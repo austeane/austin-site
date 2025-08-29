@@ -70,6 +70,13 @@
     margin-bottom: 0.25rem;
   }
   
+  .sidebar-logo {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    margin-bottom: 0.25rem;
+  }
+  
   .sidebar-label {
     font-size: 0.65rem;
     text-align: center;
@@ -146,9 +153,13 @@
         style="--accent-color: {provider.color || '#000'}"
         title="{provider.name} version"
       >
-        <span class="sidebar-icon" style="color: {provider.color || 'inherit'}">
-          {provider.icon}
-        </span>
+        {#if provider.logo}
+          <img src={provider.logo} alt={provider.name} class="sidebar-logo" />
+        {:else}
+          <span class="sidebar-icon" style="color: {provider.color || 'inherit'}">
+            {provider.icon}
+          </span>
+        {/if}
         <span class="sidebar-label">{provider.name}</span>
       </a>
     {/each}
