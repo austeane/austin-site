@@ -2,10 +2,10 @@
   import { PROVIDERS } from '$lib/providers';
   export let data; // { currentProviderId, isOnEnablement }
 
-  const { currentProviderId, isOnEnablement } = data;
+  $: ({ currentProviderId, isOnEnablement } = data);
   $: currentProvider = PROVIDERS.find(p => p.id === currentProviderId) ?? PROVIDERS[0];
 
-  function getProviderPath(targetPage) {
+  $: getProviderPath = (targetPage) => {
     return targetPage === 'resume'
       ? (currentProviderId === 'minimal' ? '/' : `/with/${currentProviderId}`)
       : (currentProviderId === 'minimal' ? '/enablement' : `/with/${currentProviderId}/enablement`);
