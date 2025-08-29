@@ -1,4 +1,4 @@
-import adapter from '@sveltejs/adapter-static';
+import adapter from 'svelte-kit-sst';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {

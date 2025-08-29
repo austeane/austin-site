@@ -173,7 +173,7 @@
       </div>
     </header>
 
-    <div class="content-area">
+    <div class="content-area" id="content">
       <slot />
     </div>
 

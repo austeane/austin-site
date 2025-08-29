@@ -40,3 +40,6 @@ temp/
 *.docx
 *.doc
 *.pdf
+
+# sst
+.sst

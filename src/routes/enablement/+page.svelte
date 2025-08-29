@@ -113,10 +113,14 @@
     color: var(--muted);
   }
   
-  .toc-list {
+  .toc-list, .toc-sublist {
     list-style: none;
     padding: 0;
     margin: 0;
+  }
+  
+  .toc-sublist {
+    margin-left: 1rem;
   }
   
   .toc-item {
@@ -453,13 +457,15 @@
             {section.title}
           </a>
           {#if section.items}
-            {#each section.items as item}
-              <li class="toc-item level-{item.level}">
-                <a href="#{item.id}" class="toc-link" class:active={currentHash === item.id}>
-                  {item.title}
-                </a>
-              </li>
-            {/each}
+            <ul class="toc-sublist">
+              {#each section.items as item}
+                <li class="toc-item level-{item.level}">
+                  <a href="#{item.id}" class="toc-link" class:active={currentHash === item.id}>
+                    {item.title}
+                  </a>
+                </li>
+              {/each}
+            </ul>
           {/if}
         </li>
       {/each}
