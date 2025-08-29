@@ -16,7 +16,8 @@ export default $config({
           domain: {
             name: "www.austinwallace.ca",
             redirects: ["austinwallace.ca"],
-            dns: false // We'll manage DNS in GoDaddy
+            dns: false, // We'll manage DNS in GoDaddy
+            cert: "arn:aws:acm:us-east-1:737679990662:certificate/061f07dc-2e1e-4751-bfee-e7e26c8b7c80"
           }
         }
       : {};

@@ -5,7 +5,7 @@
   $: currentPath = $page.url.pathname;
   $: currentProvider = currentPath.startsWith('/with/') 
     ? PROVIDERS.find(p => p.id === currentPath.split('/')[2])
-    : PROVIDERS[0]; // minimal
+    : PROVIDERS.find(p => p.id === 'minimal');
   
   // Helper to build provider-aware paths
   function getProviderPath(targetPage) {
@@ -15,6 +15,14 @@
     return targetPage === 'resume' 
       ? `/with/${currentProvider?.id}` 
       : `/with/${currentProvider?.id}/enablement`;
+  }
+  
+  // Handle click on sidebar items
+  function handleProviderClick(e, provider) {
+    if (provider.comingSoon) {
+      e.preventDefault();
+      // Stay on current page for coming soon variants
+    }
   }
 </script>
 
@@ -72,6 +80,42 @@
     height: 24px;
     background: var(--accent-color, #000);
     border-radius: 0 2px 2px 0;
+  }
+  
+  .sidebar-item.coming-soon {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .sidebar-item.coming-soon:hover {
+    opacity: 0.8;
+    transform: none;
+  }
+  
+  .sidebar-item.coming-soon .sidebar-logo,
+  .sidebar-item.coming-soon .sidebar-icon {
+    filter: grayscale(30%);
+  }
+  
+  .coming-soon-tooltip {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+    z-index: 10;
+  }
+  
+  .sidebar-item.coming-soon:hover .coming-soon-tooltip {
+    opacity: 1;
   }
   
   .sidebar-icon {
@@ -157,11 +201,13 @@
   <nav class="sidebar" aria-label="AI Variants">
     {#each PROVIDERS as provider}
       <a 
-        href={provider.id === 'minimal' ? '/' : `/with/${provider.id}`}
+        href={provider.comingSoon ? '#' : (provider.id === 'minimal' ? '/' : `/with/${provider.id}`)}
         class="sidebar-item"
         class:active={currentProvider?.id === provider.id}
+        class:coming-soon={provider.comingSoon}
         style="--accent-color: {provider.color || '#000'}"
-        title="{provider.name} version"
+        title="{provider.name} version{provider.comingSoon ? ' (coming soon)' : ''}"
+        on:click={(e) => handleProviderClick(e, provider)}
       >
         {#if provider.logo}
           <img src={provider.logo} alt={provider.name} class="sidebar-logo" />
@@ -171,6 +217,9 @@
           </span>
         {/if}
         <span class="sidebar-label">{provider.name}</span>
+        {#if provider.comingSoon}
+          <span class="coming-soon-tooltip">Coming Soon</span>
+        {/if}
       </a>
     {/each}
   </nav>
