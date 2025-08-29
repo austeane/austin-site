@@ -1,27 +1,19 @@
 <script>
   import { PROVIDERS } from '$lib/providers';
-  import { page } from '$app/stores';
-  
-  $: currentPath = $page.url.pathname;
-  $: currentProvider = currentPath.startsWith('/with/') 
-    ? PROVIDERS.find(p => p.id === currentPath.split('/')[2])
-    : PROVIDERS.find(p => p.id === 'minimal');
-  
-  // Helper to build provider-aware paths
+  export let data; // { currentProviderId, isOnEnablement }
+
+  const { currentProviderId, isOnEnablement } = data;
+  $: currentProvider = PROVIDERS.find(p => p.id === currentProviderId) ?? PROVIDERS[0];
+
   function getProviderPath(targetPage) {
-    if (currentProvider?.id === 'minimal') {
-      return targetPage === 'resume' ? '/' : '/enablement';
-    }
-    return targetPage === 'resume' 
-      ? `/with/${currentProvider?.id}` 
-      : `/with/${currentProvider?.id}/enablement`;
+    return targetPage === 'resume'
+      ? (currentProviderId === 'minimal' ? '/' : `/with/${currentProviderId}`)
+      : (currentProviderId === 'minimal' ? '/enablement' : `/with/${currentProviderId}/enablement`);
   }
-  
-  // Handle click on sidebar items
+
   function handleProviderClick(e, provider) {
     if (provider.comingSoon) {
       e.preventDefault();
-      // Stay on current page for coming soon variants
     }
   }
 </script>
@@ -200,7 +192,6 @@
 <div class="layout-container">
   <nav class="sidebar" aria-label="AI Variants">
     {#each PROVIDERS as provider}
-      {@const isOnEnablement = currentPath.includes('/enablement')}
       {@const providerHref = provider.comingSoon 
         ? '#' 
         : provider.id === 'minimal' 
@@ -237,8 +228,8 @@
           Austin Wallace — Data Engineer
         </a>
         <nav style="display: flex; gap: 1rem;">
-          <a href={getProviderPath('resume')} class:active-page={!currentPath.includes('/enablement')}>Resume</a>
-          <a href={getProviderPath('enablement')} class:active-page={currentPath.includes('/enablement')}>AI Enablement</a>
+          <a href={getProviderPath('resume')} class:active-page={!isOnEnablement}>Resume</a>
+          <a href={getProviderPath('enablement')} class:active-page={isOnEnablement}>AI Enablement</a>
         </nav>
         {#if currentProvider}
           <span class="provider-badge">
