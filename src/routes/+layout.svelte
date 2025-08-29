@@ -200,8 +200,14 @@
 <div class="layout-container">
   <nav class="sidebar" aria-label="AI Variants">
     {#each PROVIDERS as provider}
+      {@const isOnEnablement = currentPath.includes('/enablement')}
+      {@const providerHref = provider.comingSoon 
+        ? '#' 
+        : provider.id === 'minimal' 
+          ? (isOnEnablement ? '/enablement' : '/')
+          : (isOnEnablement ? `/with/${provider.id}/enablement` : `/with/${provider.id}`)}
       <a 
-        href={provider.comingSoon ? '#' : (provider.id === 'minimal' ? '/' : `/with/${provider.id}`)}
+        href={providerHref}
         class="sidebar-item"
         class:active={currentProvider?.id === provider.id}
         class:coming-soon={provider.comingSoon}

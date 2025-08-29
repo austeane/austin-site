@@ -11,4 +11,4 @@
   <title>AI Enablement - {provider.name} Variant</title>
 </svelte:head>
 
-<VariantFrame src={variantPath} title="{provider.name} Enablement Variant" />
+<VariantFrame src={variantPath} />

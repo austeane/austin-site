@@ -311,6 +311,35 @@
   </div>
   
   <script>
+    // Height tracking
+    let lastHeight = 0;
+    let resizeTimeout;
+    let isUpdating = false;
+    
+    function updateHeight() {
+      if (isUpdating) return;
+      isUpdating = true;
+      
+      setTimeout(() => {
+        // Use body's offset height which is more stable
+        const body = document.body;
+        const html = document.documentElement;
+        const height = Math.max(
+          body.scrollHeight,
+          body.offsetHeight,
+          html.clientHeight,
+          html.offsetHeight
+        );
+        
+        // Only send if height actually changed by more than 5px
+        if (Math.abs(height - lastHeight) > 5) {
+          lastHeight = height;
+          parent?.postMessage({ type: 'variant:height', value: height }, '*');
+        }
+        isUpdating = false;
+      }, 0);
+    }
+    
     async function init() {
       const container = document.getElementById('app-claude-code');
       
@@ -499,10 +528,9 @@
         
         container.innerHTML = html;
         
-        // Post height to parent
+        // Post initial height to parent
         requestAnimationFrame(() => {
-          const height = document.documentElement.scrollHeight;
-          parent?.postMessage({ type: 'variant:height', value: height }, '*');
+          updateHeight();
         });
         
       } catch (error) {
@@ -519,12 +547,17 @@
     // Initialize
     init();
     
-    // Watch for resize
+    // Only update on actual window resize (not scrolling)
+    let windowWidth = window.innerWidth;
     window.addEventListener('resize', () => {
-      requestAnimationFrame(() => {
-        const height = document.documentElement.scrollHeight;
-        parent?.postMessage({ type: 'variant:height', value: height }, '*');
-      });
+      // Check if it's an actual resize, not just a scroll
+      if (window.innerWidth !== windowWidth) {
+        windowWidth = window.innerWidth;
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          requestAnimationFrame(updateHeight);
+        }, 100);
+      }
     });
   </script>
 </body>

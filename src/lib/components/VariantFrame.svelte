@@ -3,11 +3,17 @@
   export let src: string;
   let height = '100%';
 
+  let lastReceivedHeight = 0;
+  
   function onMessage(e: MessageEvent) {
     const d = e?.data;
     if (d && typeof d === 'object' && d.type === 'variant:height') {
       const h = Number(d.value);
-      if (!Number.isNaN(h) && h > 300) height = `${h + 20}px`;
+      // Only update if height is valid and significantly different
+      if (!Number.isNaN(h) && h > 300 && Math.abs(h - lastReceivedHeight) > 5) {
+        lastReceivedHeight = h;
+        height = `${h}px`;
+      }
     }
   }
 
