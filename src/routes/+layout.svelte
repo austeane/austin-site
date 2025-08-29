@@ -6,6 +6,16 @@
   $: currentProvider = currentPath.startsWith('/with/') 
     ? PROVIDERS.find(p => p.id === currentPath.split('/')[2])
     : PROVIDERS[0]; // minimal
+  
+  // Helper to build provider-aware paths
+  function getProviderPath(targetPage) {
+    if (currentProvider?.id === 'minimal') {
+      return targetPage === 'resume' ? '/' : '/enablement';
+    }
+    return targetPage === 'resume' 
+      ? `/with/${currentProvider?.id}` 
+      : `/with/${currentProvider?.id}/enablement`;
+  }
 </script>
 
 <style>
@@ -172,8 +182,8 @@
           Austin Wallace — Data Engineer
         </a>
         <nav style="display: flex; gap: 1rem;">
-          <a href="/" class:active-page={currentPath === '/' || currentPath.startsWith('/with/')}>Resume</a>
-          <a href="/enablement" class:active-page={currentPath === '/enablement' || currentPath.includes('/enablement')}>AI Enablement</a>
+          <a href={getProviderPath('resume')} class:active-page={!currentPath.includes('/enablement')}>Resume</a>
+          <a href={getProviderPath('enablement')} class:active-page={currentPath.includes('/enablement')}>AI Enablement</a>
         </nav>
         {#if currentProvider}
           <span class="provider-badge">
