@@ -81,9 +81,9 @@
     "description": "Machine Learning (Major) / Commerce (Minor). Designed and got approved an entirely unique degree combining business, statistics, and machine learning, which included graduate-level coursework."
   }],
   "skills": [
-    { "name": "Data Platforms", "keywords": ["Databricks", "Snowflake", "dbt", "PostgreSQL", "Delta Lake"] },
+    { "name": "Data Platforms", "keywords": ["Databricks", "Unity Catalog", "Snowflake", "dbt", "PostgreSQL", "Delta Lake"] },
     { "name": "Programming", "keywords": ["Python", "SQL", "Go", "pandas", "PySpark"] },
-    { "name": "Cloud & Infrastructure", "keywords": ["AWS S3/IAM", "Azure Unity Catalog", "Terraform", "CI/CD"] },
+    { "name": "Cloud & Infrastructure", "keywords": ["AWS S3/IAM", "Azure",  "Terraform", "CI/CD"] },
     { "name": "Data Engineering", "keywords": ["Data Modeling", "Data Warehousing", "Batch & Near-Real-Time Pipelines", "Observability"] },
     { "name": "AI & Collaboration", "keywords": ["Responsible AI Enablement", "Stakeholder Collaboration", "Best Practices Guide"] }
   ],
