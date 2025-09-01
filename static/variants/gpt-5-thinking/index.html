@@ -1,36 +1,650 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPT-5 Thinking Resume</title>
+  <meta charset="utf-8" />
+  <title>Austin Wallace — Data Engineer · Resume</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="description" content="Resume and work showcase for Austin Wallace — Data Engineer specializing in Databricks, Snowflake, dbt, and AI enablement." />
+  <style>
+    /* ========= SCOPE ALL STYLES TO THIS VARIANT =========
+       We scope by any element whose id starts with "app-".
+       This satisfies the namespace requirement even if the <tool> segment changes.
+    */
+    :where([id^="app-"]) { --radius: 14px; --radius-sm: 10px; --shadow-1: 0 1px 2px rgba(0,0,0,.06), 0 8px 30px rgba(0,0,0,.06); --shadow-2: 0 2px 4px rgba(0,0,0,.08), 0 14px 45px rgba(0,0,0,.10); --maxw: 1100px; --fw-ui: 600; --fw-bold: 700; --fw-normal: 450; --sp-0: .25rem; --sp-1: .5rem; --sp-2: .75rem; --sp-3: 1rem; --sp-4: 1.25rem; --sp-5: 1.5rem; --sp-6: 2rem; --sp-7: 3rem; --sp-8: 4rem;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      --mono: ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
+      --bg: #0b0c0f; --panel: #11131a; --muted: #7a8699; --text: #e8edf5; --link: #87b7ff; --ok: #2fd17a; --chip: #1a2030; --chip-border: #28324a; --hero-accent: radial-gradient(1200px 600px at 10% -10%, rgba(67,97,238,.25), transparent 60%), radial-gradient(900px 700px at 120% 10%, rgba(47,209,122,.18), transparent 60%);
+      --border: rgba(255,255,255,.08); --divider: rgba(255,255,255,.06); --callout: #141a26; --tag-bg: #0e1422; --tag-bd: #1e263a; --cta: #def; --cta-text: #07131f;
+    }
+    @media (prefers-color-scheme: light) {
+      :where([id^="app-"]):not([data-theme="dark"]) {
+        --bg: #f6f8fb; --panel: #ffffff; --muted: #617086; --text: #0b1426; --link: #1256d1; --ok: #1a9a5f; --chip: #f2f6ff; --chip-border: #dde7ff;
+        --border: rgba(2, 19, 51, .08); --divider: rgba(2,19,51,.06); --callout: #f4f7ff; --tag-bg: #eef3ff; --tag-bd: #dfe8ff; --cta: #0b5cff; --cta-text: #fff;
+        --hero-accent: radial-gradient(1200px 600px at 10% -10%, rgba(11,92,255,.12), transparent 60%), radial-gradient(900px 700px at 120% 10%, rgba(47,209,122,.10), transparent 60%);
+      }
+    }
+    :where([id^="app-"]) * { box-sizing: border-box; }
+    :where([id^="app-"]) body, :where([id^="app-"]) div { margin: 0; }
+    :where([id^="app-"]) { font-family: var(--font); color: var(--text); }
+    :where([id^="app-"]) a { color: var(--link); text-decoration: none; }
+    :where([id^="app-"]) a:hover { text-decoration: underline; text-underline-offset: 2px; }
+    :where([id^="app-"]) .shell { min-height: 100svh; background: var(--bg); }
+    :where([id^="app-"]) .hero {
+      background: linear-gradient(180deg, rgba(0,0,0,0) 0 50%, var(--bg) 100%), var(--hero-accent);
+      padding: var(--sp-7) var(--sp-3) var(--sp-6);
+      position: relative;
+      overflow: hidden;
+    }
+    :where([id^="app-"]) .container { max-width: var(--maxw); margin: 0 auto; }
+    :where([id^="app-"]) .card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: var(--shadow-1);
+    }
+    :where([id^="app-"]) .stack { display: grid; gap: var(--sp-5); }
+    :where([id^="app-"]) .hstack { display: flex; gap: var(--sp-2); align-items: center; }
+    :where([id^="app-"]) .spread { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
+    :where([id^="app-"]) .muted { color: var(--muted); }
+    :where([id^="app-"]) .badge { background: var(--chip); border: 1px solid var(--chip-border); padding: .25rem .6rem; border-radius: 999px; font-size: .8rem; }
+    :where([id^="app-"]) .btn {
+      display: inline-flex; align-items: center; gap: .5rem; padding: .6rem .9rem; border: 1px solid var(--border);
+      border-radius: 999px; background: var(--panel); box-shadow: var(--shadow-1); cursor: pointer; font-weight: var(--fw-ui);
+    }
+    :where([id^="app-"]) .btn.primary { background: var(--cta); color: var(--cta-text); border-color: transparent; }
+    :where([id^="app-"]) .btn.ghost { background: transparent; }
+    :where([id^="app-"]) .btn:disabled { opacity: .6; cursor: not-allowed; }
+    :where([id^="app-"]) .toolbar { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(8px); background: color-mix(in oklab, var(--bg) 88%, transparent); border-bottom: 1px solid var(--divider); }
+    :where([id^="app-"]) nav .nav { display: flex; gap: .5rem; flex-wrap: wrap; }
+    :where([id^="app-"]) nav .nav a { display: inline-flex; align-items: center; gap: .5rem; padding: .6rem .9rem; border-radius: 999px; border: 1px solid transparent; }
+    :where([id^="app-"]) nav .nav a.active { border-color: var(--chip-border); background: var(--chip); }
+    :where([id^="app-"]) h1 { font-size: clamp(2rem, 3vw + 1rem, 3rem); margin: 0; line-height: 1.1; letter-spacing: -.02em; }
+    :where([id^="app-"]) h2 { font-size: 1.35rem; letter-spacing: -.01em; margin: 0 0 .25rem; }
+    :where([id^="app-"]) h3 { font-size: 1.05rem; margin: 0 0 .25rem; }
+    :where([id^="app-"]) p { margin: 0; line-height: 1.55; }
+    :where([id^="app-"]) .hero-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: var(--sp-5); }
+    @media (max-width: 900px) { :where([id^="app-"]) .hero-grid { grid-template-columns: 1fr; } }
+    :where([id^="app-"]) .chips { display: flex; flex-wrap: wrap; gap: .5rem; }
+    :where([id^="app-"]) .chip { background: var(--tag-bg); border: 1px solid var(--tag-bd); padding: .35rem .6rem; border-radius: 999px; font-size: .85rem; white-space: nowrap; }
+    :where([id^="app-"]) .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-5); }
+    @media (max-width: 900px) { :where([id^="app-"]) .grid-2 { grid-template-columns: 1fr; } }
+    :where([id^="app-"]) .section { padding: var(--sp-6) var(--sp-3); }
+    :where([id^="app-"]) .work-item { padding: var(--sp-5); border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); }
+    :where([id^="app-"]) .work-head { display: grid; grid-template-columns: 1fr auto; gap: var(--sp-2); margin-bottom: .35rem; }
+    :where([id^="app-"]) .kpis { display: flex; gap: var(--sp-5); flex-wrap: wrap; }
+    :where([id^="app-"]) .kpi { display: grid; gap: .2rem; }
+    :where([id^="app-"]) .kpi strong { font-size: 1.1rem; }
+    :where([id^="app-"]) .list { display: grid; gap: .6rem; margin-top: .6rem; }
+    :where([id^="app-"]) .list li { list-style: none; padding-left: 1.4rem; position: relative; }
+    :where([id^="app-"]) .list li::before { content: ""; position: absolute; left: 0; top: .45rem; width: .6rem; height: .6rem; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px color-mix(in oklab, var(--ok) 25%, transparent); }
+    :where([id^="app-"]) .highlight { background: var(--callout); border: 1px dashed var(--chip-border); padding: .8rem .9rem; border-radius: var(--radius-sm); }
+    :where([id^="app-"]) .proj { padding: var(--sp-4); border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); display: grid; gap: .4rem; }
+    :where([id^="app-"]) .foot { padding: var(--sp-6) var(--sp-3) var(--sp-7); text-align: center; color: var(--muted); }
+    :where([id^="app-"]) .sr-only { position: absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    :where([id^="app-"]) .loader { height: 4px; border-radius: 999px; background: linear-gradient(90deg, color-mix(in oklab, var(--link) 60%, transparent), transparent); overflow: hidden; }
+    :where([id^="app-"]) .loader::before { content:""; display:block; height:100%; width:40%; background: var(--link); filter: saturate(160%); animation: l 1.3s infinite; border-radius: 999px; }
+    @keyframes l { 0%{transform:translateX(-100%);} 60%{transform:translateX(180%);} 100%{transform:translateX(220%);} }
+    :where([id^="app-"]) .searchbar { display: flex; gap: .5rem; align-items: center; background: var(--panel); border: 1px solid var(--border); padding: .5rem .75rem; border-radius: 999px; }
+    :where([id^="app-"]) .searchbar input { background: transparent; border: none; outline: none; color: var(--text); width: 100%; font-size: .95rem; }
+    :where([id^="app-"]) .pill { padding: .35rem .55rem; border-radius: 999px; border: 1px solid var(--chip-border); background: var(--chip); font-size: .8rem; }
+    :where([id^="app-"]) .tooltips { font-size: .85rem; }
+    :where([id^="app-"]) .kv { display: grid; grid-auto-flow: column; gap: .5rem; }
+    :where([id^="app-"]) .kv code { font-family: var(--mono); padding: .15rem .35rem; border-radius: .4rem; border: 1px solid var(--chip-border); background: var(--chip); }
+    :where([id^="app-"]) .grid-3 { display: grid; gap: var(--sp-4); grid-template-columns: repeat(3,1fr); }
+    @media (max-width: 1000px) { :where([id^="app-"]) .grid-3 { grid-template-columns: 1fr; } }
+    :where([id^="app-"]) .accomplishment { padding: var(--sp-4); border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); }
+    :where([id^="app-"]) .callout { padding: .9rem 1rem; border: 1px solid var(--tag-bd); border-radius: var(--radius); background: var(--tag-bg); }
+    :where([id^="app-"]) .sep { border-top: 1px solid var(--divider); margin: var(--sp-5) 0; }
+    :where([id^="app-"]) .sticky-cta { position: fixed; right: 16px; bottom: 16px; z-index: 20; display: flex; flex-direction: column; gap: .5rem; }
+    :where([id^="app-"]) .sticky-cta .btn { box-shadow: var(--shadow-2); }
+    :where([id^="app-"]) .avatar {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: linear-gradient(135deg, color-mix(in oklab, var(--link) 25%, transparent), color-mix(in oklab, var(--ok) 25%, transparent));
+      display: grid; place-items: center; color: #fff; font-weight: 800; letter-spacing: .5px;
+      text-shadow: 0 1px 2px rgba(0,0,0,.25);
+      border: 2px solid color-mix(in oklab, #fff 60%, transparent);
+    }
+    /* PRINT */
+    @media print {
+      :where([id^="app-"]) .toolbar, :where([id^="app-"]) .sticky-cta { display: none !important; }
+      :where([id^="app-"]) .hero { padding: 0; background: none; }
+      :where([id^="app-"]) .card, :where([id^="app-"]) .work-item, :where([id^="app-"]) .proj, :where([id^="app-"]) .accomplishment { box-shadow: none; border-color: #ddd; }
+      :where([id^="app-"]) .section { padding: 0; }
+      :where([id^="app-"]) .foot { padding: 0; }
+      :where([id^="app-"]) .chip, :where([id^="app-"]) .badge, :where([id^="app-"]) .pill { border-color: #ccc; background: #f8f8f8; color: #000; }
+      :where([id^="app-"]) .hero-grid { grid-template-columns: 1fr 1fr; }
+      :where([id^="app-"]) .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+    }
+  </style>
 </head>
+
 <body>
-    <div id="app">
-        <h1>GPT-5 Thinking Resume</h1>
-        <p>This variant will be styled by GPT-5 Thinking.</p>
+  <!-- Dynamically set the required namespace id: app-<tool>
+       We derive <tool> from /variants/<tool>/index.html to avoid CSS/JS leaks across variants. -->
+  <script>
+    (function () {
+      const tool = (location.pathname.match(/\/variants\/([^/]+)/) || [,'resume'])[1];
+      const id = 'app-' + tool;
+      document.write('<div id="' + id + '" class="shell">');
+    }());
+  </script>
+
+    <a class="sr-only" href="#main">Skip to content</a>
+
+    <!-- Sticky top toolbar -->
+    <header class="toolbar">
+      <div class="container" style="padding: .6rem var(--sp-3); display:flex; align-items:center; justify-content:space-between; gap: .75rem;">
+        <div class="hstack" role="status" aria-live="polite">
+          <div class="avatar" aria-hidden="true">AW</div>
+          <div>
+            <strong style="display:block; letter-spacing:.2px;">Austin Wallace</strong>
+            <span class="muted">Data Engineer · Victoria, BC</span>
+          </div>
+        </div>
+        <nav aria-label="Primary">
+          <div class="nav">
+            <a href="#about" data-nav>About</a>
+            <a href="#experience" data-nav>Experience</a>
+            <a href="#projects" data-nav>Projects</a>
+            <a href="#skills" data-nav>Skills</a>
+            <a href="#accomplishments" data-nav>Highlights</a>
+            <a href="#contact" data-nav>Contact</a>
+          </div>
+        </nav>
+        <div class="hstack">
+          <button class="btn ghost" id="themeBtn" aria-pressed="false" title="Toggle theme">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+            Theme
+          </button>
+          <button class="btn" id="printBtn" title="Save as PDF">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 2h12v6H6zM6 14H4a2 2 0 0 1-2-2V9a3 3 0 0 1 3-3h14a3 3 0 0 1 3 3v3a2 2 0 0 1-2 2h-2v6H6z"/></svg>
+            PDF
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="card" style="padding: var(--sp-5); display:grid; gap: var(--sp-4);">
+          <div class="spread">
+            <div>
+              <h1 id="about">Austin Wallace</h1>
+              <div class="hstack" style="flex-wrap:wrap; gap:.5rem; margin-top:.35rem;">
+                <span class="badge" id="roleBadge">Data Engineer</span>
+                <span class="badge" id="expBadge" title="From resume summary">Experience</span>
+                <span class="badge" id="locBadge">Victoria, BC</span>
+              </div>
+            </div>
+            <div class="tooltips" style="text-align:right;">
+              <div class="chips">
+                <a class="chip" id="ghLink" rel="noopener noreferrer">GitHub</a>
+                <a class="chip" id="liLink" rel="noopener noreferrer">LinkedIn</a>
+                <button class="chip" id="copyEmailBtn" title="Copy email">Copy Email</button>
+                <button class="chip" id="copyPhoneBtn" title="Copy phone">Copy Phone</button>
+              </div>
+            </div>
+          </div>
+          <p id="summaryText" class="muted"></p>
+
+          <div class="kpis" role="list">
+            <div class="kpi" role="listitem"><strong id="kpi1">—</strong><span class="muted">AI enablement impact</span></div>
+            <div class="kpi" role="listitem"><strong id="kpi2">—</strong><span class="muted">Pipelines owned</span></div>
+            <div class="kpi" role="listitem"><strong id="kpi3">—</strong><span class="muted">Rows handled / game</span></div>
+          </div>
+
+          <div class="highlight">
+            <strong>What teams say I do best</strong>
+            <ul class="list" id="heroBullets" style="margin-top:.5rem;"></ul>
+          </div>
+
+          <div class="hstack" style="flex-wrap:wrap; gap:.5rem;">
+            <a href="#experience" class="btn primary">
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20 7h-5V3H9v4H4v2h16V7ZM6 10v9h12v-9H6Zm2 2h8v5H8v-5Z"/></svg>
+              View Experience
+            </a>
+            <a href="#projects" class="btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 5h18v4H3zm0 5h18v4H3zm0 5h18v4H3z"/></svg>
+              Projects
+            </a>
+            <a href="#contact" class="btn ghost">Contact</a>
+          </div>
+        </div>
+
+        <aside class="card" style="padding: var(--sp-5); display:grid; gap: var(--sp-4);" aria-labelledby="quick-actions">
+          <div class="spread">
+            <h2 id="quick-actions" style="margin:0;">Quick Actions</h2>
+            <span class="pill">No trackers. No external calls.</span>
+          </div>
+          <div class="searchbar" role="search">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 14 15.5l.3.3v.8L20 21.5 21.5 20l-6-6zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
+            <input id="searchInput" type="search" placeholder="Filter highlights, skills, projects…" autocomplete="off" />
+          </div>
+          <div class="stack">
+            <div class="kv">
+              <span class="muted">Email</span>
+              <code id="emailCode"></code>
+              <button class="btn ghost" id="emailBtn">Open</button>
+            </div>
+            <div class="kv">
+              <span class="muted">Phone</span>
+              <code id="phoneCode"></code>
+              <button class="btn ghost" id="phoneBtn">Call</button>
+            </div>
+            <div class="kv">
+              <span class="muted">Location</span>
+              <code id="locCode"></code>
+            </div>
+          </div>
+          <div class="callout">
+            <strong>Tip:</strong> Click any skill chip to highlight relevant bullets across the resume.
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- EXPERIENCE -->
+    <main id="main">
+      <section class="section container">
+        <div class="spread" style="margin-bottom: var(--sp-3);">
+          <h2 id="experience">Experience</h2>
+          <div class="hstack">
+            <button class="btn ghost" id="expandAllBtn">Expand all</button>
+            <button class="btn ghost" id="collapseAllBtn">Collapse all</button>
+          </div>
+        </div>
+        <div id="workList" class="stack"></div>
+      </section>
+
+      <!-- PROJECTS & EDUCATION -->
+      <section class="section container grid-2" id="projectsSection">
+        <div>
+          <div class="spread" style="margin-bottom: var(--sp-3);">
+            <h2 id="projects">Projects</h2>
+            <span class="muted">Production-grade side projects</span>
+          </div>
+          <div id="projectsList" class="stack"></div>
+        </div>
+        <div>
+          <div class="spread" style="margin-bottom: var(--sp-3);">
+            <h2 id="education">Education</h2>
+          </div>
+          <div id="educationCard" class="proj" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- SKILLS -->
+      <section class="section container">
+        <div class="spread" style="margin-bottom: var(--sp-3);">
+          <h2 id="skills">Skills</h2>
+          <div class="hstack">
+            <button class="btn ghost" id="clearFilterBtn" disabled>Clear filters</button>
+          </div>
+        </div>
+        <div id="skillsGrid" class="grid-3"></div>
+      </section>
+
+      <!-- ACCOMPLISHMENTS -->
+      <section class="section container">
+        <div class="spread" style="margin-bottom: var(--sp-3);">
+          <h2 id="accomplishments">Career Highlights</h2>
+          <span class="muted">Select leadership & impact</span>
+        </div>
+        <div id="accompList" class="grid-3"></div>
+      </section>
+
+      <section id="contact" class="section container">
+        <div class="spread">
+          <h2>Contact</h2>
+          <span class="muted">Let's talk about how I can help your team move faster—safely.</span>
+        </div>
+        <div class="sep"></div>
+        <div class="hstack" style="flex-wrap:wrap; gap:.75rem;">
+          <a id="contactEmail" class="btn primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 13L2 6.76V18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6.76zM21.64 6H2.36L12 12z"/></svg>
+            Email Austin
+          </a>
+          <a id="contactLinkedIn" class="btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6.94 6.5A2.19 2.19 0 1 1 4.75 4.3a2.2 2.2 0 0 1 2.19 2.2ZM6.94 20H2.88V8.8h4.06V20Zm6.41-7.5c0-1.53.71-2.44 2.08-2.44s2 1 2 2.87V20h4.06v-6.21c0-3.32-1.77-4.87-4.14-4.87a3.62 3.62 0 0 0-3.31 1.82v-1.6H10.1V20h4.06Z"/></svg>
+            Message on LinkedIn
+          </a>
+          <button id="contactCopy" class="btn ghost">Copy full contact block</button>
+        </div>
+      </section>
+
+      <footer class="foot container">
+        <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap;">
+          <span class="muted">Last updated from <code>/data/resume.json</code>.</span>
+          <span class="muted">Single-file, no external requests.</span>
+        </div>
+      </footer>
+    </main>
+
+    <div class="sticky-cta" aria-hidden="true">
+      <button class="btn primary" id="hireMeBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17 8V7a5 5 0 1 0-10 0v1H4v14h16V8h-3Zm-8 0V7a3 3 0 0 1 6 0v1H9Zm-2 4h10v8H7v-8Z"/></svg>
+        Hire Austin
+      </button>
+      <button class="btn" id="topBtn" title="Back to top">▲</button>
     </div>
 
-    <script>
-        // Post height updates to parent frame
-        function updateHeight() {
-            if (parent) {
-                parent.postMessage({ 
-                    type: 'variant:height', 
-                    value: document.body.scrollHeight 
-                }, '*');
-            }
+  <!-- Close the dynamic app container -->
+  </div>
+
+  <script>
+  (function () {
+    const app = document.querySelector('[id^="app-"]');
+    const qs = (sel, el = app) => el.querySelector(sel);
+    const qsa = (sel, el = app) => [...el.querySelectorAll(sel)];
+    const formatDate = (iso) => {
+      if (!iso) return 'Present';
+      const [y, m='01'] = iso.split('-');
+      const dt = new Date(Number(y), Number(m)-1, 1);
+      return dt.toLocaleString(undefined, { month: 'short', year: 'numeric' });
+    };
+    const monthDiff = (a, b) => (b.getFullYear()-a.getFullYear())*12 + (b.getMonth()-a.getMonth());
+    const duration = (start, end) => {
+      const s = new Date(start + (start.length===7 ? '-01' : ''));
+      const e = end ? new Date(end + (end.length===7 ? '-01' : '')) : new Date();
+      const m = Math.max(1, monthDiff(s, e)+1);
+      const y = Math.floor(m/12), mo = m%12;
+      const p = (n, w) => n ? `${n} ${w}${n>1?'s':''}` : '';
+      return [p(y,'yr'), p(mo,'mo')].filter(Boolean).join(' ');
+    };
+    const escape = (s='') => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const parseExpFromSummary = (s='') => {
+      const m = s.match(/(\d+\+?)\s*years?/i);
+      return m ? m[1] + ' yrs' : '';
+    };
+    const setTheme = (t) => {
+      if (t) localStorage.setItem('aw-theme', t);
+      const pref = t || localStorage.getItem('aw-theme') || 'auto';
+      app.dataset.theme = pref === 'dark' ? 'dark' : (pref === 'light' ? 'light' : '');
+      qs('#themeBtn').setAttribute('aria-pressed', String(pref === 'dark'));
+      qs('#themeBtn').innerHTML = (pref==='dark'
+        ? '<svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M6.76 4.84l-1.8-1.79L3.17 4.84l1.79 1.8 1.8-1.8ZM1 13h3v-2H1v2Zm10 10h2v-3h-2v3Zm8.24-3.16l1.8 1.8 1.79-1.8-1.8-1.79-1.79 1.79ZM20 11v2h3v-2h-3Zm-8-8h2V0h-2v3Zm-6.24 15.16l-1.8 1.8 1.79 1.8 1.8-1.8-1.79-1.8ZM12 6a6 6 0 1 0 .001 12.001A6 6 0 0 0 12 6Z"/></svg> Dark'
+        : '<svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg> Theme');
+    };
+
+    // NAV active link on scroll
+    const observeSections = () => {
+      const links = qsa('[data-nav]');
+      const ids = links.map(a => a.getAttribute('href')).filter(Boolean).map(h => h.slice(1));
+      const obs = new IntersectionObserver((ents) => {
+        ents.forEach(ent => {
+          const id = ent.target.id;
+          const link = qs(`a[href="#${id}"]`);
+          if (ent.isIntersecting) { links.forEach(a => a.classList.toggle('active', a===link)); }
+        });
+      }, { rootMargin: '-40% 0px -55% 0px', threshold: 0.01 });
+      ids.forEach(id => { const el = document.getElementById(id); if (el) obs.observe(el); });
+    };
+
+    // Render helpers
+    const renderWork = (work=[]) => {
+      const root = qs('#workList');
+      root.innerHTML = '';
+      work.forEach((w, idx) => {
+        const item = document.createElement('article');
+        item.className = 'work-item';
+        item.dataset.keywords = (w.highlights||[]).join(' ').toLowerCase();
+        const time = `${formatDate(w.startDate)} — ${formatDate(w.endDate || '')}`;
+        item.innerHTML = `
+          <header class="work-head">
+            <div>
+              <h3>${escape(w.position)} · <span class="muted">${escape(w.name)}</span></h3>
+              <div class="hstack muted" style="gap:.75rem; flex-wrap:wrap;">
+                <span title="Dates">${escape(time)}</span>
+                <span aria-hidden="true">•</span>
+                <span title="Location">${escape(w.location||'')}</span>
+                <span aria-hidden="true">•</span>
+                <span class="badge" title="Duration">${escape(duration(w.startDate, w.endDate || ''))}</span>
+              </div>
+            </div>
+            <div class="hstack">
+              <button class="btn ghost" data-toggle="#bullets-${idx}">Toggle</button>
+            </div>
+          </header>
+          <p class="muted">${escape(w.summary||'')}</p>
+          <ul class="list" id="bullets-${idx}" style="margin-top:.8rem;">${
+            (w.highlights||[]).map(h => `<li data-item>${escape(h)}</li>`).join('')
+          }</ul>
+        `;
+        root.appendChild(item);
+      });
+    };
+
+    const renderProjects = (projects=[]) => {
+      const root = qs('#projectsList');
+      root.innerHTML = projects.map(p => `
+        <article class="proj" data-keywords="${escape((p.keywords||[]).join(' ').toLowerCase())}">
+          <h3>
+            <a href="${escape(p.url||'#')}" target="_blank" rel="noopener noreferrer">${escape(p.name)}</a>
+          </h3>
+          <p class="muted">${escape(p.description||'')}</p>
+          <div class="chips">${(p.keywords||[]).map(k => `<button class="chip" data-skill="${escape(k)}">${escape(k)}</button>`).join('')}</div>
+        </article>
+      `).join('');
+    };
+
+    const renderEducation = (edu=[]) => {
+      const e = edu[0]; if (!e) return;
+      qs('#educationCard').innerHTML = `
+        <h3>${escape(e.institution)}</h3>
+        <div class="muted" style="margin-bottom:.25rem;">
+          ${escape(e.studyType)} · ${escape(e.area)} — ${escape(e.location||'')}
+        </div>
+        <div class="chips" style="margin-bottom:.5rem;">
+          <span class="chip">${escape(e.startDate)}–${escape(e.endDate)}</span>
+          <span class="chip">Custom Degree Approval</span>
+        </div>
+        <p class="muted">${escape(e.description||'')}</p>
+      `;
+    };
+
+    const renderSkills = (skills=[]) => {
+      const grid = qs('#skillsGrid');
+      grid.innerHTML = skills.map(s => `
+        <div class="accomplishment">
+          <h3>${escape(s.name)}</h3>
+          <div class="chips" style="margin-top:.4rem;">
+            ${(s.keywords||[]).map(k => `<button class="chip" data-skill="${escape(k)}">${escape(k)}</button>`).join('')}
+          </div>
+        </div>
+      `).join('');
+    };
+
+    const renderAccomplishments = (accomp=[]) => {
+      const root = qs('#accompList');
+      root.innerHTML = accomp.map(a => `
+        <div class="accomplishment">
+          <h3>${escape(a.title)}</h3>
+          <p class="muted">${escape(a.summary||'')}</p>
+        </div>
+      `).join('');
+    };
+
+    // Filtering logic (skills + search)
+    const state = { activeSkills: new Set(), search: '' };
+    const applyFilters = () => {
+      const term = state.search.toLowerCase();
+      const hasTerm = !!term;
+      const skillTerms = [...state.activeSkills].map(s => s.toLowerCase());
+
+      const match = (text) => {
+        const t = text.toLowerCase();
+        const okTerm = hasTerm ? t.includes(term) : true;
+        const okSkill = skillTerms.length ? skillTerms.every(s => t.includes(s)) : true;
+        return okTerm && okSkill;
+      };
+
+      // Work bullets
+      qsa('#workList [data-item]').forEach(li => {
+        li.style.display = match(li.textContent) ? '' : 'none';
+      });
+      // Work cards visibility (hide only if ALL bullets hidden)
+      qsa('#workList .work-item').forEach(card => {
+        const items = [...card.querySelectorAll('[data-item]')];
+        const anyVisible = items.some(el => el.style.display !== 'none');
+        card.style.opacity = anyVisible ? '1' : '.35';
+        card.style.outline = anyVisible ? '' : '1px dashed var(--divider)';
+      });
+
+      // Projects
+      qsa('#projectsList .proj').forEach(p => {
+        const kw = p.dataset.keywords || '';
+        const name = p.querySelector('h3')?.textContent || '';
+        const desc = p.querySelector('p')?.textContent || '';
+        const text = kw + ' ' + name + ' ' + desc + ' ' + [...p.querySelectorAll('[data-skill]')].map(b=>b.textContent).join(' ');
+        p.style.display = match(text) ? '' : 'none';
+      });
+
+      // Enable/disable clear button
+      const clearBtn = qs('#clearFilterBtn');
+      clearBtn.disabled = !term && state.activeSkills.size === 0;
+    };
+
+    const attachInteractions = () => {
+      // Theme toggle
+      qs('#themeBtn').addEventListener('click', () => {
+        const cur = localStorage.getItem('aw-theme') || 'auto';
+        const next = cur === 'dark' ? 'light' : (cur === 'light' ? 'auto' : 'dark');
+        setTheme(next);
+      });
+
+      // Print
+      qs('#printBtn').addEventListener('click', () => window.print());
+      qs('#topBtn').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+      qs('#hireMeBtn').addEventListener('click', () => qs('#contactEmail').click());
+
+      // Expand/Collapse all
+      qs('#expandAllBtn').addEventListener('click', () => qsa('[id^="bullets-"]').forEach(ul => ul.style.display = 'grid'));
+      qs('#collapseAllBtn').addEventListener('click', () => qsa('[id^="bullets-"]').forEach(ul => ul.style.display = 'none'));
+      app.addEventListener('click', (e) => {
+        const t = e.target.closest('[data-toggle]');
+        if (t) {
+          const sel = t.getAttribute('data-toggle');
+          const el = qs(sel);
+          if (el) el.style.display = (getComputedStyle(el).display === 'none') ? 'grid' : 'none';
         }
+      });
 
-        // Initial height update
-        updateHeight();
+      // Skill chip click -> filter
+      app.addEventListener('click', (e) => {
+        const chip = e.target.closest('[data-skill]');
+        if (!chip) return;
+        const skill = chip.dataset.skill;
+        if (state.activeSkills.has(skill)) state.activeSkills.delete(skill);
+        else state.activeSkills.add(skill);
+        chip.classList.toggle('badge');
+        applyFilters();
+      });
 
-        // Update height when content changes
-        window.addEventListener('resize', updateHeight);
-        
-        // Observe DOM changes for height updates
-        const observer = new ResizeObserver(updateHeight);
-        observer.observe(document.body);
-    </script>
+      // Search
+      qs('#searchInput').addEventListener('input', (e) => { state.search = e.target.value || ''; applyFilters(); });
+
+      // Clear filters
+      qs('#clearFilterBtn').addEventListener('click', () => {
+        state.activeSkills.clear(); state.search = '';
+        qsa('[data-skill].badge').forEach(b => b.classList.remove('badge'));
+        qs('#searchInput').value = '';
+        applyFilters();
+      });
+
+      // Copy + contact
+      const copy = async (text, okMsg='Copied!') => {
+        try { await navigator.clipboard.writeText(text); toast(okMsg); }
+        catch { alert(text); }
+      };
+      const toast = (msg) => {
+        const t = document.createElement('div'); t.textContent = msg;
+        t.style.cssText = 'position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--border);padding:.5rem .75rem;border-radius:999px;box-shadow:var(--shadow-2);z-index:9999';
+        app.appendChild(t); setTimeout(()=>t.remove(), 1300);
+      };
+      qs('#copyEmailBtn').addEventListener('click', () => copy(qs('#emailCode').textContent.trim()));
+      qs('#copyPhoneBtn').addEventListener('click', () => copy(qs('#phoneCode').textContent.trim()));
+      qs('#contactCopy').addEventListener('click', () => {
+        const all = `Austin Wallace — Data Engineer
+Email: ${qs('#emailCode').textContent.trim()}
+Phone: ${qs('#phoneCode').textContent.trim()}
+LinkedIn: ${qs('#liLink').href}
+GitHub: ${qs('#ghLink').href}`;
+        copy(all, 'Contact copied');
+      });
+
+      observeSections();
+      setTheme(); // initialize
+    };
+
+    // Seed loading state
+    const seedLoading = () => {
+      // Small loader below toolbar on first render
+      const heroBullets = qs('#heroBullets');
+      heroBullets.innerHTML = `
+        <li>Loading resume…</li>
+        <div class="loader" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-label="Loading"></div>
+      `;
+    };
+
+    seedLoading();
+
+    // ======= Fetch the JSON (only allowed network call) =======
+    fetch('/data/resume.json', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(data => {
+        // Basics
+        const b = data.basics || {};
+        qs('#roleBadge').textContent = b.label || 'Data Engineer';
+        qs('#locBadge').textContent = (b.location && b.location.city) ? b.location.city : '—';
+        const exp = parseExpFromSummary(b.summary || '');
+        qs('#expBadge').textContent = exp || 'Experienced';
+        qs('#summaryText').textContent = b.summary || '';
+
+        // Profiles & contacts
+        const gh = (b.profiles || []).find(p => /github/i.test(p.network||''));
+        const li = (b.profiles || []).find(p => /linkedin/i.test(p.network||''));
+        if (gh) { const a = qs('#ghLink'); a.href = gh.url || '#'; a.title = gh.username || 'GitHub'; }
+        if (li) { const a = qs('#liLink'); a.href = li.url || '#'; a.title = li.username || 'LinkedIn'; qs('#contactLinkedIn').href = li.url || '#'; qs('#contactLinkedIn').setAttribute('target', '_blank'); qs('#contactLinkedIn').setAttribute('rel','noopener noreferrer'); }
+
+        qs('#emailCode').textContent = b.email || '';
+        qs('#phoneCode').textContent = b.phone || '';
+        qs('#locCode').textContent = (b.location && b.location.city) ? b.location.city : '';
+        if (b.email) { qs('#emailBtn').addEventListener('click', () => location.href = 'mailto:' + b.email); qs('#contactEmail').href = 'mailto:' + b.email; }
+        if (b.phone) { qs('#phoneBtn').addEventListener('click', () => location.href = 'tel:' + b.phone); }
+
+        // Hero KPI examples derived from work bullets where possible
+        const w = data.work || [];
+        const clio = w.find(x => /clio/i.test(x.name||'')) || {};
+        const devs = w.find(x => /devils/i.test(x.name||'')) || {};
+        qs('#kpi1').textContent = (clio.highlights||[]).find(h=>/\$?1 ?million/i.test(h)) ? '$1M+ value unlocked' : 'AI best practices adopted';
+        qs('#kpi2').textContent = (clio.summary||'').match(/\d+\+/)?.[0] || '10+';
+        qs('#kpi3').textContent = (devs.highlights||[]).find(h=>/10 ?million/i.test(h)) ? '10M rows / game' : 'High-volume pipelines';
+
+        // Hero bullets — pick 3 compelling cross-role highlights
+        const picks = [];
+        (clio.highlights||[]).forEach(h => { if (picks.length<2 && /AI|token|Databricks|diff tool/i.test(h)) picks.push(h); });
+        (devs.highlights||[]).forEach(h => { if (picks.length<3) picks.push(h); });
+        qs('#heroBullets').innerHTML = picks.slice(0,3).map(h => `<li>${escape(h)}</li>`).join('');
+
+        // Experience
+        renderWork(w);
+
+        // Projects / Education / Skills / Accomplishments
+        renderProjects(data.projects || []);
+        renderEducation(data.education || []);
+        renderSkills(data.skills || []);
+        renderAccomplishments(data.accomplishments || []);
+
+        attachInteractions();
+        applyFilters();
+      })
+      .catch(err => {
+        console.error(err);
+        qs('#summaryText').textContent = 'Sorry — could not load resume data. Please ensure /data/resume.json is available on the same origin.';
+        qs('#heroBullets').innerHTML = '';
+      });
+
+  }());
+  </script>
 </body>
 </html>
