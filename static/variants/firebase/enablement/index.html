@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Variant - AI Enablement</title>
+    <style>
+        /* Basic reset and typography */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        /* Basic styling - replace with your own design */
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+        
+        h3 {
+            font-size: 1.2rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .section {
+            margin-bottom: 2rem;
+        }
+        
+        ul {
+            padding-left: 1.5rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric {
+            display: inline-block;
+            margin-right: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .metric-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 4rem;
+            color: #666;
+        }
+        
+        /* Error state */
+        .error {
+            text-align: center;
+            padding: 4rem;
+            color: #d00;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="loading">Loading enablement data...</div>
+
+    <script>
+        // IMPORTANT: Post height updates to parent for iframe resizing
+        function updateHeight() {
+            const height = document.documentElement.scrollHeight;
+            parent?.postMessage({ type: 'variant:height', value: height }, '*');
+        }
+
+        // Fetch enablement data from the centralized JSON endpoint
+        async function loadEnablement() {
+            try {
+                const response = await fetch('/data/enablement.json');
+                if (!response.ok) throw new Error('Failed to load enablement data');
+                
+                const data = await response.json();
+                renderEnablement(data);
+            } catch (error) {
+                document.getElementById('app').innerHTML = `
+                    <div class="error">Error loading enablement data: ${error.message}</div>
+                `;
+            }
+        }
+
+        // Render the enablement data into HTML
+        function renderEnablement(data) {
+            const app = document.getElementById('app');
+            app.className = ''; // Remove loading class
+            
+            // Build HTML from enablement data
+            let html = `
+                <header>
+                    <h1>${data.title}</h1>
+                    <p>${data.subtitle}</p>
+                </header>
+
+                <section class="section">
+                    <h2>Overview</h2>
+                    <p>${data.overview}</p>
+                    
+                    <div class="metrics">
+                        ${data.metrics.map(metric => `
+                            <div class="metric">
+                                <div class="metric-value">${metric.value}</div>
+                                <div class="metric-label">${metric.label}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Key Initiatives</h2>
+                    ${data.initiatives.map(initiative => `
+                        <div class="initiative">
+                            <h3>${initiative.title}</h3>
+                            <p>${initiative.description}</p>
+                            <ul>
+                                ${initiative.outcomes.map(outcome => `
+                                    <li>${outcome}</li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    `).join('')}
+                </section>
+
+                <section class="section">
+                    <h2>Implementation Approach</h2>
+                    ${data.approach.map(phase => `
+                        <div class="phase">
+                            <h3>${phase.phase}</h3>
+                            <p>${phase.description}</p>
+                            <ul>
+                                ${phase.activities.map(activity => `
+                                    <li>${activity}</li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    `).join('')}
+                </section>
+
+                <section class="section">
+                    <h2>Success Stories</h2>
+                    ${data.successStories.map(story => `
+                        <div class="story">
+                            <h3>${story.title}</h3>
+                            <p>${story.description}</p>
+                            <p><strong>Impact:</strong> ${story.impact}</p>
+                        </div>
+                    `).join('')}
+                </section>
+            `;
+            
+            app.innerHTML = html;
+            
+            // Update height after rendering
+            setTimeout(updateHeight, 100);
+        }
+
+        // Initialize
+        loadEnablement();
+
+        // Update height on window resize
+        window.addEventListener('resize', updateHeight);
+        
+        // Also update height when fonts load
+        document.fonts?.ready?.then(updateHeight);
+    </script>
+</body>
+</html>
