@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -48,7 +47,9 @@
         .contact-info a {
             color: white;
             text-decoration: none;
-            font-weight: 400;
+        }
+        .contact-info a:hover {
+            text-decoration: underline;
         }
         main {
             padding: 2rem;
@@ -57,77 +58,80 @@
             margin-bottom: 2rem;
         }
         .section h2 {
+            color: #FFA000; /* Firebase Amber */
             font-size: 1.5rem;
             font-weight: 500;
-            color: #0277BD;
-            border-bottom: 2px solid #B3E5FC;
-            padding-bottom: 0.5rem;
             margin-bottom: 1rem;
+            border-bottom: 2px solid #FFA000;
+            padding-bottom: 0.5rem;
         }
-        .work-item, .project-item, .education-item {
+        .work-item, .project-item {
             margin-bottom: 1.5rem;
         }
-        .work-item h3, .project-item h3, .education-item h3 {
+        .work-item h3, .project-item h3 {
+            color: #263238;
             font-size: 1.2rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }
-        .work-item .position, .education-item .area {
             font-weight: 500;
-            color: #546E7A;
+            margin: 0;
         }
-        .work-item .date, .education-item .date {
-            float: right;
+        .work-item .position {
+            color: #546E7A;
             font-style: italic;
+            margin: 0.25rem 0;
+        }
+        .work-item .date {
             color: #78909C;
+            font-size: 0.9rem;
+            margin: 0;
         }
         .highlights {
-            list-style-type: '– ';
-            padding-left: 1.2rem;
-            margin-top: 0.5rem;
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }
+        .highlights li {
+            margin-bottom: 0.25rem;
         }
         .skills-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1rem;
         }
-        .skill-card {
+        .skill-item {
             background-color: #F5F5F5;
             padding: 1rem;
             border-radius: 4px;
+            border-left: 4px solid #039BE5;
         }
-        .skill-card h4 {
-            margin: 0 0 0.5rem;
-            color: #0288D1;
+        .skill-name {
+            font-weight: 500;
+            color: #263238;
         }
-        .skill-card ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-        .skill-card li {
-            background-color: #CFD8DC;
-            padding: 0.25rem 0.5rem;
-            border-radius: 12px;
+        .skill-keywords {
+            display: block;
+            margin-top: 0.5rem;
+            color: #546E7A;
             font-size: 0.9rem;
+        }
+        a {
+            color: #039BE5;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-
-    <div id="resume" class="container">
-        <!-- Resume content will be injected here -->
+    <div class="container" id="resume">
+        <p style="text-align:center;padding:2rem;">Loading resume...</p>
     </div>
 
     <script>
-        async function fetchData() {
+        async function loadResume() {
             try {
                 const response = await fetch('/data/resume.json');
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${"\u007b"}response.status{"\u007d"}`);
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
                 renderResume(data);
@@ -141,102 +145,89 @@
             const resumeContainer = document.getElementById('resume');
             resumeContainer.innerHTML = `
                 <header>
-                    <h1>${"\u007b"}data.basics.name{"\u007d"}</h1>
-                    <p>${"\u007b"}data.basics.label{"\u007d"}</p>
+                    <h1>${data.basics?.name || 'Name'}</h1>
+                    <p>${data.basics?.label || 'Title'}</p>
                     <div class="contact-info">
-                        <a href="mailto:${"\u007b"}data.basics.email{"\u007d"}">${"\u007b"}data.basics.email{"\u007d"}</a>
-                        <span>|</span>
-                        <span>${"\u007b"}data.basics.location.city{"\u007d"}</span>
-                        ${"\u007b"}data.basics.profiles.map(p => `<span>|</span> <a href="${"\u007b"}p.url{"\u007d"}" target="_blank">${"\u007b"}p.network{"\u007d"}</a>`).join(''){"\u007d"}
+                        ${data.basics?.email ? `<a href="mailto:${data.basics.email}">${data.basics.email}</a>` : ''}
+                        ${data.basics?.email && data.basics?.location?.city ? '<span>|</span>' : ''}
+                        ${data.basics?.location?.city ? `<span>${data.basics.location.city}</span>` : ''}
+                        ${data.basics?.profiles?.map(p => `<span>|</span> <a href="${p.url}" target="_blank">${p.network}</a>`).join('') || ''}
                     </div>
                 </header>
                 <main>
+                    ${data.basics?.summary ? `
                     <div class="section">
                         <h2>Summary</h2>
-                        <p>${"\u007b"}data.basics.summary{"\u007d"}</p>
+                        <p>${data.basics.summary}</p>
                     </div>
+                    ` : ''}
 
+                    ${data.work?.length ? `
                     <div class="section">
                         <h2>Work Experience</h2>
-                        ${"\u007b"}data.work.map(job => `
+                        ${data.work.map(job => `
                             <div class="work-item">
-                                <p class="date">${"\u007b"}job.startDate{"\u007d"} - ${"\u007b"}job.endDate || 'Present'{"\u007d"}</p>
-                                <h3>${"\u007b"}job.name{"\u007d"}</h3>
-                                <p class="position">${"\u007b"}job.position{"\u007d"}</p>
-                                <p>${"\u007b"}job.summary{"\u007d"}</p>
+                                <p class="date">${job.startDate} - ${job.endDate || 'Present'}</p>
+                                <h3>${job.name}</h3>
+                                <p class="position">${job.position}</p>
+                                ${job.summary ? `<p>${job.summary}</p>` : ''}
+                                ${job.highlights?.length ? `
                                 <ul class="highlights">
-                                    ${"\u007b"}job.highlights.map(h => `<li>${"\u007b"}h{"\u007d"}</li>`).join(''){"\u007d"}
+                                    ${job.highlights.map(h => `<li>${h}</li>`).join('')}
                                 </ul>
+                                ` : ''}
                             </div>
-                        `).join(''){"\u007d"}
+                        `).join('')}
                     </div>
+                    ` : ''}
 
-                     <div class="section">
+                    ${data.projects?.length ? `
+                    <div class="section">
                         <h2>Projects</h2>
-                        ${"\u007b"}data.projects.map(proj => `
+                        ${data.projects.map(proj => `
                             <div class="project-item">
-                                <h3><a href="${"\u007b"}proj.url || '#'{"\u007d"}" target="_blank">${"\u007b"}proj.name{"\u007d"}</a></h3>
-                                <p>${"\u007b"}proj.description{"\u007d"}</p>
+                                <h3><a href="${proj.url || '#'}" target="_blank">${proj.name}</a></h3>
+                                ${proj.description ? `<p>${proj.description}</p>` : ''}
+                                ${proj.highlights?.length ? `
                                 <ul class="highlights">
-                                    ${"\u007b"}proj.highlights.map(h => `<li>${"\u007b"}h{"\u007d"}</li>`).join(''){"\u007d"}
+                                    ${proj.highlights.map(h => `<li>${h}</li>`).join('')}
                                 </ul>
+                                ` : ''}
                             </div>
-                        `).join(''){"\u007d"}
+                        `).join('')}
                     </div>
+                    ` : ''}
 
+                    ${data.skills?.length ? `
                     <div class="section">
                         <h2>Skills</h2>
                         <div class="skills-grid">
-                            ${"\u007b"}data.skills.map(skill => `
-                                <div class="skill-card">
-                                    <h4>${"\u007b"}skill.name{"\u007d"}</h4>
-                                    <ul>
-                                        ${"\u007b"}skill.keywords.map(k => `<li>${"\u007b"}k{"\u007d"}</li>`).join(''){"\u007d"}
-                                    </ul>
+                            ${data.skills.map(skill => `
+                                <div class="skill-item">
+                                    <span class="skill-name">${skill.name}</span>
+                                    ${skill.keywords?.length ? `<span class="skill-keywords">${skill.keywords.join(', ')}</span>` : ''}
                                 </div>
-                            `).join(''){"\u007d"}
+                            `).join('')}
                         </div>
                     </div>
-
-                    <div class="section">
-                        <h2>Education</h2>
-                        ${"\u007b"}data.education.map(edu => `
-                            <div class="education-item">
-                                <p class="date">${"\u007b"}edu.startDate{"\u007d"} - ${"\u007b"}edu.endDate{"\u007d"}</p>
-                                <h3>${"\u007b"}edu.institution{"\u007d"}</h3>
-                                <p class="area">${"\u007b"}edu.studyType{"\u007d"} in ${"\u007b"}edu.area{"\u007d"}</p>
-                                <p>${"\u007b"}edu.description{"\u007d"}</p>
-                            </div>
-                        `).join(''){"\u007d"}
-                    </div>
+                    ` : ''}
                 </main>
             `;
-            // After rendering, post height to parent
-            updateHeight();
-        }
 
-        function updateHeight() {
-             // Debounce height updates to avoid excessive messages
-            clearTimeout(window.heightUpdateTimeout);
-            window.heightUpdateTimeout = setTimeout(() => {
+            // Report height to parent frame
+            const reportHeight = () => {
                 const height = document.documentElement.scrollHeight;
                 parent?.postMessage({ type: 'variant:height', value: height }, '*');
-            }, 100);
+            };
+
+            // Report height on load and after rendering
+            reportHeight();
+            setTimeout(reportHeight, 100);
+            window.addEventListener('resize', reportHeight);
         }
 
-        // Initial fetch and render
-        fetchData();
-
-        // Update height on resize
-        window.addEventListener('resize', updateHeight);
-
-        // Use a MutationObserver to update height when content changes dynamically
-        const observer = new MutationObserver(updateHeight);
-        observer.observe(document.getElementById('resume'), {
-            childList: true,
-            subtree: true,
-            attributes: true
-        });
+        // Load resume when page loads
+        loadResume();
     </script>
 </body>
 </html>

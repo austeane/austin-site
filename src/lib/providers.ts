@@ -16,4 +16,5 @@ export const PROVIDERS: Provider[] = [
   { id: 'gpt-5-thinking', name: 'GPT-5 Thinking', path: '/variants/gpt-5-thinking/index.html', noindex: true, icon: '🧠', logo: '/logos/chatgpt.svg', color: '#10a37f' },
   { id: 'lovable', name: 'Lovable', path: '/variants/lovable/index.html', noindex: true, icon: '♥', logo: '/logos/lovable.png', color: '#ff006e' },
   { id: 'bolt', name: 'Bolt', path: '/variants/bolt/index.html', noindex: true, icon: '⚡', logo: '/logos/bolt.jpg', color: '#f59e0b' },
+  { id: 'firebase', name: 'Firebase Studio', path: '/variants/firebase/index.html', noindex: true, icon: '🔥', logo: '/logos/firebase.svg', color: '#039BE5' },
 ];
