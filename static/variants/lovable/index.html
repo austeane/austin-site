@@ -1,41 +1,566 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Coming Soon</title>
-  <style>
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-    }
-    .container {
-      text-align: center;
-      padding: 2rem;
-    }
-    h1 {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-    }
-    p {
-      font-size: 1.25rem;
-      opacity: 0.9;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Austin Wallace - Data Engineer</title>
+    <meta name="description" content="Data Engineer with 9+ years building Databricks/Snowflake/dbt platforms. Expert in AI enablement and data infrastructure.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        #app-resume {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #1a202c;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #fff, #f0f8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero .label {
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .hero .summary {
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto 2rem;
+            opacity: 0.9;
+            line-height: 1.7;
+        }
+
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            text-decoration: none;
+            opacity: 0.9;
+            transition: opacity 0.3s ease;
+        }
+
+        .contact-item:hover {
+            opacity: 1;
+        }
+
+        .main-content {
+            background: white;
+            margin-top: -2rem;
+            border-radius: 2rem 2rem 0 0;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 3rem;
+            padding: 3rem 0;
+        }
+
+        .sidebar {
+            padding-right: 2rem;
+        }
+
+        .main {
+            padding-left: 2rem;
+            border-left: 1px solid #e2e8f0;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+
+        .section h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 3rem;
+            height: 3px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+
+        .skills-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .skill-category {
+            background: #f7fafc;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            border-left: 4px solid #667eea;
+        }
+
+        .skill-category h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.8rem;
+        }
+
+        .skill-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .skill-tag {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 1rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .work-item, .project-item {
+            background: #f8fafc;
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid #667eea;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .work-item:hover, .project-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .work-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .work-title {
+            flex: 1;
+        }
+
+        .work-title h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 0.3rem;
+        }
+
+        .company {
+            font-size: 1.1rem;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .work-meta {
+            text-align: right;
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .work-summary {
+            color: #4a5568;
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+
+        .highlights {
+            list-style: none;
+        }
+
+        .highlights li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.8rem;
+            color: #4a5568;
+        }
+
+        .highlights li::before {
+            content: '▶';
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-size: 0.8rem;
+        }
+
+        .project-header h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .project-url {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .project-url:hover {
+            text-decoration: underline;
+        }
+
+        .project-keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .keyword-tag {
+            background: #e2e8f0;
+            color: #4a5568;
+            padding: 0.2rem 0.6rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .education-item {
+            background: #f8fafc;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border-left: 4px solid #764ba2;
+        }
+
+        .education-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.5rem;
+        }
+
+        .education-title h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .institution {
+            color: #764ba2;
+            font-weight: 600;
+        }
+
+        .accomplishments-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .accomplishment-item {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            border-left: 4px solid #38b2ac;
+        }
+
+        .accomplishment-item h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 50vh;
+            color: white;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero .label {
+                font-size: 1.2rem;
+            }
+            
+            .contact-info {
+                gap: 1rem;
+            }
+            
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .sidebar {
+                padding-right: 0;
+            }
+            
+            .main {
+                padding-left: 0;
+                border-left: none;
+                border-top: 1px solid #e2e8f0;
+                padding-top: 2rem;
+            }
+            
+            .work-header {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .work-meta {
+                text-align: left;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Coming Soon</h1>
-    <p>This variant is under development</p>
-  </div>
-  <script>
-    parent?.postMessage({ type: 'variant:height', value: document.documentElement.scrollHeight }, '*');
-  </script>
+    <div id="app-resume">
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+        </div>
+        
+        <div id="content" style="display: none;">
+            <!-- Content will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        async function loadResume() {
+            try {
+                const response = await fetch('/data/resume.json');
+                const resume = await response.json();
+                renderResume(resume);
+            } catch (error) {
+                console.error('Error loading resume:', error);
+                document.getElementById('loading').innerHTML = '<p>Error loading resume data</p>';
+            }
+        }
+
+        function renderResume(resume) {
+            const { basics, work, projects, education, skills, accomplishments } = resume;
+            
+            const content = `
+                <section class="hero">
+                    <div class="container">
+                        <div class="hero-content">
+                            <h1>${basics.name}</h1>
+                            <div class="label">${basics.label}</div>
+                            <p class="summary">${basics.summary}</p>
+                            <div class="contact-info">
+                                <div class="contact-item">
+                                    <span>📍</span>
+                                    <span>${basics.location.city}</span>
+                                </div>
+                                <a href="mailto:${basics.email}" class="contact-item">
+                                    <span>✉️</span>
+                                    <span>${basics.email}</span>
+                                </a>
+                                <div class="contact-item">
+                                    <span>📱</span>
+                                    <span>${basics.phone}</span>
+                                </div>
+                                ${basics.profiles.map(profile => `
+                                    <a href="${profile.url}" class="contact-item" target="_blank" rel="noopener">
+                                        <span>${profile.network === 'GitHub' ? '⚡' : '💼'}</span>
+                                        <span>${profile.network}</span>
+                                    </a>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="main-content">
+                    <div class="container">
+                        <div class="content-grid">
+                            <aside class="sidebar">
+                                <section class="section">
+                                    <h2>Technical Skills</h2>
+                                    <div class="skills-grid">
+                                        ${skills.map(skillCategory => `
+                                            <div class="skill-category">
+                                                <h3>${skillCategory.name}</h3>
+                                                <div class="skill-tags">
+                                                    ${skillCategory.keywords.map(skill => `
+                                                        <span class="skill-tag">${skill}</span>
+                                                    `).join('')}
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </section>
+
+                                <section class="section">
+                                    <h2>Education</h2>
+                                    ${education.map(edu => `
+                                        <div class="education-item">
+                                            <div class="education-header">
+                                                <div class="education-title">
+                                                    <h3>${edu.studyType} ${edu.area}</h3>
+                                                    <div class="institution">${edu.institution}</div>
+                                                </div>
+                                                <div class="education-meta">
+                                                    <div>${edu.startDate} - ${edu.endDate}</div>
+                                                    <div>${edu.location}</div>
+                                                </div>
+                                            </div>
+                                            <p>${edu.description}</p>
+                                        </div>
+                                    `).join('')}
+                                </section>
+
+                                <section class="section">
+                                    <h2>Key Accomplishments</h2>
+                                    <div class="accomplishments-grid">
+                                        ${accomplishments.map(acc => `
+                                            <div class="accomplishment-item">
+                                                <h3>${acc.title}</h3>
+                                                <p>${acc.summary}</p>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </section>
+                            </aside>
+
+                            <main class="main">
+                                <section class="section">
+                                    <h2>Professional Experience</h2>
+                                    ${work.map(job => `
+                                        <div class="work-item">
+                                            <div class="work-header">
+                                                <div class="work-title">
+                                                    <h3>${job.position}</h3>
+                                                    <div class="company">${job.name}</div>
+                                                </div>
+                                                <div class="work-meta">
+                                                    <div>${job.startDate} - ${job.endDate || 'Present'}</div>
+                                                    <div>${job.location}</div>
+                                                </div>
+                                            </div>
+                                            <p class="work-summary">${job.summary}</p>
+                                            <ul class="highlights">
+                                                ${job.highlights.map(highlight => `
+                                                    <li>${highlight}</li>
+                                                `).join('')}
+                                            </ul>
+                                        </div>
+                                    `).join('')}
+                                </section>
+
+                                <section class="section">
+                                    <h2>Notable Projects</h2>
+                                    ${projects.map(project => `
+                                        <div class="project-item">
+                                            <div class="project-header">
+                                                <h3>${project.name}</h3>
+                                                ${project.url ? `<a href="${project.url}" class="project-url" target="_blank" rel="noopener">Visit Project →</a>` : ''}
+                                            </div>
+                                            <p>${project.description}</p>
+                                            ${project.highlights ? `
+                                                <ul class="highlights">
+                                                    ${project.highlights.map(highlight => `<li>${highlight}</li>`).join('')}
+                                                </ul>
+                                            ` : ''}
+                                            <div class="project-keywords">
+                                                ${project.keywords.map(keyword => `
+                                                    <span class="keyword-tag">${keyword}</span>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </section>
+                            </main>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('content').innerHTML = content;
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+        }
+
+        // Load resume when page loads
+        loadResume();
+    </script>
 </body>
 </html>

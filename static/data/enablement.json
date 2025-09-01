@@ -16,7 +16,7 @@
   "hero": {
     "title": "AI Enablement that Drives Effectiveness",
     "subtitle": "Ship faster and safer, with workflows your team will actually use.",
-    "primary_cta": { "label": "Email me", "href": "mailto:you@example.com" },
+    "primary_cta": { "label": "Email me", "href": "mailto:austeane@gmail.com" },
     "secondary_cta": { "label": "See approach", "href": "#process" },
     "notes": "Resume remains minimal at /resume"
   },
@@ -333,7 +333,7 @@
     "headline": "Curious if this would work for your team?",
     "subhead": "If these ideas resonate, let's talk about your context.",
     "actions": [
-      { "label": "Email me", "href": "mailto:you@example.com" }
+      { "label": "Email me", "href": "mailto:austeane@gmail.com" }
     ]
   }
 }
