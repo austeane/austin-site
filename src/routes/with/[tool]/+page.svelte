@@ -50,7 +50,7 @@
       This route is for AI-generated variants. The minimal version is shown on the home page.
     </p>
   {:else}
-    <div class="variant-wrap">
+    <div style="position: relative; height: calc(100vh - 200px); min-height: 600px;">
       {#key p.id}
         <VariantFrame src={p.path} />
       {/key}
@@ -61,10 +61,3 @@
   {/if}
 {/if}
 
-<style>
-  .variant-wrap {
-    /* No fixed height: the iframe will dictate height via postMessage */
-    /* Provide a sensible minimum for initial paint while content loads */
-    min-height: clamp(480px, 70svh, 1200px);
-  }
-</style>

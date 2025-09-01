@@ -469,22 +469,6 @@ ${SCOPE} .footer { margin: 16px 0 32px; text-align: center; color: var(--muted);
       return `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="10"/></svg>`;
     }
   })();
-
-  // Height reporting for iframe resizing
-  function postHeight() {
-    // Measure the whole document, not just <body>
-    var h = Math.max(
-      document.documentElement.scrollHeight,
-      document.body.scrollHeight
-    );
-    parent?.postMessage({ type: 'variant:height', value: h }, '*');
-  }
-  // Initial and follow‑ups (handle reflow and font load)
-  window.addEventListener('load', postHeight);
-  window.addEventListener('resize', postHeight);
-  document.fonts?.ready?.then(postHeight);
-  setTimeout(postHeight, 0);
-  setTimeout(postHeight, 250); // catch late reflows/accordions
   </script>
 </body>
 </html>
