@@ -11,6 +11,9 @@
   $: providers = data.providers;
   $: idx = providers.findIndex((x) => x.id === p?.id);
 
+  // Standard max width for all variants
+  const frameMax = 2000;
+
   function navigate(id: string) {
     goto(id === 'minimal' ? '/' : `/with/${id}`);
   }
@@ -50,9 +53,10 @@
       This route is for AI-generated variants. The minimal version is shown on the home page.
     </p>
   {:else}
+    <!-- Fixed-height wrapper: iframe scrollbars are OK -->
     <div style="position: relative; height: calc(100vh - 200px); min-height: 600px;">
       {#key p.id}
-        <VariantFrame src={p.path} />
+        <VariantFrame src={p.path} maxWidth={frameMax} autosize={false} />
       {/key}
     </div>
     <p style="text-align: center; margin-top: 1rem; color: var(--muted); font-size: 0.85rem;">

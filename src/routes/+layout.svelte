@@ -147,7 +147,7 @@
   
   .content-area {
     flex: 1;
-    max-width: 900px;
+    max-width: 2000px;
     width: 100%;
     margin: 0 auto;
     padding: 1.25rem;
@@ -176,6 +176,11 @@
     font-weight: 600;
     color: var(--text);
     text-decoration: underline;
+  }
+
+  /* Remove padding for pages with VariantFrame */
+  .content-area:has(.frame-wrap) {
+    padding: 0;
   }
   
   @media (max-width: 768px) {
@@ -245,7 +250,7 @@
     </div>
 
     <footer>
-      <p>See this resume styled by different AI tools. Variants are demos; canonical content is the minimal version.</p>
+      <p>Base text written by Austin, enhanced by various AI tooling providers, and deployed with SST. </p>
     </footer>
   </div>
 </div>

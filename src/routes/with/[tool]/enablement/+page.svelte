@@ -7,6 +7,8 @@
   $: provider = data.provider;
   $: tool = data.tool;
   $: variantPath = `/variants/${tool}/enablement/index.html`;
+
+  const frameMax = 2000;
 </script>
 
 <svelte:head>
@@ -16,5 +18,8 @@
 </svelte:head>
 
 {#key tool}
-  <VariantFrame src={variantPath} />
+  <!-- Fixed-height wrapper: keeps the variant's viewport stable; scrollbars inside iframe -->
+  <div style="position: relative; height: calc(100vh - 200px); min-height: 600px;">
+    <VariantFrame src={variantPath} maxWidth={frameMax} autosize={false}/>
+  </div>
 {/key}
