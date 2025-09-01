@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Enablement that Drives Effectiveness</title>
+    <meta name="description" content="Ship faster and safer, with workflows your team will actually use.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --accent-primary: #3b82f6;
+            --accent-secondary: #1d4ed8;
+            --accent-glow: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --border: #374151;
+            --gradient-primary: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            --gradient-glow: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            --shadow-glow: 0 0 50px rgba(59, 130, 246, 0.3);
+            --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        #app-tool {
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Background Effects */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            z-index: -1;
+            animation: pulse 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-primary);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 90vh;
+            max-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            animation: fadeInUp 1s ease;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 8vw, 6rem);
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            background: var(--gradient-glow);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: var(--shadow-glow);
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-ctas {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 60px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--accent-primary);
+            border: 2px solid var(--accent-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--accent-primary);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Sections */
+        .section {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            margin-bottom: 3rem;
+            text-align: center;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Value Props */
+        .value-props {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .value-prop {
+            background: var(--bg-secondary);
+            padding: 2rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .value-prop::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+            transform-origin: left;
+        }
+
+        .value-prop:hover::before {
+            transform: scaleX(1);
+        }
+
+        .value-prop:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-card);
+            border-color: var(--accent-primary);
+        }
+
+        .value-prop h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .value-prop ul {
+            list-style: none;
+        }
+
+        .value-prop li {
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .value-prop li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--accent-primary);
+            font-weight: bold;
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            padding: 2rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-card);
+            border-color: var(--accent-primary);
+        }
+
+        .card h3 {
+            color: var(--accent-primary);
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+
+        .card-deliverables {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .card-deliverables strong {
+            color: var(--text-primary);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-deliverables ul {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            list-style: none;
+        }
+
+        .card-deliverables li {
+            background: var(--bg-tertiary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        /* Accordion */
+        .accordion {
+            background: var(--bg-secondary);
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .accordion-item {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .accordion-item:last-child {
+            border-bottom: none;
+        }
+
+        .accordion-header {
+            background: transparent;
+            border: none;
+            width: 100%;
+            padding: 1.5rem;
+            text-align: left;
+            color: var(--text-primary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.1rem;
+        }
+
+        .accordion-header:hover {
+            background: var(--bg-tertiary);
+            color: var(--accent-primary);
+        }
+
+        .accordion-content {
+            padding: 0 1.5rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .accordion-content.active {
+            max-height: 1000px;
+            padding: 0 1.5rem 1.5rem;
+        }
+
+        .accordion-content ul {
+            list-style: none;
+        }
+
+        .accordion-content li {
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .accordion-content li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: var(--accent-primary);
+            font-weight: bold;
+        }
+
+        /* Process */
+        .process-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .process-step {
+            text-align: center;
+            position: relative;
+        }
+
+        .process-step::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -1rem;
+            width: 2rem;
+            height: 2px;
+            background: var(--accent-primary);
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .process-step:not(:last-child)::after {
+                display: block;
+            }
+        }
+
+        .step-number {
+            width: 3rem;
+            height: 3rem;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-weight: bold;
+            font-size: 1.25rem;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .step-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Bullets */
+        .bullets {
+            background: var(--bg-secondary);
+            padding: 2rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .bullets ul {
+            list-style: none;
+        }
+
+        .bullets li {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+            position: relative;
+            line-height: 1.7;
+        }
+
+        .bullets li::before {
+            content: '▶';
+            position: absolute;
+            left: 0;
+            color: var(--accent-primary);
+        }
+
+        .bullets li strong {
+            color: var(--text-primary);
+        }
+
+        /* Resources */
+        .resources {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .resource {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .resource:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-primary);
+        }
+
+        .resource-kind {
+            display: inline-block;
+            background: var(--accent-primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+        }
+
+        .resource h4 {
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .resource a {
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .resource a:hover {
+            text-decoration: underline;
+        }
+
+        .resource-notes {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        /* CTA */
+        .cta {
+            background: var(--bg-secondary);
+            padding: 4rem 2rem;
+            border-radius: 2rem;
+            text-align: center;
+            border: 1px solid var(--border);
+            margin-top: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gradient-primary);
+            opacity: 0.1;
+            z-index: 0;
+        }
+
+        .cta-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .cta p {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero-ctas {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .value-props {
+                grid-template-columns: 1fr;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .process-steps {
+                grid-template-columns: 1fr;
+            }
+
+            .process-step::after {
+                display: none;
+            }
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-tool">
+        <div class="bg-gradient"></div>
+        
+        <nav class="nav">
+            <div class="nav-container">
+                <div class="nav-logo">AI Enablement</div>
+                <ul class="nav-links">
+                    <li><a href="#process">Process</a></li>
+                    <li><a href="#what-i-do">Services</a></li>
+                    <li><a href="#resources">Resources</a></li>
+                    <li><a href="mailto:austeane@gmail.com" class="btn btn-primary">Email Me</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            Loading content...
+        </div>
+
+        <main id="content" style="display: none;"></main>
+
+        <script>
+            // Fetch and render data
+            async function loadContent() {
+                try {
+                    const response = await fetch('/data/enablement.json');
+                    const data = await response.json();
+                    renderContent(data);
+                    
+                    // Hide loading, show content
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('content').style.display = 'block';
+                    
+                    // Initialize interactions
+                    initializeAccordions();
+                    initializeScrollAnimations();
+                    
+                } catch (error) {
+                    console.error('Error loading content:', error);
+                    document.getElementById('loading').innerHTML = 
+                        '<div class="spinner"></div>Error loading content. Please check the data source.';
+                }
+            }
+
+            function renderContent(data) {
+                const content = document.getElementById('content');
+                
+                // Hero Section
+                content.innerHTML = `
+                    <section class="hero">
+                        <div class="hero-content animate-on-scroll">
+                            <h1>${data.hero.title}</h1>
+                            <p>${data.hero.subtitle}</p>
+                            <div class="hero-ctas">
+                                <a href="${data.hero.primary_cta.href}" class="btn btn-primary">
+                                    ${data.hero.primary_cta.label}
+                                </a>
+                                <a href="${data.hero.secondary_cta.href}" class="btn btn-secondary">
+                                    ${data.hero.secondary_cta.label}
+                                </a>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="section animate-on-scroll">
+                        <h2 class="section-title">Why Choose This Approach</h2>
+                        <div class="value-props">
+                            ${data.value_props.map(prop => `
+                                <div class="value-prop">
+                                    <h3>${prop.title}</h3>
+                                    <ul>
+                                        ${prop.bullets.map(bullet => `<li>${bullet}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </section>
+
+                    ${data.sections.map(section => renderSection(section)).join('')}
+
+                    <section class="section animate-on-scroll">
+                        <h2 class="section-title">Resources & References</h2>
+                        <div class="resources">
+                            ${data.resources.map(resource => `
+                                <div class="resource">
+                                    <div class="resource-kind">${resource.kind}</div>
+                                    <h4><a href="${resource.url}" target="_blank">${resource.title}</a></h4>
+                                    <div class="resource-notes">${resource.notes}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </section>
+
+                    <section class="section animate-on-scroll">
+                        <div class="cta">
+                            <div class="cta-content">
+                                <h2>${data.cta.headline}</h2>
+                                <p>${data.cta.subhead}</p>
+                                <div class="hero-ctas">
+                                    ${data.cta.actions.map(action => `
+                                        <a href="${action.href}" class="btn btn-primary">
+                                            ${action.label}
+                                        </a>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                `;
+            }
+
+            function renderSection(section) {
+                switch(section.type) {
+                    case 'cards':
+                        return `
+                            <section class="section animate-on-scroll" id="${section.id}">
+                                <h2 class="section-title">${section.title}</h2>
+                                <div class="cards-grid">
+                                    ${section.cards.map(card => `
+                                        <div class="card">
+                                            <h3>${card.title}</h3>
+                                            <p>${card.body}</p>
+                                            ${card.deliverables ? `
+                                                <div class="card-deliverables">
+                                                    <strong>Deliverables:</strong>
+                                                    <ul>
+                                                        ${card.deliverables.map(item => `<li>${item}</li>`).join('')}
+                                                    </ul>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </section>
+                        `;
+                    
+                    case 'text':
+                        return `
+                            <section class="section animate-on-scroll" id="${section.id}">
+                                <h2 class="section-title">${section.title}</h2>
+                                <div class="bullets">
+                                    ${Array.isArray(section.body) 
+                                        ? section.body.map(p => `<p style="margin-bottom: 1rem; color: var(--text-secondary);">${p}</p>`).join('')
+                                        : `<p style="color: var(--text-secondary);">${section.body}</p>`
+                                    }
+                                </div>
+                            </section>
+                        `;
+                    
+                    case 'bullets':
+                        return `
+                            <section class="section animate-on-scroll" id="${section.id}">
+                                <h2 class="section-title">${section.title}</h2>
+                                <div class="bullets">
+                                    <ul>
+                                        ${section.bullets.map(bullet => `<li>${bullet}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            </section>
+                        `;
+                    
+                    case 'accordion':
+                        return `
+                            <section class="section animate-on-scroll" id="${section.id}">
+                                <h2 class="section-title">${section.title}</h2>
+                                ${section.intro ? `<p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem;">${section.intro}</p>` : ''}
+                                <div class="accordion">
+                                    ${section.items.map((item, index) => `
+                                        <div class="accordion-item">
+                                            <button class="accordion-header" onclick="toggleAccordion(${index})">
+                                                ${item.label}
+                                                <span id="icon-${index}">+</span>
+                                            </button>
+                                            <div class="accordion-content" id="content-${index}">
+                                                <ul>
+                                                    ${item.content.map(c => `<li>${c}</li>`).join('')}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </section>
+                        `;
+                    
+                    case 'process':
+                        return `
+                            <section class="section animate-on-scroll" id="${section.id}">
+                                <h2 class="section-title">${section.title}</h2>
+                                <div class="process-steps">
+                                    ${section.steps.map((step, index) => `
+                                        <div class="process-step">
+                                            <div class="step-number">${index + 1}</div>
+                                            <div class="step-title">${step.split(':')[0]}</div>
+                                            <div class="step-description">${step.split(':')[1] || ''}</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </section>
+                        `;
+                    
+                    default:
+                        return '';
+                }
+            }
+
+            function toggleAccordion(index) {
+                const content = document.getElementById(`content-${index}`);
+                const icon = document.getElementById(`icon-${index}`);
+                
+                content.classList.toggle('active');
+                icon.textContent = content.classList.contains('active') ? '−' : '+';
+            }
+
+            function initializeAccordions() {
+                // Accordion functionality is handled by toggleAccordion function
+            }
+
+            function initializeScrollAnimations() {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                        }
+                    });
+                }, { threshold: 0.1 });
+
+                document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                    observer.observe(el);
+                });
+            }
+
+            // Load content when page loads
+            document.addEventListener('DOMContentLoaded', loadContent);
+        </script>
+    </div>
+</body>
+</html>

@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Austin Wallace - Resume (Bolt Variant)</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --bolt-primary: #f59e0b;
+      --bolt-secondary: #fbbf24;
+      --bolt-accent: #fef3c7;
+      --bolt-dark: #92400e;
+      --text-primary: #111827;
+      --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f9fafb;
+      --bg-tertiary: #f3f4f6;
+      --border: #e5e7eb;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+      --radius: 12px;
+      --radius-lg: 16px;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      color: var(--text-primary);
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    
+    #app-bolt {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 2rem;
+      animation: slideInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes fadeInScale {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    @keyframes shimmer {
+      0% {
+        background-position: -200px 0;
+      }
+      100% {
+        background-position: calc(200px + 100%) 0;
+      }
+    }
+    
+    .hero-section {
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
+      padding: 3rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-xl);
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+    }
+    
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--bolt-primary), var(--bolt-secondary), var(--bolt-primary));
+      background-size: 200px 100%;
+      animation: shimmer 2s infinite linear;
+    }
+    
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, var(--bolt-primary), var(--bolt-secondary));
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-md);
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.05);
+        opacity: 0.9;
+      }
+    }
+    
+    .hero-name {
+      font-size: 3.5rem;
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 0.75rem;
+      background: linear-gradient(135deg, var(--bolt-primary) 0%, var(--bolt-secondary) 50%, var(--bolt-dark) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      position: relative;
+    }
+    
+    .hero-title {
+      font-size: 1.5rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+      font-weight: 500;
+    }
+    
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      list-style: none;
+    }
+    
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: var(--bg-secondary);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    .contact-item:hover {
+      background: var(--bg-primary);
+      border-color: var(--bolt-primary);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .contact-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bolt-accent);
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    
+    .contact-item a {
+      color: var(--text-primary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    
+    .contact-item:hover a {
+      color: var(--bolt-primary);
+    }
+    
+    .section {
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    
+    .section:nth-child(2) { animation-delay: 0.1s; }
+    .section:nth-child(3) { animation-delay: 0.2s; }
+    .section:nth-child(4) { animation-delay: 0.3s; }
+    .section:nth-child(5) { animation-delay: 0.4s; }
+    
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--bg-tertiary);
+    }
+    
+    .section-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--bolt-primary), var(--bolt-secondary));
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .section-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .summary-text {
+      font-size: 1.125rem;
+      color: var(--text-secondary);
+      line-height: 1.8;
+      max-width: 75ch;
+    }
+    
+    .experience-timeline {
+      position: relative;
+      padding-left: 2rem;
+    }
+    
+    .experience-timeline::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, var(--bolt-primary), var(--bolt-secondary));
+    }
+    
+    .experience-item {
+      position: relative;
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background: var(--bg-secondary);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    .experience-item:hover {
+      background: var(--bg-primary);
+      transform: translateX(8px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--bolt-primary);
+    }
+    
+    .experience-item::before {
+      content: '';
+      position: absolute;
+      left: -2.25rem;
+      top: 1.5rem;
+      width: 12px;
+      height: 12px;
+      background: var(--bolt-primary);
+      border-radius: 50%;
+      border: 3px solid var(--bg-primary);
+      box-shadow: 0 0 0 2px var(--bolt-primary);
+    }
+    
+    .experience-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .experience-role {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .experience-company {
+      color: var(--bolt-primary);
+      font-weight: 600;
+    }
+    
+    .experience-date {
+      background: var(--bolt-accent);
+      color: var(--bolt-dark);
+      padding: 0.375rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border: 1px solid var(--bolt-secondary);
+    }
+    
+    .experience-summary {
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+      font-style: italic;
+    }
+    
+    .highlights {
+      list-style: none;
+    }
+    
+    .highlights li {
+      position: relative;
+      padding: 0.5rem 0 0.5rem 2rem;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+    
+    .highlights li:hover {
+      color: var(--text-primary);
+      transform: translateX(4px);
+    }
+    
+    .highlights li::before {
+      content: '⚡';
+      position: absolute;
+      left: 0;
+      top: 0.5rem;
+      color: var(--bolt-primary);
+      font-size: 1.125rem;
+    }
+    
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .project-card {
+      background: var(--bg-secondary);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .project-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--bolt-primary), var(--bolt-secondary));
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+    
+    .project-card:hover {
+      background: var(--bg-primary);
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: var(--shadow-xl);
+      border-color: var(--bolt-primary);
+    }
+    
+    .project-card:hover::before {
+      transform: scaleX(1);
+    }
+    
+    .project-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .project-icon {
+      font-size: 1.125rem;
+    }
+    
+    .project-link {
+      color: var(--bolt-primary);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      margin-bottom: 0.75rem;
+      transition: all 0.2s;
+    }
+    
+    .project-link:hover {
+      color: var(--bolt-dark);
+      transform: translateX(2px);
+    }
+    
+    .project-description {
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+      line-height: 1.7;
+    }
+    
+    .project-keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    
+    .keyword-tag {
+      background: var(--bolt-accent);
+      color: var(--bolt-dark);
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px solid var(--bolt-secondary);
+      transition: all 0.2s;
+    }
+    
+    .keyword-tag:hover {
+      background: var(--bolt-secondary);
+      transform: scale(1.05);
+    }
+    
+    .skills-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .skill-category {
+      background: var(--bg-secondary);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+    
+    .skill-category:hover {
+      background: var(--bg-primary);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--bolt-primary);
+    }
+    
+    .skill-name {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--bolt-primary);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .skill-keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    
+    .skill-keyword {
+      background: var(--bg-primary);
+      color: var(--text-secondary);
+      padding: 0.375rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.875rem;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+    
+    .skill-keyword:hover {
+      background: var(--bolt-accent);
+      color: var(--bolt-dark);
+      border-color: var(--bolt-secondary);
+      transform: scale(1.05);
+    }
+    
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem;
+      color: var(--text-secondary);
+    }
+    
+    .loading-spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--bolt-primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .error-state {
+      text-align: center;
+      padding: 3rem;
+      color: #ef4444;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: var(--radius);
+    }
+    
+    .bolt-signature {
+      text-align: center;
+      margin-top: 3rem;
+      padding: 1rem;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      border-top: 1px solid var(--border);
+    }
+    
+    .bolt-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--bolt-primary);
+      font-weight: 600;
+    }
+    
+    @media (max-width: 768px) {
+      #app-bolt {
+        padding: 1rem;
+      }
+      
+      .hero-section {
+        padding: 2rem;
+      }
+      
+      .hero-name {
+        font-size: 2.5rem;
+      }
+      
+      .hero-title {
+        font-size: 1.25rem;
+      }
+      
+      .contact-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .section {
+        padding: 1.5rem;
+      }
+      
+      .experience-timeline {
+        padding-left: 1.5rem;
+      }
+      
+      .projects-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .skills-container {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .hero-name {
+        font-size: 2rem;
+      }
+      
+      .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app-bolt">
+    <div class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>Loading resume with Bolt magic...</p>
+    </div>
+  </div>
+  
+  <script>
+    // Height tracking with debouncing
+    let lastHeight = 0;
+    let resizeTimeout;
+    let isUpdating = false;
+    
+    function updateHeight() {
+      if (isUpdating) return;
+      isUpdating = true;
+      
+      requestAnimationFrame(() => {
+        const body = document.body;
+        const html = document.documentElement;
+        const height = Math.max(
+          body.scrollHeight,
+          body.offsetHeight,
+          html.clientHeight,
+          html.offsetHeight
+        );
+        
+        if (Math.abs(height - lastHeight) > 10) {
+          lastHeight = height;
+          parent?.postMessage({ type: 'variant:height', value: height }, '*');
+        }
+        isUpdating = false;
+      });
+    }
+    
+    async function loadResume() {
+      const container = document.getElementById('app-bolt');
+      
+      try {
+        const response = await fetch('/data/resume.json');
+        if (!response.ok) throw new Error('Failed to fetch resume data');
+        
+        const resume = await response.json();
+        
+        let html = `
+          <div class="hero-section">
+            <div class="hero-badge">
+              <span>⚡</span>
+              <span>Built with Bolt</span>
+            </div>
+            <h1 class="hero-name">${resume.basics?.name || 'Your Name'}</h1>
+            <p class="hero-title">${resume.basics?.label || 'Professional Title'}</p>
+            <ul class="contact-grid">
+        `;
+        
+        // Contact information
+        if (resume.basics?.email) {
+          html += `
+            <li class="contact-item">
+              <div class="contact-icon">📧</div>
+              <a href="mailto:${resume.basics.email}">${resume.basics.email}</a>
+            </li>
+          `;
+        }
+        
+        if (resume.basics?.location?.city) {
+          html += `
+            <li class="contact-item">
+              <div class="contact-icon">📍</div>
+              <span>${resume.basics.location.city}</span>
+            </li>
+          `;
+        }
+        
+        const github = resume.basics?.profiles?.find(p => p.network?.toLowerCase() === 'github');
+        if (github) {
+          html += `
+            <li class="contact-item">
+              <div class="contact-icon">💻</div>
+              <a href="${github.url}" target="_blank" rel="noopener">GitHub</a>
+            </li>
+          `;
+        }
+        
+        const linkedin = resume.basics?.profiles?.find(p => p.network?.toLowerCase() === 'linkedin');
+        if (linkedin) {
+          html += `
+            <li class="contact-item">
+              <div class="contact-icon">💼</div>
+              <a href="${linkedin.url}" target="_blank" rel="noopener">LinkedIn</a>
+            </li>
+          `;
+        }
+        
+        html += `
+            </ul>
+          </div>
+        `;
+        
+        // Summary section
+        if (resume.basics?.summary) {
+          html += `
+            <section class="section">
+              <div class="section-header">
+                <div class="section-icon">📋</div>
+                <h2 class="section-title">Summary</h2>
+              </div>
+              <p class="summary-text">${resume.basics.summary}</p>
+            </section>
+          `;
+        }
+        
+        // Experience section
+        if (resume.work?.length) {
+          html += `
+            <section class="section">
+              <div class="section-header">
+                <div class="section-icon">💼</div>
+                <h2 class="section-title">Experience</h2>
+              </div>
+              <div class="experience-timeline">
+          `;
+          
+          resume.work.forEach(job => {
+            html += `
+              <div class="experience-item">
+                <div class="experience-header">
+                  <div>
+                    <div class="experience-role">${job.position}</div>
+                    <div class="experience-company">@ ${job.name}</div>
+                  </div>
+                  <div class="experience-date">
+                    ${job.startDate}${job.endDate ? ` – ${job.endDate}` : ' – Present'}
+                  </div>
+                </div>
+            `;
+            
+            if (job.summary) {
+              html += `<p class="experience-summary">${job.summary}</p>`;
+            }
+            
+            if (job.highlights?.length) {
+              html += '<ul class="highlights">';
+              job.highlights.forEach(highlight => {
+                html += `<li>${highlight}</li>`;
+              });
+              html += '</ul>';
+            }
+            
+            html += '</div>';
+          });
+          
+          html += `
+              </div>
+            </section>
+          `;
+        }
+        
+        // Projects section
+        if (resume.projects?.length) {
+          html += `
+            <section class="section">
+              <div class="section-header">
+                <div class="section-icon">🚀</div>
+                <h2 class="section-title">Projects</h2>
+              </div>
+              <div class="projects-grid">
+          `;
+          
+          resume.projects.forEach(project => {
+            html += `
+              <div class="project-card">
+                <div class="project-name">
+                  <span class="project-icon">🔧</span>
+                  ${project.name}
+                </div>
+            `;
+            
+            if (project.url) {
+              html += `
+                <a href="${project.url}" class="project-link" target="_blank" rel="noopener">
+                  ${project.url} →
+                </a>
+              `;
+            }
+            
+            if (project.description) {
+              html += `<p class="project-description">${project.description}</p>`;
+            }
+            
+            if (project.keywords?.length) {
+              html += '<div class="project-keywords">';
+              project.keywords.forEach(keyword => {
+                html += `<span class="keyword-tag">${keyword}</span>`;
+              });
+              html += '</div>';
+            }
+            
+            html += '</div>';
+          });
+          
+          html += `
+              </div>
+            </section>
+          `;
+        }
+        
+        // Skills section
+        if (resume.skills?.length) {
+          html += `
+            <section class="section">
+              <div class="section-header">
+                <div class="section-icon">⚡</div>
+                <h2 class="section-title">Skills</h2>
+              </div>
+              <div class="skills-container">
+          `;
+          
+          resume.skills.forEach(skill => {
+            html += `
+              <div class="skill-category">
+                <div class="skill-name">
+                  <span>🔥</span>
+                  ${skill.name}
+                </div>
+                <div class="skill-keywords">
+            `;
+            
+            if (skill.keywords?.length) {
+              skill.keywords.forEach(keyword => {
+                html += `<span class="skill-keyword">${keyword}</span>`;
+              });
+            }
+            
+            html += `
+                </div>
+              </div>
+            `;
+          });
+          
+          html += `
+              </div>
+            </section>
+          `;
+        }
+        
+        html += `
+          <div class="bolt-signature">
+            <div class="bolt-logo">
+              <span>⚡</span>
+              <span>Crafted with Bolt</span>
+            </div>
+            <p>This variant showcases modern web development with smooth animations and responsive design</p>
+          </div>
+        `;
+        
+        container.innerHTML = html;
+        
+        // Update height after content loads and animations settle
+        setTimeout(() => {
+          updateHeight();
+        }, 100);
+        
+        // Add intersection observer for staggered animations
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.style.animationPlayState = 'running';
+            }
+          });
+        }, { threshold: 0.1 });
+        
+        document.querySelectorAll('.section').forEach(section => {
+          observer.observe(section);
+        });
+        
+      } catch (error) {
+        console.error('Error loading resume:', error);
+        container.innerHTML = `
+          <div class="error-state">
+            <h2>⚠️ Error Loading Resume</h2>
+            <p>Unable to fetch resume data. Please try again later.</p>
+            <p style="font-size: 0.875rem; margin-top: 1rem;">Error: ${error.message}</p>
+          </div>
+        `;
+      }
+    }
+    
+    // Initialize
+    loadResume();
+    
+    // Handle window resize
+    let windowWidth = window.innerWidth;
+    window.addEventListener('resize', () => {
+      if (window.innerWidth !== windowWidth) {
+        windowWidth = window.innerWidth;
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          updateHeight();
+        }, 150);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,5620 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.claude/
+  settings.local.json
+scripts/
+  validate-variant.mjs
+src/
+  lib/
+    components/
+      VariantFrame.svelte
+    providers.ts
+  routes/
+    enablement/
+      +page.svelte
+      +page.ts
+    robots.txt/
+      +server.ts
+    with/
+      [tool]/
+        enablement/
+          +page.svelte
+          +page.ts
+        +page.svelte
+        +page.ts
+    +layout.svelte
+    +page.svelte
+    +page.ts
+  app.html
+  hooks.server.ts
+static/
+  data/
+    enablement.json
+    resume.json
+  logos/
+    bolt-old.svg
+    chatgpt.svg
+    lovable-old.svg
+    lovable.svg
+    v0-old.svg
+    v0.svg
+  variants/
+    bolt/
+      index.html
+    chatgpt/
+      index.html
+    claude-code/
+      enablement/
+        index.html
+      index.html
+    cursor/
+      index.html
+    lovable/
+      index.html
+    v0/
+      index.html
+.gitignore
+CLAUDE.md
+DOMAIN_SETUP.md
+package.json
+README.md
+site-conversation.md
+site.json
+sst-env.d.ts
+sst.config.ts
+svelte.config.js
+tsconfig.json
+vite.config.ts
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path=".claude/settings.local.json">
+{
+  "permissions": {
+    "allow": [
+      "Bash(source:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
+</file>
+
+<file path="scripts/validate-variant.mjs">
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { HtmlValidate } from 'html-validate';
+import * as cheerio from 'cheerio';
+
+const ROOT = path.resolve(process.cwd());
+const VARIANTS_DIR = path.join(ROOT, 'static', 'variants');
+
+const validator = new HtmlValidate({
+  extends: ['html-validate:recommended'],
+  rules: {
+    'no-dup-class': 'error',
+    'no-trailing-whitespace': 'warn',
+    // Allow inline styles; variants are self-contained
+    'no-inline-style': 'off'
+  }
+});
+
+async function validateVariant(dir, page = 'resume') {
+  // Check for both single-file and bundle variants
+  const variantPath = page === 'resume' 
+    ? path.join(VARIANTS_DIR, dir)
+    : path.join(VARIANTS_DIR, dir, page);
+  
+  const entry = path.join(variantPath, 'index.html');
+  
+  // Check if variant exists
+  try {
+    await fs.access(entry);
+  } catch {
+    console.log(`ℹ ${dir}/${page}: Not implemented yet`);
+    return;
+  }
+  
+  const html = await fs.readFile(entry, 'utf8');
+  
+  // Check if it's a bundle (has separate JS/CSS files)
+  const isBundle = await checkForBundle(variantPath);
+
+  // 1) HTML semantics
+  const result = await validator.validateString(html);
+  if (!result.valid) {
+    console.error(`✖ ${dir}: HTML validation failed`);
+    if (result.results && result.results.length > 0) {
+      result.results.forEach((r) => {
+        if (r.messages && r.messages.length > 0) {
+          r.messages.forEach((m) =>
+            console.error(`  ${m.ruleId} [${m.severity}] ${m.message} @ line ${m.line}:${m.column}`)
+          );
+        }
+      });
+    }
+    throw new Error('HTML validation failed');
+  }
+
+  // 2) Minimal policy checks - check for either resume.json or enablement.json
+  const hasFetchResume = /fetch\(['"`]\/data\/resume\.json['"`]\)/.test(html);
+  const hasFetchEnablement = /fetch\(['"`]\/data\/enablement\.json['"`]\)/.test(html);
+  
+  if (page === 'resume' && !hasFetchResume) {
+    console.warn(`! ${dir}/${page}: Did not find fetch('/data/resume.json') — ensure variant reads the shared resume data`);
+  } else if (page === 'enablement' && !hasFetchEnablement) {
+    console.warn(`! ${dir}/${page}: Did not find fetch('/data/enablement.json') — ensure variant reads the shared enablement data`);
+  }
+
+  const hasPostMessage = /postMessage\s*\(\s*\{\s*type\s*:\s*['"`]variant:height['"`]/.test(html);
+  if (!hasPostMessage && !isBundle) {
+    console.warn(`! ${dir}/${page}: No postMessage({ type: 'variant:height', ... }) — iframe may not auto-size`);
+  }
+
+  // 3) Basic link checks for local assets
+  const $ = cheerio.load(html);
+  const assetPaths = [];
+  $('link[href], script[src], img[src]').each((_, el) => {
+    const attr = el.name === 'link' ? 'href' : 'src';
+    const url = $(el).attr(attr);
+    if (!url) return;
+    if (url.startsWith('http')) return; // allow external (discouraged but not blocked)
+    const abs = path.join(variantPath, url.replace(/^\//, '')); // relative to variant path
+    assetPaths.push(abs);
+  });
+  for (const p of assetPaths) {
+    try {
+      await fs.access(p);
+    } catch {
+      console.warn(`! ${dir}/${page}: Missing local asset referenced by HTML -> ${p}`);
+    }
+  }
+
+  if (isBundle) {
+    console.log(`✔ ${dir}/${page}: OK (bundle variant)`);
+  } else {
+    console.log(`✔ ${dir}/${page}: OK (single-file variant)`);
+  }
+}
+
+async function checkForBundle(variantPath) {
+  try {
+    const files = await fs.readdir(variantPath);
+    const hasJS = files.some(f => f.endsWith('.js'));
+    const hasCSS = files.some(f => f.endsWith('.css'));
+    return hasJS || hasCSS;
+  } catch {
+    return false;
+  }
+}
+
+async function main() {
+  const entries = await fs.readdir(VARIANTS_DIR, { withFileTypes: true }).catch(() => []);
+  const dirs = entries.filter((d) => d.isDirectory()).map((d) => d.name);
+  if (!dirs.length) {
+    console.log('No variants found in static/variants. Add at least one folder.');
+    return;
+  }
+  
+  console.log('\n📋 Validating resume variants...');
+  for (const d of dirs) await validateVariant(d, 'resume');
+  
+  console.log('\n📘 Validating enablement variants...');
+  for (const d of dirs) await validateVariant(d, 'enablement');
+  
+  console.log('\n✅ Validation complete!');
+}
+
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
+</file>
+
+<file path="src/routes/enablement/+page.ts">
+export async function load({ fetch }) {
+  const response = await fetch('/data/enablement.json');
+  const enablement = await response.json();
+  
+  return {
+    enablement
+  };
+}
+</file>
+
+<file path="src/routes/robots.txt/+server.ts">
+import type { RequestHandler } from '@sveltejs/kit';
+
+export const GET: RequestHandler = () => {
+  const body = [
+    'User-agent: *',
+    'Allow: /',
+    'Disallow: /with/',
+    'Sitemap: /sitemap.xml' // optional; remove if not generating one
+  ].join('\n');
+
+  return new Response(body, {
+    headers: {
+      'content-type': 'text/plain; charset=utf-8',
+      'cache-control': 'public, max-age=3600'
+    }
+  });
+};
+</file>
+
+<file path="src/routes/with/[tool]/enablement/+page.ts">
+import { error } from '@sveltejs/kit';
+import { PROVIDERS } from '$lib/providers';
+
+export async function load({ params }) {
+  const provider = PROVIDERS.find(p => p.id === params.tool);
+  
+  if (!provider) {
+    throw error(404, `Provider "${params.tool}" not found`);
+  }
+  
+  return {
+    provider,
+    tool: params.tool
+  };
+}
+</file>
+
+<file path="src/routes/with/[tool]/+page.svelte">
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import { PROVIDERS } from '$lib/providers';
+  import VariantFrame from '$lib/components/VariantFrame.svelte';
+
+  export let data: { provider: any; providers: typeof PROVIDERS };
+
+  const p = data.provider;
+  const providers = data.providers;
+  const idx = providers.findIndex((x) => x.id === p?.id);
+
+  function goto(id: string) {
+    window.location.href = id === 'minimal' ? '/' : `/with/${id}`;
+  }
+
+  // Keyboard: [ ] to cycle through variants
+  function onKey(e: KeyboardEvent) {
+    if (!p) return;
+    if (e.key === ']') {
+      const next = providers[(idx + 1) % providers.length];
+      goto(next.id);
+    } else if (e.key === '[') {
+      const prev = providers[(idx - 1 + providers.length) % providers.length];
+      goto(prev.id);
+    }
+  }
+
+  onMount(() => {
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+</script>
+
+<svelte:head>
+  {#if p?.noindex}<meta name="robots" content="noindex, nofollow" />{/if}
+  {#if p?.path}<link rel="prefetch" href={p.path} />{/if}
+</svelte:head>
+
+{#if !p}
+  <div style="text-align: center; padding: 3rem;">
+    <h1>Unknown provider</h1>
+    <p>This variant doesn't exist yet.</p>
+    <a href="/" style="color: var(--accent);">← Back to minimal version</a>
+  </div>
+{:else}
+  {#if p.id === 'minimal'}
+    <p style="text-align: center; padding: 2rem; color: var(--muted);">
+      This route is for AI-generated variants. The minimal version is shown on the home page.
+    </p>
+  {:else}
+    <div style="position: relative; height: calc(100vh - 200px); min-height: 600px;">
+      <VariantFrame src={p.path} />
+    </div>
+    <p style="text-align: center; margin-top: 1rem; color: var(--muted); font-size: 0.85rem;">
+      Tip: Use [ and ] keys to cycle through variants
+    </p>
+  {/if}
+{/if}
+</file>
+
+<file path="src/routes/with/[tool]/+page.ts">
+import type { PageLoad } from './$types';
+import { PROVIDERS } from '$lib/providers';
+
+export const prerender = true;
+
+export const load: PageLoad = async ({ params }) => {
+  const provider = PROVIDERS.find((p) => p.id === params.tool);
+  return {
+    provider,
+    providers: PROVIDERS
+  };
+};
+</file>
+
+<file path="src/routes/+page.svelte">
+<script lang="ts">
+  export let data: any;
+  const resume = data.resume;
+
+  const contactLinks = [
+    resume.basics?.website && { label: 'Website', url: resume.basics.website },
+    resume.basics?.email && { label: resume.basics.email, url: `mailto:${resume.basics.email}` },
+    resume.basics?.location?.city && { label: resume.basics.location.city, url: null },
+    resume.basics?.profiles?.find((p:any)=>p.network?.toLowerCase()==='github') && {
+      label: 'GitHub',
+      url: resume.basics.profiles.find((p:any)=>p.network?.toLowerCase()==='github').url
+    },
+    resume.basics?.profiles?.find((p:any)=>p.network?.toLowerCase()==='linkedin') && {
+      label: 'LinkedIn',
+      url: resume.basics.profiles.find((p:any)=>p.network?.toLowerCase()==='linkedin').url
+    }
+  ].filter(Boolean) as {label:string,url:string|null}[];
+</script>
+
+<section aria-labelledby="title">
+  <h1 id="title" style="font-size:2rem;line-height:1.1;margin:.25rem 0 .5rem 0;">
+    {resume.basics?.name || 'Your Name'}
+  </h1>
+  <p style="margin:0;color:var(--muted);">{resume.basics?.label || 'AI Engineer · AI Enablement Specialist'}</p>
+  {#if contactLinks.length}
+    <ul style="list-style:none;padding:0;margin:.75rem 0 0 0;display:flex;gap:1rem;flex-wrap:wrap;">
+      {#each contactLinks as c}
+        <li>
+          {#if c.url}
+            <a href={c.url} rel="noopener noreferrer">{c.label}</a>
+          {:else}
+            <span>{c.label}</span>
+          {/if}
+        </li>
+      {/each}
+    </ul>
+  {/if}
+</section>
+
+<hr style="margin:1.25rem 0;border:0;border-top:1px solid var(--border);" />
+
+{#if resume.basics?.summary}
+  <section aria-labelledby="summary">
+    <h2 id="summary" style="font-size:1rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;">Summary</h2>
+    <p style="margin:0;max-width:70ch;">{resume.basics.summary}</p>
+  </section>
+
+  <hr style="margin:1.25rem 0;border:0;border-top:1px solid var(--border);" />
+{/if}
+
+{#if resume.work?.length}
+  <section aria-labelledby="work">
+    <h2 id="work" style="font-size:1rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;">Experience</h2>
+    {#each resume.work as job (job.name + job.position)}
+      <article style="margin-bottom:1rem;">
+        <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+          <div>
+            <strong>{job.position}</strong>{' @ '}{job.name}
+          </div>
+          <div style="color:var(--muted);">
+            {job.startDate}{job.endDate ? ` – ${job.endDate}` : ' – Present'}
+          </div>
+        </div>
+        {#if job.summary}<p style="margin:.25rem 0 0 0;max-width:70ch;">{job.summary}</p>{/if}
+        {#if job.highlights?.length}
+          <ul style="margin:.25rem 0 0 1rem;">
+            {#each job.highlights as h}<li>{h}</li>{/each}
+          </ul>
+        {/if}
+      </article>
+    {/each}
+  </section>
+
+  <hr style="margin:1.25rem 0;border:0;border-top:1px solid var(--border);" />
+{/if}
+
+{#if resume.projects?.length}
+  <section aria-labelledby="projects">
+    <h2 id="projects" style="font-size:1rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;">Projects</h2>
+    <ul style="list-style:disc;margin:.25rem 0 0 1rem;">
+      {#each resume.projects as p}
+        <li>
+          <strong>{p.name}</strong>{p.url ? ' — ' : ''}{#if p.url}<a rel="noopener noreferrer" href={p.url}>{p.url}</a>{/if}
+          {#if p.description}<div style="margin:.25rem 0 0 0;max-width:70ch;">{p.description}</div>{/if}
+          {#if p.keywords?.length}<div style="color:var(--muted);font-size:.9rem;margin-top:.25rem;">{p.keywords.join(' · ')}</div>{/if}
+        </li>
+      {/each}
+    </ul>
+  </section>
+
+  <hr style="margin:1.25rem 0;border:0;border-top:1px solid var(--border);" />
+{/if}
+
+{#if resume.skills?.length}
+  <section aria-labelledby="skills">
+    <h2 id="skills" style="font-size:1rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;">Skills</h2>
+    <ul style="list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:.5rem;">
+      {#each resume.skills as s}
+        <li style="border:1px solid var(--border);padding:.25rem .5rem;border-radius:999px;">
+          {s.name}{s.keywords?.length ? ` — ${s.keywords.join(', ')}` : ''}
+        </li>
+      {/each}
+    </ul>
+  </section>
+{/if}
+</file>
+
+<file path="src/routes/+page.ts">
+import type { PageLoad } from './$types';
+
+export const prerender = true;
+
+export const load: PageLoad = async ({ fetch }) => {
+  const res = await fetch('/data/resume.json');
+  if (!res.ok) throw new Error('Failed to load resume.json');
+  const resume = await res.json();
+  return { resume };
+};
+</file>
+
+<file path="src/app.html">
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="data:," />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    %sveltekit.head%
+    <style>
+      /* Minimal, high-contrast defaults (no custom fonts) */
+      :root {
+        --fg: #111;
+        --bg: #fff;
+        --muted: #666;
+        --border: #e5e5e5;
+        --accent: #000;
+      }
+      * { box-sizing: border-box; }
+      html, body { padding: 0; margin: 0; background: var(--bg); color: var(--fg); }
+      a { color: var(--accent); }
+      code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    </style>
+  </head>
+  <body>
+    <div style="position:fixed;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">
+      <a href="#content">Skip to content</a>
+    </div>
+    %sveltekit.body%
+  </body>
+</html>
+</file>
+
+<file path="src/hooks.server.ts">
+import type { Handle } from '@sveltejs/kit';
+
+export const handle: Handle = async ({ event, resolve }) => {
+  // Add CORS headers for /data/* endpoints
+  if (event.url.pathname.startsWith('/data/')) {
+    const response = await resolve(event);
+    
+    // Set CORS headers to allow cross-origin access
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', '*');
+    
+    return response;
+  }
+  
+  return resolve(event);
+};
+</file>
+
+<file path="static/data/enablement.json">
+{
+  "meta": {
+    "version": "1.1.0",
+    "audience": [
+      "engineering managers",
+      "tech leads",
+      "staff/IC engineers hiring for AI/coding roles",
+      "product leadership (technical-leaning)"
+    ],
+    "tone": "direct, practical, low-fluff",
+    "canonical_resume_path": "/resume",
+    "principle": "Effectiveness > output. Effectiveness = rate of progress toward goals.",
+    "contact_mode": "email-first; contact for quote or to hire"
+  },
+
+  "hero": {
+    "title": "AI Enablement that Drives Effectiveness",
+    "subtitle": "Ship faster and safer, with workflows your team will actually use.",
+    "primary_cta": { "label": "Email me", "href": "mailto:you@example.com" },
+    "secondary_cta": { "label": "See approach", "href": "#process" },
+    "notes": "Resume remains minimal at /resume"
+  },
+
+  "value_props": [
+    {
+      "id": "effectiveness-first",
+      "title": "Effectiveness first",
+      "bullets": [
+        "AI can increase raw output, but effectiveness = progress toward goals.",
+        "We design workflows, not just prompts, so gains stick."
+      ]
+    },
+    {
+      "id": "legit-wins",
+      "title": "Legitimate wins early",
+      "bullets": [
+        "People adopt AI when they feel a real speed-up in *their* work.",
+        "We minimize time-to-first-win and time-to-productivity."
+      ]
+    },
+    {
+      "id": "friction-reduction",
+      "title": "Friction reduction",
+      "bullets": [
+        "Standard tools, defaults, setup guides, and exemplars.",
+        "Workshops and 1:1 pairing to remove blockers quickly."
+      ]
+    },
+    {
+      "id": "security-grounded",
+      "title": "Security-grounded",
+      "bullets": [
+        "Risk profiles differ; we right-size controls (ZDR, sandboxing, allowlists).",
+        "Agentic safety and prompt-injection defenses from day one."
+      ]
+    },
+    {
+      "id": "future-advantage",
+      "title": "Advantage compounds",
+      "bullets": [
+        "Skills built now compound as models improve.",
+        "Even if gains are modest today, you'll be ahead when capabilities jump."
+      ]
+    }
+  ],
+
+  "sections": [
+    {
+      "id": "what-i-do",
+      "type": "cards",
+      "title": "How I Help",
+      "cards": [
+        {
+          "title": "Workflow & Tooling Enablement",
+          "body": "Deeply understand your organization's goals and jobs-to-be-done, pick high-leverage workflows, and fit AI into daily routines.",
+          "deliverables": ["Workflow maps", "Tool choices & defaults", "Starter prompts/snippets", "Playbooks"]
+        },
+        {
+          "title": "Engineering Acceleration",
+          "body": "Best practices for AI coding: codegen, review, refactors, tests, and safe agentic automation.",
+          "deliverables": ["Personalized AGENTS.md", "Codebase-specific rules", "IDE setup (e.g., AI pair tools)"]
+        },
+        {
+          "title": "Security, Risk & Governance",
+          "body": "Align on risk profile, data exposure limits, and safe tool use (ZDR, secrets, sandbox).",
+          "deliverables": ["Risk profile & policy", "Agent permissions model", "Incident playbook"]
+        },
+        {
+          "title": "Training & Adoption",
+          "body": "Group workshops, role-based coaching, training enthusiasts as coaches.",
+          "deliverables": ["Workshops", "1:1 pairing", "Role guides", "Usage & outcome metrics"]
+        }
+      ]
+    },
+
+    {
+      "id": "effectiveness",
+      "type": "text",
+      "title": "Effectiveness > Output",
+      "body": [
+        "AI can raise output (e.g., more code), but that doesn't guarantee progress on the right things.",
+        "Effectiveness is your **rate of progress toward goals**. We design prompts, tools, and workflows so quality, reliability, and alignment improve along with speed."
+      ]
+    },
+
+    {
+      "id": "codebase-context",
+      "type": "bullets",
+      "title": "Your Codebase Is the Most Important Context",
+      "bullets": [
+        "Agents mirror your patterns: clean architecture and consistent practices produce better AI outputs.",
+        "LLMs have limited effective context—avoid polluting it. Smaller, focused files help models read only what's needed.",
+        "Prefer 1,000 files × 100 lines over 100 files × 1,000 lines when feasible.",
+        "Clear READMEs, best practices, and explicit rules dramatically reduce prompt overhead; unwritten, inconsistently followed rules leak into the results."
+      ]
+    },
+
+    {
+      "id": "learning-curve",
+      "type": "bullets",
+      "title": "Learning Curve: Slower Before Faster",
+      "bullets": [
+        "New workflows create temporary drag—plan for it.",
+        "Design for quick wins and practice reps so teams cross the dip fast.",
+        "Measure time-to-first-win and time-to-productivity explicitly."
+      ]
+    },
+
+    {
+      "id": "adoption-curve",
+      "type": "bullets",
+      "title": "Why Adopt Now",
+      "bullets": [
+        "We can't guarantee exponential improvement, but a reasonable baseline is that models get somewhat better over time.",
+        "Skills built today create a **compounding advantage** when capabilities step-change.",
+        "Even skeptics can benefit from targeted, low-risk wins while policies mature."
+      ]
+    },
+
+    {
+      "id": "prompting-best-practices",
+      "type": "accordion",
+      "title": "Best Practices: Prompting, Planning & Agents",
+      "items": [
+        {
+          "label": "Set the AI up to succeed",
+          "content": [
+            "Imagine handing the task to a junior/intermediate with no context—what would they need?",
+            "Include purpose, constraints, acceptance criteria, examples, and the target audience."
+          ]
+        },
+        {
+          "label": "Right-size the instruction detail",
+          "content": [
+            "Simple tasks can succeed with lightweight prompts.",
+            "Complex tasks need detailed specs—learning the bar is a skill."
+          ]
+        },
+        {
+          "label": "Plan → Clarify → Execute",
+          "content": [
+            "Ask the model to propose a plan, list assumptions/risks, and ask clarifying questions.",
+            "For large efforts: generate a plan → break into tickets → produce technical designs per ticket."
+          ]
+        },
+        {
+          "label": "Long-lived instructions (AGENTS.md)",
+          "content": [
+            "Maintain durable, codebase-specific rules and conventions (naming, architecture, security musts).",
+            "Think: the parts you'd repeat in careful prompts almost every time—persist them so agents don't forget.",
+            "Keep it versioned, reviewed, and discoverable next to the code (e.g., /AGENTS.md)."
+          ]
+        },
+        {
+          "label": "Ensure complete context & tools",
+          "content": [
+            "Give each session the documents, code, and tools it needs.",
+            "If you use tool plugins or MCP-style connectors, make sure they're wired in each time."
+          ]
+        },
+        {
+          "label": "Tight feedback loops",
+          "content": [
+            "Iterate with small steps and checks (tests, linters, reviewers).",
+            "Browser-use MCPs let agents see the results of their actions."
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "security",
+      "type": "accordion",
+      "title": "Security & Risk (Tradeoffs Are Real)",
+      "intro": "Different orgs need different ceilings on AI augmentation. We choose controls that match your risk profile.",
+      "items": [
+        {
+          "label": "Risk profile first",
+          "content": [
+            "If code exposure is unacceptable, your augmentation ceiling is lower; we prioritize on-device or ZDR paths and restrict tool scope."
+          ]
+        },
+        {
+          "label": "Zero-data-retention (ZDR) & secrets hygiene",
+          "content": [
+            "Prefer vendors/modes that don't retain prompts/outputs; block training on your data.",
+            "Never paste secrets; rotate credentials; use ephemeral tokens."
+          ]
+        },
+        {
+          "label": "Agentic safety",
+          "content": [
+            "No \"skip-permissions\" for CLI or filesystem actions.",
+            "Enforce dry-runs, allowlists, and human confirmation.",
+            "Beware scripts that bundle destructive commands—review before execution."
+          ]
+        },
+        {
+          "label": "Prompt injection & external content",
+          "content": [
+            "Treat web/Docs/HTML as **untrusted** inputs; use content firewalls, allowlisted domains, and output filtering.",
+            "Train users to recognize \"IGNORE PREVIOUS INSTRUCTIONS\"-style attacks."
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "reduce-friction",
+      "type": "bullets",
+      "title": "Reducing Friction to First Win",
+      "bullets": [
+        "Standardize on a default model and toolchain; publish setup guides.",
+        "Provide prompt libraries, code snippets, and example repos.",
+        "Offer workshops & 1:1 pairing—engineers often prefer hands-on pairing.",
+        "For non-coders, provide a research assistant template with success examples.",
+        "Listen first: gather pain points and moral concerns; tailor the plan."
+      ]
+    },
+
+    {
+      "id": "metrics-usage",
+      "type": "bullets",
+      "title": "Metrics & Usage (Avoid Goodhart's Law)",
+      "bullets": [
+        "Track usage volumes **and** patterns (model choice, CLI vs agent vs tab-completion).",
+        "Review outcomes, not just counts—link to cycle time, review quality, and defect rates.",
+        "Use metrics to inform decisions; don't turn them into targets that distort behavior."
+      ]
+    },
+
+    {
+      "id": "adoption-culture",
+      "type": "text",
+      "title": "Adoption & Culture",
+      "body": [
+        "Different objections need different responses: ethics vs speed vs quality.",
+        "Your goal is organizational effectiveness—not AI for its own sake.",
+        "Push too hard and you create resentment; instead, kindle excitement with real wins.",
+        "A practical approach: ask everyone to try once, listen to feedback, keep reducing friction, and respect those who opt out."
+      ]
+    },
+
+    {
+      "id": "pitfalls",
+      "type": "bullets",
+      "title": "Pitfalls to Avoid",
+      "bullets": [
+        "80/20 trap: easy to get to 80%, hard to land the last 20%.",
+        "Checking out with agents: don't fire-and-forget—run multiple tasks with checkpoints.",
+        "AI mistakes differ from human mistakes: it may confidently take the wrong path or over-edit.",
+        "Code quality hazards: deleting tests or violating best practices to \"make it pass.\"",
+        "Using AI *instead of* thinking—flip it to **learn faster** with targeted questions."
+      ]
+    },
+
+    {
+      "id": "quick-wins",
+      "type": "bullets",
+      "title": "Good First Wins (Examples)",
+      "bullets": [
+        "Quickly understanding a codebase and its goals.",
+        "Write tests from examples; then refine.",
+        "Refactor small, mechanical code; add docstrings and type hints.",
+        "Summarize RFCs/PRs; generate checklists from standards.",
+        "Draft data pipelines or dbt models from schema + examples; you finalize.",
+        "Generate skeletons for tickets, runbooks, and postmortems."
+      ]
+    },
+
+    {
+      "id": "process",
+      "type": "process",
+      "title": "Engagement Process",
+      "steps": [
+        "Discover: goals, constraints, risk profile, current stack.",
+        "Find quick wins: pick 2–3 high-leverage workflows; define success criteria.",
+        "Standards: prompting patterns, coding guardrails, security policies.",
+        "Pilot & train: workshops + 1:1 pairing; measure outcomes.",
+        "Scale: roll out playbooks; automate checks; ongoing evals."
+      ]
+    }
+  ],
+
+  "resources": [
+    {
+      "title": "Measuring AI ability to complete long tasks",
+      "kind": "research",
+      "url": "https://metr.org/blog/2025-03-19-measuring-ai-ability-to-complete-long-tasks/",
+      "notes": "On task time horizons and implications for automation timelines."
+    },
+    {
+      "title": "OWASP: Top 10 for LLM Applications",
+      "kind": "security",
+      "url": "https://genai.owasp.org/llm-top-10/",
+      "notes": "Key risks and mitigations (e.g., prompt injection)."
+    },
+    {
+      "title": "Cursor Trust FAQ — Privacy Mode / Zero Data Retention",
+      "kind": "vendor-docs",
+      "url": "https://trust.cursor.com/faq",
+      "notes": "Example of ZDR vendor language for enterprise posture."
+    },
+    {
+      "title": "Model Context Protocol (MCP)",
+      "kind": "protocol",
+      "url": "https://docs.anthropic.com/en/docs/mcp",
+      "notes": "Standard for connecting models to tools/data; ensures sessions have the right capabilities."
+    }
+  ],
+
+  "cta": {
+    "headline": "Curious if this would work for your team?",
+    "subhead": "If these ideas resonate, let's talk about your context.",
+    "actions": [
+      { "label": "Email me", "href": "mailto:you@example.com" }
+    ]
+  }
+}
+</file>
+
+<file path="static/logos/bolt-old.svg">
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="16" cy="16" r="15" fill="#f59e0b" stroke="#f59e0b" stroke-width="2"/>
+  <path d="M18 8L10 18H16L14 24L22 14H16L18 8Z" fill="white" stroke="white" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>
+</file>
+
+<file path="static/logos/chatgpt.svg">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 2406 2406">
+	<path d="M1 578.4C1 259.5 259.5 1 578.4 1h1249.1c319 0 577.5 258.5 577.5 577.4V2406H578.4C259.5 2406 1 2147.5 1 1828.6V578.4z" fill="#74aa9c"/>
+	<path id="a" d="M1107.3 299.1c-197.999 0-373.9 127.3-435.2 315.3L650 743.5v427.9c0 21.4 11 40.4 29.4 51.4l344.5 198.515V833.3h.1v-27.9L1372.7 604c33.715-19.52 70.44-32.857 108.47-39.828L1447.6 450.3C1361 353.5 1237.1 298.5 1107.3 299.1zm0 117.5-.6.6c79.699 0 156.3 27.5 217.6 78.4-2.5 1.2-7.4 4.3-11 6.1L952.8 709.3c-18.4 10.4-29.4 30-29.4 51.4V1248l-155.1-89.4V755.8c-.1-187.099 151.601-338.9 339-339.2z" fill="#fff"/>
+	<use xlink:href="#a" transform="rotate(60 1203 1203)"/>
+  	<use xlink:href="#a" transform="rotate(120 1203 1203)"/>
+	<use xlink:href="#a" transform="rotate(180 1203 1203)"/>
+	<use xlink:href="#a" transform="rotate(240 1203 1203)"/>
+	<use xlink:href="#a" transform="rotate(300 1203 1203)"/>
+
+</svg>
+</file>
+
+<file path="static/logos/lovable-old.svg">
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="16" cy="16" r="15" fill="#ff006e" stroke="#ff006e" stroke-width="2"/>
+  <path d="M16 8.5C12.5 8.5 10.5 11 10.5 13.5C10.5 19 16 23.5 16 23.5S21.5 19 21.5 13.5C21.5 11 19.5 8.5 16 8.5Z" fill="white"/>
+</svg>
+</file>
+
+<file path="static/logos/v0-old.svg">
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="1" y="1" width="30" height="30" rx="6" fill="black" stroke="black" stroke-width="2"/>
+  <text x="16" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">v0</text>
+</svg>
+</file>
+
+<file path="static/variants/bolt/index.html">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coming Soon</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .container {
+      text-align: center;
+      padding: 2rem;
+    }
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    p {
+      font-size: 1.25rem;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Coming Soon</h1>
+    <p>This variant is under development</p>
+  </div>
+  <script>
+    parent?.postMessage({ type: 'variant:height', value: document.documentElement.scrollHeight }, '*');
+  </script>
+</body>
+</html>
+</file>
+
+<file path="static/variants/chatgpt/index.html">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Resume — ChatGPT Variant</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    /* Namespaced styles to avoid leaking */
+    #app-chatgpt { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; background:#fafafa; color:#111; padding:16px; }
+    #app-chatgpt .card { background:#fff; border:1px solid #e5e5e5; border-radius:12px; padding:16px; margin:12px 0; box-shadow:0 1px 0 rgba(0,0,0,.03); }
+    #app-chatgpt h1 { font-size:28px; margin:0 0 6px 0; }
+    #app-chatgpt h2 { font-size:14px; letter-spacing:.06em; text-transform:uppercase; margin:16px 0 8px; color:#555; }
+    #app-chatgpt .chips { display:flex; flex-wrap:wrap; gap:8px; }
+    #app-chatgpt .chip { border:1px solid #e5e5e5; border-radius:999px; padding:4px 8px; font-size:12px; }
+    #app-chatgpt a { color:#0b62ff; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <div id="app-chatgpt">
+    <div class="card" id="header">
+      <h1 id="name">Loading…</h1>
+      <div id="label" style="color:#555;"></div>
+      <div id="links" style="margin-top:6px; display:flex; gap:12px; flex-wrap:wrap;"></div>
+    </div>
+
+    <div class="card">
+      <h2>Summary</h2>
+      <div id="summary"></div>
+    </div>
+
+    <div class="card">
+      <h2>Experience</h2>
+      <div id="work"></div>
+    </div>
+
+    <div class="card">
+      <h2>Skills</h2>
+      <div id="skills" class="chips"></div>
+    </div>
+  </div>
+
+  <script>
+    async function render() {
+      const res = await fetch('/data/resume.json');
+      const data = await res.json();
+
+      const byId = (id) => document.getElementById(id);
+      byId('name').textContent = data.basics?.name || 'Your Name';
+      byId('label').textContent = data.basics?.label || '';
+      const links = [];
+      if (data.basics?.website) links.push(`<a href="${data.basics.website}" target="_blank" rel="noopener">Website</a>`);
+      if (data.basics?.email) links.push(`<a href="mailto:${data.basics.email}">${data.basics.email}</a>`);
+      const gh = data.basics?.profiles?.find(p => (p.network||'').toLowerCase()==='github');
+      if (gh) links.push(`<a href="${gh.url}" target="_blank" rel="noopener">GitHub</a>`);
+      const li = data.basics?.profiles?.find(p => (p.network||'').toLowerCase()==='linkedin');
+      if (li) links.push(`<a href="${li.url}" target="_blank" rel="noopener">LinkedIn</a>`);
+      byId('links').innerHTML = links.join(' · ');
+
+      byId('summary').textContent = data.basics?.summary || '';
+
+      const work = (data.work||[]).map(j => {
+        const when = j.endDate ? `${j.startDate} – ${j.endDate}` : `${j.startDate} – Present`;
+        const hi = (j.highlights||[]).map(x => `<li>${x}</li>`).join('');
+        return `
+          <div style="margin:10px 0;">
+            <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+              <strong>${j.position}</strong> @ ${j.name}
+              <span style="color:#666;">${when}</span>
+            </div>
+            ${j.summary ? `<div style="margin:4px 0 0;">${j.summary}</div>` : ''}
+            ${hi ? `<ul style="margin:6px 0 0 18px;">${hi}</ul>` : ''}
+          </div>`;
+      }).join('');
+      byId('work').innerHTML = work;
+
+      const skills = (data.skills||[]).map(s => `<span class="chip">${s.name}${s.keywords?.length ? ' — ' + s.keywords.join(', ') : ''}</span>`).join('');
+      byId('skills').innerHTML = skills;
+
+      // Inform parent iframe of height
+      requestAnimationFrame(() => {
+        const h = document.documentElement.scrollHeight;
+        window.parent && window.parent.postMessage({ type: 'variant:height', value: h }, '*');
+      });
+    }
+    render();
+  </script>
+</body>
+</html>
+</file>
+
+<file path="static/variants/cursor/index.html">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coming Soon</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .container {
+      text-align: center;
+      padding: 2rem;
+    }
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    p {
+      font-size: 1.25rem;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Coming Soon</h1>
+    <p>This variant is under development</p>
+  </div>
+  <script>
+    parent?.postMessage({ type: 'variant:height', value: document.documentElement.scrollHeight }, '*');
+  </script>
+</body>
+</html>
+</file>
+
+<file path="static/variants/lovable/index.html">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coming Soon</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .container {
+      text-align: center;
+      padding: 2rem;
+    }
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    p {
+      font-size: 1.25rem;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Coming Soon</h1>
+    <p>This variant is under development</p>
+  </div>
+  <script>
+    parent?.postMessage({ type: 'variant:height', value: document.documentElement.scrollHeight }, '*');
+  </script>
+</body>
+</html>
+</file>
+
+<file path="static/variants/v0/index.html">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coming Soon</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .container {
+      text-align: center;
+      padding: 2rem;
+    }
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    p {
+      font-size: 1.25rem;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Coming Soon</h1>
+    <p>This variant is under development</p>
+  </div>
+  <script>
+    parent?.postMessage({ type: 'variant:height', value: document.documentElement.scrollHeight }, '*');
+  </script>
+</body>
+</html>
+</file>
+
+<file path="CLAUDE.md">
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Commands
+
+### Development
+```bash
+npm run dev          # Start development server at localhost:5173
+npm run build        # Build for production
+npm run preview      # Preview production build locally
+npm run check        # Type-check Svelte components
+npm run validate:variants  # Validate all HTML variants
+```
+
+### Deployment
+```bash
+# Deploy to production (requires AWS credentials)
+AWS_PROFILE=prod npx sst deploy --stage production
+
+# Unlock deployment if locked
+AWS_PROFILE=prod npx sst unlock --stage production
+```
+
+## Architecture
+
+### Multi-Variant Resume Platform
+The site displays the same resume content styled by different AI tools. Each variant runs in an isolated iframe to prevent CSS/JS conflicts.
+
+**Key Components:**
+- **Providers System** (`src/lib/providers.ts`): Central registry of AI tool variants with metadata (id, name, path, icon, color)
+- **VariantFrame** (`src/lib/components/VariantFrame.svelte`): Manages iframe isolation and PostMessage height communication
+- **Data Layer** (`/static/data/*.json`): Centralized JSON files for resume and enablement content
+
+### Route Structure
+```
+/                           # Minimal/canonical resume
+/enablement                 # AI enablement content
+/with/[tool]               # Tool-specific resume variant
+/with/[tool]/enablement    # Tool-specific enablement variant
+/data/*.json               # CORS-enabled data endpoints
+```
+
+### Variant System
+Variants are static HTML files in `/static/variants/[tool-name]/` that must:
+1. Fetch data from `/data/resume.json` or `/data/enablement.json`
+2. Post height updates: `parent?.postMessage({ type: 'variant:height', value: scrollHeight }, '*')`
+3. Be self-contained with all assets
+
+### SST Deployment Configuration
+- **Domain**: www.austinwallace.ca (CloudFront + ACM certificate)
+- **DNS**: External management via GoDaddy
+- **Certificate ARN**: `arn:aws:acm:us-east-1:737679990662:certificate/061f07dc-2e1e-4751-bfee-e7e26c8b7c80`
+
+## Adding New Variants
+
+1. Create HTML file in `/static/variants/[tool-name]/index.html`
+2. Add provider entry to `src/lib/providers.ts`:
+   ```typescript
+   { id: 'tool-name', name: 'Tool Name', path: '/variants/tool-name/index.html', icon: '🔧', color: '#hex' }
+   ```
+3. Validate with `npm run validate:variants`
+4. Test locally with `npm run dev`
+
+## Navigation Context
+The layout maintains provider context - clicking "AI Enablement" while viewing Claude Code variant navigates to `/with/claude-code/enablement`, not `/enablement`.
+
+## Content Updates
+Edit JSON files in `/static/data/` - changes are immediately available to all variants without rebuilding.
+</file>
+
+<file path="DOMAIN_SETUP.md">
+# Setting up austinwallace.ca with GoDaddy
+
+## Current Setup
+- **CloudFront Distribution**: dkvegx9yiglsd.cloudfront.net
+- **Current Live Site**: https://dkvegx9yiglsd.cloudfront.net
+
+## GoDaddy DNS Configuration
+
+### Step 1: Log into GoDaddy
+1. Go to https://www.godaddy.com
+2. Sign in to your account
+3. Navigate to "My Products" → "Domains"
+4. Click "Manage" next to austinwallace.ca
+5. Select "DNS" or "Manage DNS"
+
+### Step 2: Remove Default Records
+Delete any existing A records or CNAME records for @ and www
+
+### Step 3: Add DNS Records
+
+#### For www.austinwallace.ca:
+- **Type**: CNAME
+- **Name**: www
+- **Value**: dkvegx9yiglsd.cloudfront.net
+- **TTL**: 600 seconds (or 1 hour)
+
+#### For austinwallace.ca (root domain):
+Since GoDaddy doesn't support ALIAS records, you have two options:
+
+**Option A: Use GoDaddy Forwarding (Easiest)**
+1. Go to "Forwarding" section in GoDaddy DNS
+2. Set up domain forwarding:
+   - Forward to: https://www.austinwallace.ca
+   - Forward type: Permanent (301)
+   - Settings: Forward with masking OFF
+
+**Option B: Use GoDaddy's IP redirect**
+1. Add an A record:
+   - **Type**: A
+   - **Name**: @
+   - **Value**: Use GoDaddy's forwarding IP (typically 50.63.202.1)
+   - **TTL**: 600 seconds
+
+### Step 4: SSL Certificate
+CloudFront automatically provides SSL for:
+- www.austinwallace.ca (via CNAME)
+- The root domain will redirect to www
+
+### Step 5: Wait for DNS Propagation
+- DNS changes can take 5 minutes to 48 hours to propagate
+- You can check status at: https://www.whatsmydns.net/
+
+## Alternative: Move DNS to Route53 (Recommended for AWS)
+
+If you want better AWS integration:
+
+1. Create a hosted zone in Route53 for austinwallace.ca
+2. Update nameservers in GoDaddy to point to Route53
+3. Use Route53's ALIAS records for both root and www
+4. This allows both austinwallace.ca and www.austinwallace.ca to work directly
+
+## Testing Your Domain
+
+Once DNS is configured, test:
+```bash
+# Check DNS resolution
+dig www.austinwallace.ca
+nslookup www.austinwallace.ca
+
+# Test the site
+curl -I https://www.austinwallace.ca
+```
+
+## Next Steps
+
+After DNS is configured, we need to:
+1. Update CloudFront distribution to accept austinwallace.ca and www.austinwallace.ca as alternate domain names
+2. Add SSL certificate for the custom domain (ACM certificate)
+
+Run this command to update the deployment with custom domain:
+```bash
+AWS_PROFILE=prod npx sst deploy --stage production
+```
+
+This will configure CloudFront to accept traffic for your domain.
+</file>
+
+<file path="README.md">
+# Austin Site - AI-Enhanced Resume & Enablement Platform
+
+A modern, AI-variant resume and enablement site built with SvelteKit, featuring multiple AI-generated design variants and progressive disclosure for content.
+
+## 🚀 Features
+
+- **Multi-variant system**: Different AI tools (Claude Code, ChatGPT, etc.) can generate unique variants
+- **Iframe isolation**: Each variant is sandboxed to prevent CSS/JS conflicts
+- **Progressive disclosure**: Enablement content uses accordions and collapsible sections
+- **CORS-enabled data endpoints**: Variants can fetch data cross-origin
+- **Responsive design**: Works seamlessly on mobile and desktop
+- **Single source of truth**: All variants read from centralized JSON data
+
+## 📁 Project Structure
+
+```
+austin-site/
+├── src/
+│   ├── routes/              # SvelteKit routes
+│   │   ├── +page.svelte     # Resume page (minimal)
+│   │   ├── enablement/      # AI Enablement page
+│   │   └── with/[tool]/     # Variant routes
+│   ├── lib/
+│   │   ├── components/      # Shared components
+│   │   └── providers.ts     # AI provider configuration
+│   └── hooks.server.ts      # CORS headers for data endpoints
+├── static/
+│   ├── data/                # JSON data sources
+│   │   ├── resume.json      # Resume content
+│   │   └── enablement.json  # AI enablement content
+│   └── variants/            # AI-generated variants
+│       ├── claude-code/     # Claude Code variants
+│       └── chatgpt/         # ChatGPT variants
+└── scripts/
+    └── validate-variant.mjs # Variant validation script
+```
+
+## 🛠️ Development
+
+```bash
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+# Validate variants
+node scripts/validate-variant.mjs
+```
+
+## 🎨 Creating New Variants
+
+Variants can be either single HTML files or static bundles. They must:
+
+1. Fetch data from `/data/resume.json` or `/data/enablement.json`
+2. Post height updates for iframe resizing:
+   ```javascript
+   parent?.postMessage({ type: 'variant:height', value: height }, '*');
+   ```
+3. Be placed in `/static/variants/[tool-name]/`
+
+### Adding a New Provider
+
+Edit `src/lib/providers.ts`:
+
+```typescript
+export const PROVIDERS: Provider[] = [
+  // ... existing providers
+  { 
+    id: 'your-tool', 
+    name: 'Your Tool', 
+    path: '/variants/your-tool/index.html', 
+    icon: '🎯', 
+    color: '#your-color' 
+  }
+];
+```
+
+## 📊 Available Routes
+
+- `/` - Minimal resume (default)
+- `/enablement` - AI Enablement content
+- `/with/[tool]` - Tool-specific resume variant
+- `/with/[tool]/enablement` - Tool-specific enablement variant
+- `/data/resume.json` - Resume data API
+- `/data/enablement.json` - Enablement data API
+
+## 🚢 Deployment
+
+The site is built as a static SvelteKit app and can be deployed to any static hosting service:
+
+```bash
+npm run build
+# Deploy the 'build' directory to your hosting service
+```
+
+### Recommended Platforms
+- Vercel
+- Netlify
+- Cloudflare Pages
+- GitHub Pages
+
+## 📝 Variant Contract
+
+Variants must follow these rules:
+
+1. **Data Source**: Read from `/data/*.json` endpoints
+2. **Isolation**: Wrap content in unique root element
+3. **Communication**: Post height updates to parent frame
+4. **Static Only**: No server-side rendering required
+5. **Self-contained**: Include all styles and scripts
+
+## 🤝 Contributing
+
+Feel free to create new AI variants! Simply:
+1. Generate your variant using your preferred AI tool
+2. Place it in `/static/variants/[your-tool]/`
+3. Add your tool to the providers list
+4. Submit a PR
+
+## 📄 License
+
+MIT
+
+---
+
+Built with ❤️ and AI assistance
+</file>
+
+<file path="site-conversation.md">
+<user>
+I'm considering making a resume website for myself as an ai engineer and ai enablement specialist.
+I want the base website to be very minimalist and stark and probably black and white, and then on it "see this website with" and then lovable, bolt, cursor, chatgpt, Claude code, v0, a bunch of different llm website makers, which will show the site as made by each technology, each will be much more fancy.
+Can you help me make a technical plan for this; what would be the best way to do this; any suggestions appreciated 
+</user>
+<assistant> 
+Love the concept. Here’s a practical, low‑maintenance way to build it so the **content is one source of truth** and each “made with X” version is a **fully isolated, fancy snapshot** that you can regenerate or swap out anytime.
+
+---
+
+## High‑level idea
+
+* **One minimalist “shell” site** (your canonical resume) that’s black‑and‑white, blazing fast, and SEO/analytics friendly.
+* **A single machine‑readable resume** (JSON) that all versions consume.
+* **Multiple isolated “variant” builds**—each one “as made by” Lovable, Bolt, Cursor, ChatGPT, Claude Code, v0, etc. These live as static HTML/CSS/JS bundles in your repo.
+* On the shell, a **toggle/selector**: “See this site made with…”. Selecting a tool swaps in that variant inside a sandboxed `<iframe>` (or opens a dedicated `/with/<tool>` route). Because each variant is isolated, its CSS/JS can be as wild as it wants without breaking the shell.
+
+This gets you:
+
+* **Consistency** (same resume data everywhere)
+* **Safety** (no CSS/JS collisions)
+* **Performance** (shell stays fast; variants prefetched)
+* **Credibility** (each variant is a real artifact generated by the named tool)
+
+---
+
+## Recommended stack (tailored to you)
+
+You’re comfortable with AWS & Svelte. Keep it simple and robust:
+
+* **Framework (Shell):** SvelteKit with `adapter-static` (SSG). Zero/near‑zero JS on the shell.
+* **Data:** [JSON Resume schema](https://jsonresume.org/) (extensible). Store it as `/static/data/resume.json`.
+* **Variants:** Plain static bundles (generated by each AI tool). One folder per tool: `/static/variants/<tool>/index.html` (+ assets).
+* **Hosting:** S3 + CloudFront via SST (since you know AWS well), or Cloudflare Pages if you want an even simpler DX.
+* **CI/CD:** GitHub Actions. On `main`, build shell and deploy. Variants are static files—no build step needed beyond copy.
+* **Analytics:** Plausible/Umami (lightweight, privacy‑respecting) only on the shell.
+* **SEO:** Canonical URLs and `noindex` for variant routes.
+
+---
+
+## Information architecture & routing
+
+* Shell (SvelteKit):
+
+  * `/` — minimal B\&W resume (canonical)
+  * `/with/[tool]` — loads variant via iframe (same‑origin)
+  * `/data/resume.json` — source‑of‑truth resume
+* Variants (static):
+
+  * `/variants/lovable/index.html`
+  * `/variants/bolt/index.html`
+  * `/variants/cursor/index.html`
+  * `/variants/chatgpt/index.html`
+  * `/variants/claude-code/index.html`
+  * `/variants/v0/index.html`
+  * …and so on
+
+**Why iframe?** Absolute CSS/JS isolation, fewer surprises, easy drop‑in replacement, and you can show a small header above the frame with the tool’s name, date generated, and the prompt used.
+
+---
+
+## Repo layout
+
+```
+resume-site/
+├─ apps/
+│  └─ shell/                      # SvelteKit app (the minimal site)
+│     ├─ src/
+│     │  ├─ lib/
+│     │  │  ├─ providers.ts       # List of “tools”, display names, paths
+│     │  │  └─ components/
+│     │  │     └─ VariantFrame.svelte
+│     │  └─ routes/
+│     │     ├─ +layout.svelte
+│     │     ├─ +page.svelte       # Minimal resume view
+│     │     └─ with/
+│     │        └─ [tool]/
+│     │           └─ +page.svelte  # iframe wrapper
+│     └─ static/
+│        ├─ data/resume.json       # JSON Resume (single source of truth)
+│        └─ variants/
+│           ├─ lovable/...
+│           ├─ bolt/...
+│           ├─ cursor/...
+│           ├─ chatgpt/...
+│           ├─ claude-code/...
+│           └─ v0/...
+├─ scripts/
+│  ├─ validate-variant.mjs         # HTML/CSS lint, link check
+│  └─ generate-from-llm/           # Optional: auto-regeneration helpers
+└─ .github/workflows/deploy.yml
+```
+
+---
+
+## The data model (JSON Resume)
+
+* Start with JSON Resume core fields: `basics`, `work`, `education`, `projects`, `skills`, etc.
+* Add a **small extension** block for your AI‑enablement portfolio:
+
+  ```json
+  {
+    "aiShowcase": [
+      {
+        "title": "AI Enablement Playbook @ Org",
+        "summary": "Rolled out prompt ops, evals, and governance; reduced cycle time by 38%.",
+        "tech": ["OpenAI", "Anthropic", "LangChain", "Weights & Biases"],
+        "links": [{"title": "Case Study", "url": "https://..."}]
+      }
+    ]
+  }
+  ```
+
+All shell & variants derive from the same JSON.
+
+---
+
+## Shell UI behavior
+
+* At the top/right: `See this website made with: [Minimal] [Lovable] [Bolt] [Cursor] [ChatGPT] [Claude Code] [v0]`
+* Selecting a provider:
+
+  * Navigates to `/with/<tool>`
+  * Preloads `/variants/<tool>/index.html` (link prefetch + Service Worker optional)
+* Above the iframe, show:
+
+  * Tool name & badge
+  * “Generated on <date> from commit <hash>” (links to repo folder)
+  * Prompt used (expandable), with note: “Not affiliated with <Tool>.”
+
+**Accessibility & performance**
+
+* High contrast, semantic HTML, skip links, reduced‑motion support.
+* No custom fonts on the shell; system stack only.
+* Strict CSP; iframe uses `sandbox` with only what’s required:
+
+  * `sandbox="allow-scripts allow-same-origin"` (add `allow-popups` if a variant needs it)
+
+---
+
+## Sample code (SvelteKit shell)
+
+**`src/lib/providers.ts`**
+
+```ts
+export type Provider = {
+  id: string;
+  name: string;
+  path: string;     // relative to site root
+  color?: string;   // optional accent for the label only (not global styling)
+  noindex?: boolean;
+};
+
+export const PROVIDERS: Provider[] = [
+  { id: 'minimal', name: 'Minimal', path: '/'},
+  { id: 'lovable', name: 'Lovable', path: '/variants/lovable/index.html' },
+  { id: 'bolt', name: 'Bolt', path: '/variants/bolt/index.html' },
+  { id: 'cursor', name: 'Cursor', path: '/variants/cursor/index.html' },
+  { id: 'chatgpt', name: 'ChatGPT', path: '/variants/chatgpt/index.html' },
+  { id: 'claude-code', name: 'Claude Code', path: '/variants/claude-code/index.html' },
+  { id: 'v0', name: 'v0', path: '/variants/v0/index.html' }
+];
+```
+
+**`src/lib/components/VariantFrame.svelte`**
+
+```svelte
+<script lang="ts">
+  export let src: string;
+  // Optional: listen for height messages if a variant posts its height
+  let height = '80vh';
+  function handleMessage(e: MessageEvent) {
+    if (typeof e.data === 'object' && e.data?.type === 'variant:height') {
+      const h = Number(e.data.value);
+      if (!Number.isNaN(h) && h > 300) height = `${h}px`;
+    }
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('message', handleMessage);
+  }
+</script>
+
+<iframe
+  title="Variant preview"
+  src={src}
+  style={`width:100%;border:1px solid #e5e5e5;border-radius:8px;height:${height};`}
+  sandbox="allow-scripts allow-same-origin"
+  loading="lazy"
+></iframe>
+```
+
+**`src/routes/with/[tool]/+page.svelte`**
+
+```svelte
+<script lang="ts">
+  import { PROVIDERS } from '$lib/providers';
+  import VariantFrame from '$lib/components/VariantFrame.svelte';
+  export let data;
+  const provider = PROVIDERS.find(p => p.id === data.tool);
+  const isMinimal = provider?.id === 'minimal';
+</script>
+
+<svelte:head>
+  {#if provider?.noindex}
+    <meta name="robots" content="noindex, nofollow" />
+  {/if}
+  <link rel="prefetch" href={provider?.path} />
+</svelte:head>
+
+{#if !provider}
+  <h1>Unknown provider</h1>
+{:else}
+  <header style="display:flex;justify-content:space-between;align-items:center;margin:1rem 0;">
+    <h1 style="font-size:1rem;font-weight:600;">Made with {provider.name}</h1>
+    <nav aria-label="Variants" style="display:flex;gap:.5rem;flex-wrap:wrap;">
+      {#each PROVIDERS as p}
+        <a href={`/with/${p.id}`}
+           style="text-decoration:none;border:1px solid #ddd;padding:.3rem .6rem;border-radius:6px;font-size:.9rem;">
+          {p.name}
+        </a>
+      {/each}
+    </nav>
+  </header>
+
+  {#if isMinimal}
+    <p>This route is for variants; the Minimal version is the home page.</p>
+  {:else}
+    <VariantFrame src={provider.path} />
+  {/if}
+{/if}
+```
+
+**`src/routes/with/[tool]/+page.ts`**
+
+```ts
+import type { PageLoad } from './$types';
+export const load: PageLoad = ({ params }) => ({ tool: params.tool });
+```
+
+**Home page (`src/routes/+page.svelte`)**
+
+* Render your B\&W resume directly from `/data/resume.json`.
+* Keep it semantic and tiny (e.g., fetch in `load()` and render; or embed at build time).
+
+---
+
+## Creating each variant (the fun part)
+
+For each tool (Lovable, Bolt, Cursor, ChatGPT, Claude Code, v0):
+
+1. **Prompt shape (keep consistent)**
+
+   * Provide the JSON Resume (paste or link to `/data/resume.json`).
+   * Ask for **a single, production‑ready HTML file** + inline CSS/JS, or a tiny asset folder.
+   * Requirements:
+
+     * Read resume from `/data/resume.json` via `fetch`.
+     * Do not use external fonts or trackers.
+     * Namespaced CSS (e.g., wrap in `#app-<tool>` or use BEM) to minimize any chance of leaks.
+     * Include a small `postMessage({ type: 'variant:height', value: document.body.scrollHeight })` after render so the iframe can auto‑size (optional).
+     * Lighthouse performance ≥ 90 on mobile.
+
+2. **Export the artifact**
+
+   * Save exactly what the tool gives you into `/static/variants/<tool>/`.
+   * If the tool gives a project, run its build once and copy the `dist` (flatten if needed).
+
+3. **Validate**
+
+   * `scripts/validate-variant.mjs` runs:
+
+     * `html-validate`/`eslint-plugin-html`
+     * dead link check
+     * Lighthouse CI (optional) to a minimum budget
+
+4. **Annotate**
+
+   * In your repo’s `README.md` for each variant folder, record:
+
+     * Tool name & version
+     * Date generated
+     * The exact prompt (so viewers can reproduce)
+     * Any manual tweaks you made
+
+> Tip: Freeze a variant per commit. If you regenerate with the same tool later, keep both (`/variants/<tool>-2025-08-28/`), and point `/variants/<tool>/` to the latest with a CI step.
+
+---
+
+## Prefetch & performance
+
+* Add `<link rel="prefetch" href="/variants/<tool>/index.html">` for the currently highlighted option (or for all once idle).
+* Optional Service Worker: on first visit, cache the variants so the toggling feels instantaneous offline.
+* Keep variants same‑origin (served from your domain) so iframes can postMessage height and prefetch works cleanly.
+
+---
+
+## SEO & legal niceties
+
+* The **shell** is your canonical resume. Use `<link rel="canonical" href="https://yoursite/">`.
+* Add `<meta name="robots" content="noindex, nofollow">` for `/with/*` pages (or just the iframe pages) to avoid duplicate content.
+* **Not affiliated** disclaimer above each iframe: “This demo variant was generated with <Tool>. Logos and names are trademarks of their respective owners.”
+
+---
+
+## Deployment with SST (sketch)
+
+* **Infra**: S3 Website Bucket (static hosting disabled; serve via CloudFront + OAC), CloudFront distribution, Route53 DNS, ACM certificate.
+* **CI**: GitHub Actions
+
+  * Job 1: build SvelteKit shell → `build/` folder
+  * Job 2: copy `apps/shell/build/**` + `apps/shell/static/**` (which includes `data/` and `variants/`) to S3
+  * Invalidate CloudFront on changed paths (`/index.html`, `/with/*`, `/variants/*`, `/data/resume.json`)
+
+---
+
+## Optional “Regenerate with AI” pipeline
+
+If you want the site to **self‑refresh variants** when `resume.json` changes:
+
+* Add a small serverless function (API Gateway + Lambda via SST) that:
+
+  * Pulls `resume.json`
+  * Calls the provider’s API (OpenAI/Anthropic/Vercel v0, etc.) with your standard prompt
+  * Validates output and writes to S3 under `/variants/<tool>/`
+* Gate this behind an **admin-only** secret URL and run it manually (or on CI).
+
+Pros: always up‑to‑date variants.
+Cons: needs API keys & careful guardrails; sometimes LLMs drift from constraints.
+
+---
+
+## QA & guardrails checklist
+
+* [ ] Lighthouse ≥ 95 (shell), ≥ 90 (variants)
+* [ ] Axe a11y pass (shell) and basic checks (variants)
+* [ ] 3 device sizes tested (360w, 768w, 1280w)
+* [ ] No external calls in variants except `/data/resume.json`
+* [ ] CSP for shell (`default-src 'self'`), iframe `sandbox` enabled
+* [ ] Analytics only on shell
+* [ ] Robots `noindex` on `/with/*`
+* [ ] 404 for unknown `/with/<tool>`
+
+---
+
+## Small touches that impress
+
+* **“Diff view”**: on the shell, show a tiny modal with the exact prompt used for a variant (read from a `PROMPT.md` file in each variant folder).
+* **Performance badge**: Pull Lighthouse scores (CI artifact) and show a badge near each tool name (“Perf 97, A11y 98”).
+* **Keyboard‑first UX**: `[` and `]` keys cycle variants.
+* **Print stylesheet**: The shell prints to one page cleanly.
+
+---
+
+## Suggested implementation order (2–4 evenings)
+
+1. **Set up shell** (SvelteKit static) + JSON resume + minimal B\&W render.
+2. **Wire `/with/[tool]`** route and `<iframe>` component.
+3. **Add 2 variants** (e.g., ChatGPT and Claude Code) by hand, validate.
+4. **Prefetch + postMessage height** for smooth UX.
+5. **Infra** via SST and first deploy to your domain.
+6. Add remaining variants, QA, and polish (badges, prompts modal).
+
+---
+
+If you want, I can:
+
+* Draft the minimal shell page that renders from `resume.json`.
+* Write the `providers.ts`, `VariantFrame.svelte`, and a small validate script.
+* Give you a reproducible **prompt template** you can paste into each tool to generate consistent, high‑quality variants.
+</assistant>
+
+<user>
+Yes please. Go ahead and do that 
+</user>
+<assistant>
+Awesome — here’s a **ready-to-drop** SvelteKit scaffold (minimal shell + provider switcher), a **validator script** for variants, a **sample variant**, and a **prompt template** you can paste into Lovable/Bolt/Cursor/ChatGPT/Claude Code/v0 to generate each fancy version.
+
+> **What you get below**
+>
+> 1. Minimal B\&W shell site that renders from `static/data/resume.json`
+> 2. `/with/[tool]` route that sandboxes each “made with X” variant in an iframe
+> 3. `scripts/validate-variant.mjs` to lint/verify variants
+> 4. A sample `chatgpt/` variant to prove the plumbing
+> 5. A reproducible prompt template for generating more variants
+
+---
+
+## 0) Quick start
+
+```bash
+# 1) Create SvelteKit project
+npm create svelte@latest resume-site
+cd resume-site
+
+# 2) Add dependencies
+npm i
+npm i -D @sveltejs/adapter-static html-validate cheerio typescript svelte-check @types/node
+
+# 3) Replace/add the files below into this repo
+#    (copy the file tree & contents exactly)
+
+# 4) Run it
+npm run dev
+
+# 5) Build static site (for S3/CloudFront etc.)
+npm run build
+
+# (Optional) Validate variants
+npm run validate:variants
+```
+
+---
+
+## 1) File tree
+
+```
+resume-site/
+├─ package.json
+├─ svelte.config.js
+├─ tsconfig.json
+├─ vite.config.ts
+├─ scripts/
+│  └─ validate-variant.mjs
+├─ static/
+│  ├─ data/
+│  │  └─ resume.json
+│  └─ variants/
+│     └─ chatgpt/
+│        └─ index.html
+└─ src/
+   ├─ app.html
+   ├─ lib/
+   │  ├─ providers.ts
+   │  └─ components/
+   │     └─ VariantFrame.svelte
+   └─ routes/
+      ├─ +layout.svelte
+      ├─ +page.ts
+      ├─ +page.svelte
+      ├─ robots.txt/
+      │  └─ +server.ts
+      └─ with/
+         └─ [tool]/
+            ├─ +page.ts
+            └─ +page.svelte
+```
+
+---
+
+## 2) Code — drop in exactly
+
+### `package.json`
+
+```json
+{
+  "name": "resume-site",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "validate:variants": "node scripts/validate-variant.mjs"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-static": "^3.0.2",
+    "@sveltejs/kit": "^2.5.10",
+    "@types/node": "^20.12.12",
+    "cheerio": "^1.0.0",
+    "html-validate": "^9.1.3",
+    "svelte": "^4.2.18",
+    "svelte-check": "^3.6.7",
+    "tslib": "^2.6.2",
+    "typescript": "^5.4.5",
+    "vite": "^5.4.2"
+  }
+}
+```
+
+### `svelte.config.js`
+
+```js
+import adapter from '@sveltejs/adapter-static';
+
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+  kit: {
+    adapter: adapter(),
+    prerender: { entries: ['*'] }
+  }
+};
+
+export default config;
+```
+
+### `tsconfig.json`
+
+```json
+{
+  "extends": "./.svelte-kit/tsconfig.json",
+  "compilerOptions": {
+    "types": ["svelte"],
+    "moduleResolution": "bundler",
+    "strict": true
+  }
+}
+```
+
+### `vite.config.ts`
+
+```ts
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  plugins: [sveltekit()]
+});
+```
+
+### `src/app.html`
+
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="data:," />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    %sveltekit.head%
+    <style>
+      /* Minimal, high-contrast defaults (no custom fonts) */
+      :root {
+        --fg: #111;
+        --bg: #fff;
+        --muted: #666;
+        --border: #e5e5e5;
+        --accent: #000;
+      }
+      * { box-sizing: border-box; }
+      html, body { padding: 0; margin: 0; background: var(--bg); color: var(--fg); }
+      a { color: var(--accent); }
+      code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    </style>
+  </head>
+  <body>
+    <div style="position:fixed;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">
+      <a href="#content">Skip to content</a>
+    </div>
+    %sveltekit.body%
+  </body>
+</html>
+```
+
+### `src/lib/providers.ts`
+
+```ts
+export type Provider = {
+  id: string;
+  name: string;
+  path: string;        // static path to variant entry
+  noindex?: boolean;   // whether to add robots noindex on /with/[tool]
+};
+
+export const PROVIDERS: Provider[] = [
+  { id: 'minimal', name: 'Minimal', path: '/' },
+  { id: 'lovable', name: 'Lovable', path: '/variants/lovable/index.html', noindex: true },
+  { id: 'bolt', name: 'Bolt', path: '/variants/bolt/index.html', noindex: true },
+  { id: 'cursor', name: 'Cursor', path: '/variants/cursor/index.html', noindex: true },
+  { id: 'chatgpt', name: 'ChatGPT', path: '/variants/chatgpt/index.html', noindex: true },
+  { id: 'claude-code', name: 'Claude Code', path: '/variants/claude-code/index.html', noindex: true },
+  { id: 'v0', name: 'v0', path: '/variants/v0/index.html', noindex: true }
+];
+```
+
+### `src/lib/components/VariantFrame.svelte`
+
+```svelte
+<script lang="ts">
+  import { onMount, onDestroy } from 'svelte';
+  export let src: string;
+  let height = '80vh';
+
+  function onMessage(e: MessageEvent) {
+    const d = e?.data;
+    if (d && typeof d === 'object' && d.type === 'variant:height') {
+      const h = Number(d.value);
+      if (!Number.isNaN(h) && h > 300) height = `${h}px`;
+    }
+  }
+
+  onMount(() => window.addEventListener('message', onMessage));
+  onDestroy(() => window.removeEventListener('message', onMessage));
+</script>
+
+<iframe
+  title="Variant preview"
+  src={src}
+  style={`width:100%;height:${height};border:1px solid #e5e5e5;border-radius:8px;background:#fff;`}
+  loading="lazy"
+  sandbox="allow-scripts allow-same-origin"
+></iframe>
+```
+
+### `src/routes/+layout.svelte`
+
+```svelte
+<script>
+  // Global shell nav & layout
+</script>
+
+<header style="padding:1rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+  <a href="/" style="text-decoration:none;color:inherit;font-weight:700">Your Name — AI Engineer & Enablement</a>
+  <nav aria-label="Primary" style="display:flex;gap:.75rem;">
+    <a href="/" style="text-decoration:none;">Home</a>
+    <a href="/with/chatgpt" style="text-decoration:none;">Made with ChatGPT</a>
+  </nav>
+</header>
+
+<main id="content" style="max-width:900px;margin:0 auto;padding:1.25rem;">
+  <slot />
+</main>
+
+<footer style="max-width:900px;margin:2rem auto 3rem;padding:0 1.25rem;color:var(--muted);font-size:.9rem;">
+  <p>Variants are demos; trademarks belong to their owners. Canonical content is the minimal version.</p>
+</footer>
+```
+
+### `src/routes/+page.ts`
+
+```ts
+import type { PageLoad } from './$types';
+
+export const prerender = true;
+
+export const load: PageLoad = async ({ fetch }) => {
+  const res = await fetch('/data/resume.json');
+  if (!res.ok) throw new Error('Failed to load resume.json');
+  const resume = await res.json();
+  return { resume };
+};
+```
+
+### `src/routes/+page.svelte`
+
+```svelte
+<script lang="ts">
+  export let data: any;
+  const resume = data.resume;
+
+  const contactLinks = [
+    resume.basics?.website && { label: 'Website', url: resume.basics.website },
+    resume.basics?.email && { label: resume.basics.email, url: `mailto:${resume.basics.email}` },
+    resume.basics?.location?.city && { label: resume.basics.location.city, url: null },
+    resume.basics?.profiles?.find((p:any)=>p.network?.toLowerCase()==='github') && {
+      label: 'GitHub',
+      url: resume.basics.profiles.find((p:any)=>p.network?.toLowerCase()==='github').url
+    },
+    resume.basics?.profiles?.find((p:any)=>p.network?.toLowerCase()==='linkedin') && {
+      label: 'LinkedIn',
+      url: resume.basics.profiles.find((p:any)=>p.network?.toLowerCase()==='linkedin').url
+    }
+  ].filter(Boolean) as {label:string,url:string|null}[];
+</script>
+
+<section aria-labelledby="title">
+  <h1 id="title" style="font-size:2rem;line-height:1.1;margin:.25rem 0 .5rem 0;">
+    {resume.basics?.name || 'Your Name'}
+  </h1>
+  <p style="margin:0;color:var(--muted);">{resume.basics?.label || 'AI Engineer · AI Enablement Specialist'}</p>
+  {#if contactLinks.length}
+    <ul style="list-style:none;padding:0;margin:.75rem 0 0 0;display:flex;gap:1rem;flex-wrap:wrap;">
+      {#each contactLinks as c}
+        <li>
+          {#if c.url}
+            <a href={c.url} rel="noopener noreferrer">{c.label}</a>
+          {:else}
+            <span>{c.label}</span>
+          {/if}
+        </li>
+      {/each}
+    </ul>
+  {/if}
+</section>
+
+<hr style="margin:1.25rem 0;border:0;border-top:1px solid var(--border);" />
+
+{#if resume.basics?.summary}
+  <section aria-labelledby="summary">
+    <h2 id="summary" style="font-size:1rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;">Summary</h2>
+    <p style="margin:0;max-width:70ch;">{resume.basics.summary}</p>
+  </section>
+
+  <hr style="margin:1.25rem 0;border:0;border-top:1px solid var(--border);" />
+{/if}
+
+{#if resume.work?.length}
+  <section aria-labelledby="work">
+    <h2 id="work" style="font-size:1rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;">Experience</h2>
+    {#each resume.work as job (job.name + job.position)}
+      <article style="margin-bottom:1rem;">
+        <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+          <div>
+            <strong>{job.position}</strong>{' @ '}{job.name}
+          </div>
+          <div style="color:var(--muted);">
+            {job.startDate}{job.endDate ? ` – ${job.endDate}` : ' – Present'}
+          </div>
+        </div>
+        {#if job.summary}<p style="margin:.25rem 0 0 0;max-width:70ch;">{job.summary}</p>{/if}
+        {#if job.highlights?.length}
+          <ul style="margin:.25rem 0 0 1rem;">
+            {#each job.highlights as h}<li>{h}</li>{/each}
+          </ul>
+        {/if}
+      </article>
+    {/each}
+  </section>
+
+  <hr style="margin:1.25rem 0;border:0;border-top:1px solid var(--border);" />
+{/if}
+
+{#if resume.projects?.length}
+  <section aria-labelledby="projects">
+    <h2 id="projects" style="font-size:1rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;">Projects</h2>
+    <ul style="list-style:disc;margin:.25rem 0 0 1rem;">
+      {#each resume.projects as p}
+        <li>
+          <strong>{p.name}</strong>{p.url ? ' — ' : ''}{#if p.url}<a rel="noopener noreferrer" href={p.url}>{p.url}</a>{/if}
+          {#if p.description}<div style="margin:.25rem 0 0 0;max-width:70ch;">{p.description}</div>{/if}
+          {#if p.keywords?.length}<div style="color:var(--muted);font-size:.9rem;margin-top:.25rem;">{p.keywords.join(' · ')}</div>{/if}
+        </li>
+      {/each}
+    </ul>
+  </section>
+
+  <hr style="margin:1.25rem 0;border:0;border-top:1px solid var(--border);" />
+{/if}
+
+{#if resume.skills?.length}
+  <section aria-labelledby="skills">
+    <h2 id="skills" style="font-size:1rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;">Skills</h2>
+    <ul style="list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:.5rem;">
+      {#each resume.skills as s}
+        <li style="border:1px solid var(--border);padding:.25rem .5rem;border-radius:999px;">
+          {s.name}{s.keywords?.length ? ` — ${s.keywords.join(', ')}` : ''}
+        </li>
+      {/each}
+    </ul>
+  </section>
+{/if}
+```
+
+### `src/routes/robots.txt/+server.ts`
+
+```ts
+import type { RequestHandler } from '@sveltejs/kit';
+
+export const GET: RequestHandler = () => {
+  const body = [
+    'User-agent: *',
+    'Allow: /',
+    'Disallow: /with/',
+    'Sitemap: /sitemap.xml' // optional; remove if not generating one
+  ].join('\n');
+
+  return new Response(body, {
+    headers: {
+      'content-type': 'text/plain; charset=utf-8',
+      'cache-control': 'public, max-age=3600'
+    }
+  });
+};
+```
+
+### `src/routes/with/[tool]/+page.ts`
+
+```ts
+import type { PageLoad } from './$types';
+import { PROVIDERS } from '$lib/providers';
+
+export const prerender = true;
+
+export const load: PageLoad = async ({ params }) => {
+  const provider = PROVIDERS.find((p) => p.id === params.tool);
+  return {
+    provider,
+    providers: PROVIDERS
+  };
+};
+```
+
+### `src/routes/with/[tool]/+page.svelte`
+
+```svelte
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import { PROVIDERS } from '$lib/providers';
+  import VariantFrame from '$lib/components/VariantFrame.svelte';
+
+  export let data: { provider: any; providers: typeof PROVIDERS };
+
+  const p = data.provider;
+  const providers = data.providers;
+  const idx = providers.findIndex((x) => x.id === p?.id);
+
+  function goto(id: string) {
+    window.location.href = id === 'minimal' ? '/' : `/with/${id}`;
+  }
+
+  // Keyboard: [ ] to cycle
+  function onKey(e: KeyboardEvent) {
+    if (!p) return;
+    if (e.key === ']') {
+      const next = providers[(idx + 1) % providers.length];
+      goto(next.id);
+    } else if (e.key === '[') {
+      const prev = providers[(idx - 1 + providers.length) % providers.length];
+      goto(prev.id);
+    }
+  }
+
+  onMount(() => window.addEventListener('keydown', onKey));
+</script>
+
+<svelte:head>
+  {#if p?.noindex}<meta name="robots" content="noindex, nofollow" />{/if}
+  {#if p?.path}<link rel="prefetch" href={p.path} />{/if}
+</svelte:head>
+
+{#if !p}
+  <h1>Unknown provider</h1>
+{:else}
+  <header style="display:flex;justify-content:space-between;align-items:center;margin:1rem 0;">
+    <div>
+      <h1 style="font-size:1rem;margin:.25rem 0;">Made with {p.name}</h1>
+      <p style="margin:0;color:var(--muted);font-size:.9rem;">Demo variant generated by {p.name}. Not affiliated.</p>
+    </div>
+    <nav aria-label="Variants" style="display:flex;gap:.5rem;flex-wrap:wrap;">
+      {#each providers as pv}
+        <a href={pv.id === 'minimal' ? '/' : `/with/${pv.id}`}
+           style="text-decoration:none;border:1px solid var(--border);padding:.3rem .6rem;border-radius:6px;font-size:.9rem;">
+          {pv.name}
+        </a>
+      {/each}
+    </nav>
+  </header>
+
+  {#if p.id === 'minimal'}
+    <p>This route previews variants. The minimal version is the home page.</p>
+  {:else}
+    <VariantFrame src={p.path} />
+  {/if}
+{/if}
+```
+
+---
+
+## 3) Variant validator script
+
+### `scripts/validate-variant.mjs`
+
+```js
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { HtmlValidate } from 'html-validate';
+import * as cheerio from 'cheerio';
+
+const ROOT = path.resolve(process.cwd());
+const VARIANTS_DIR = path.join(ROOT, 'static', 'variants');
+
+const validator = new HtmlValidate({
+  extends: ['html-validate:recommended'],
+  rules: {
+    'no-dup-class': 'error',
+    'no-trailing-whitespace': 'warn',
+    // Allow inline styles; variants are self-contained
+    'no-inline-style': 'off'
+  }
+});
+
+async function validateVariant(dir) {
+  const entry = path.join(VARIANTS_DIR, dir, 'index.html');
+  const html = await fs.readFile(entry, 'utf8');
+
+  // 1) HTML semantics
+  const result = validator.validateString(html);
+  if (!result.valid) {
+    console.error(`✖ ${dir}: HTML validation failed`);
+    result.results.forEach((r) =>
+      r.messages.forEach((m) =>
+        console.error(`  ${m.ruleId} [${m.severity}] ${m.message} @ line ${m.line}:${m.column}`)
+      )
+    );
+    throw new Error('HTML validation failed');
+  }
+
+  // 2) Minimal policy checks
+  const hasFetchResume = /fetch\(['"`]\/data\/resume\.json['"`]\)/.test(html);
+  if (!hasFetchResume) {
+    console.warn(`! ${dir}: Did not find fetch('/data/resume.json') — ensure variant reads the shared resume data`);
+  }
+
+  const hasPostMessage = /postMessage\s*\(\s*\{\s*type\s*:\s*['"`]variant:height['"`]/.test(html);
+  if (!hasPostMessage) {
+    console.warn(`! ${dir}: No postMessage({ type: 'variant:height', ... }) — iframe may not auto-size`);
+  }
+
+  // 3) Basic link checks for local assets
+  const $ = cheerio.load(html);
+  const assetPaths = [];
+  $('link[href], script[src], img[src]').each((_, el) => {
+    const attr = el.name === 'link' ? 'href' : 'src';
+    const url = $(el).attr(attr);
+    if (!url) return;
+    if (url.startsWith('http')) return; // allow external (discouraged but not blocked)
+    const abs = path.join(VARIANTS_DIR, dir, url.replace(/^\//, '')); // treat root as /static
+    assetPaths.push(abs);
+  });
+  for (const p of assetPaths) {
+    try {
+      await fs.access(p);
+    } catch {
+      console.warn(`! ${dir}: Missing local asset referenced by HTML -> ${p}`);
+    }
+  }
+
+  console.log(`✔ ${dir}: OK`);
+}
+
+async function main() {
+  const entries = await fs.readdir(VARIANTS_DIR, { withFileTypes: true }).catch(() => []);
+  const dirs = entries.filter((d) => d.isDirectory()).map((d) => d.name);
+  if (!dirs.length) {
+    console.log('No variants found in static/variants. Add at least one folder.');
+    return;
+  }
+  for (const d of dirs) await validateVariant(d);
+}
+
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
+```
+
+---
+
+## 4) Sample shared resume data
+
+> **Edit this** with your content; it follows the JSON Resume schema (plus a small `aiShowcase` extension).
+
+### `static/data/resume.json`
+
+```json
+{
+  "basics": {
+    "name": "Your Name",
+    "label": "AI Engineer · AI Enablement Specialist",
+    "email": "you@example.com",
+    "website": "https://yourdomain.com",
+    "location": { "city": "City, Country" },
+    "summary": "AI engineer focused on LLM app delivery, enablement, and governance. I help teams ship safe, observable, and cost-effective AI features.",
+    "profiles": [
+      { "network": "GitHub", "username": "yourgithub", "url": "https://github.com/yourgithub" },
+      { "network": "LinkedIn", "username": "yourlinkedin", "url": "https://www.linkedin.com/in/yourlinkedin/" }
+    ]
+  },
+  "work": [
+    {
+      "name": "Company A",
+      "position": "Senior AI Engineer",
+      "startDate": "2023-04",
+      "endDate": "",
+      "summary": "Lead LLM platform & enablement.",
+      "highlights": [
+        "Shipped retrieval-augmented generation with evals >92% exact-match",
+        "Cut inference cost 37% via caching & prompt compression",
+        "Rolled out prompt ops, guardrails, and incident response playbook"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "AI Enablement Toolkit",
+      "description": "Templates for evals, guardrails, and observability on Langfuse/W&B.",
+      "url": "https://yourdomain.com/ai-toolkit",
+      "keywords": ["Evals", "Guardrails", "Observability", "PromptOps"]
+    }
+  ],
+  "skills": [
+    { "name": "LLMs", "keywords": ["OpenAI", "Anthropic", "Ollama", "vLLM"] },
+    { "name": "Platform", "keywords": ["AWS", "SST", "S3/CloudFront", "Lambda", "SageMaker"] },
+    { "name": "Data", "keywords": ["Snowflake", "dbt", "Databricks", "Airflow"] },
+    { "name": "App", "keywords": ["SvelteKit", "React", "Vite", "TypeScript"] }
+  ],
+  "aiShowcase": [
+    {
+      "title": "Enablement @ Org",
+      "summary": "Ship fast with evals & governance; reduced cycle time 38%.",
+      "tech": ["OpenAI", "Anthropic", "LangChain", "W&B"],
+      "links": [{ "title": "Case Study", "url": "https://yourdomain.com/case-study" }]
+    }
+  ]
+}
+```
+
+---
+
+## 5) Sample variant (ChatGPT) to test
+
+> Put every generated variant under `static/variants/<tool>/index.html`.
+> This sample fetches `/data/resume.json` and posts its height for smooth iframe sizing.
+
+### `static/variants/chatgpt/index.html`
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Resume — ChatGPT Variant</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    /* Namespaced styles to avoid leaking */
+    #app-chatgpt { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; background:#fafafa; color:#111; padding:16px; }
+    #app-chatgpt .card { background:#fff; border:1px solid #e5e5e5; border-radius:12px; padding:16px; margin:12px 0; box-shadow:0 1px 0 rgba(0,0,0,.03); }
+    #app-chatgpt h1 { font-size:28px; margin:0 0 6px 0; }
+    #app-chatgpt h2 { font-size:14px; letter-spacing:.06em; text-transform:uppercase; margin:16px 0 8px; color:#555; }
+    #app-chatgpt .chips { display:flex; flex-wrap:wrap; gap:8px; }
+    #app-chatgpt .chip { border:1px solid #e5e5e5; border-radius:999px; padding:4px 8px; font-size:12px; }
+    #app-chatgpt a { color:#0b62ff; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <div id="app-chatgpt">
+    <div class="card" id="header">
+      <h1 id="name">Loading…</h1>
+      <div id="label" style="color:#555;"></div>
+      <div id="links" style="margin-top:6px; display:flex; gap:12px; flex-wrap:wrap;"></div>
+    </div>
+
+    <div class="card">
+      <h2>Summary</h2>
+      <div id="summary"></div>
+    </div>
+
+    <div class="card">
+      <h2>Experience</h2>
+      <div id="work"></div>
+    </div>
+
+    <div class="card">
+      <h2>Skills</h2>
+      <div id="skills" class="chips"></div>
+    </div>
+  </div>
+
+  <script>
+    async function render() {
+      const res = await fetch('/data/resume.json');
+      const data = await res.json();
+
+      const byId = (id) => document.getElementById(id);
+      byId('name').textContent = data.basics?.name || 'Your Name';
+      byId('label').textContent = data.basics?.label || '';
+      const links = [];
+      if (data.basics?.website) links.push(`<a href="${data.basics.website}" target="_blank" rel="noopener">Website</a>`);
+      if (data.basics?.email) links.push(`<a href="mailto:${data.basics.email}">${data.basics.email}</a>`);
+      const gh = data.basics?.profiles?.find(p => (p.network||'').toLowerCase()==='github');
+      if (gh) links.push(`<a href="${gh.url}" target="_blank" rel="noopener">GitHub</a>`);
+      const li = data.basics?.profiles?.find(p => (p.network||'').toLowerCase()==='linkedin');
+      if (li) links.push(`<a href="${li.url}" target="_blank" rel="noopener">LinkedIn</a>`);
+      byId('links').innerHTML = links.join(' · ');
+
+      byId('summary').textContent = data.basics?.summary || '';
+
+      const work = (data.work||[]).map(j => {
+        const when = j.endDate ? `${j.startDate} – ${j.endDate}` : `${j.startDate} – Present`;
+        const hi = (j.highlights||[]).map(x => `<li>${x}</li>`).join('');
+        return `
+          <div style="margin:10px 0;">
+            <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+              <strong>${j.position}</strong> @ ${j.name}
+              <span style="color:#666;">${when}</span>
+            </div>
+            ${j.summary ? `<div style="margin:4px 0 0;">${j.summary}</div>` : ''}
+            ${hi ? `<ul style="margin:6px 0 0 18px;">${hi}</ul>` : ''}
+          </div>`;
+      }).join('');
+      byId('work').innerHTML = work;
+
+      const skills = (data.skills||[]).map(s => `<span class="chip">${s.name}${s.keywords?.length ? ' — ' + s.keywords.join(', ') : ''}</span>`).join('');
+      byId('skills').innerHTML = skills;
+
+      // Inform parent iframe of height
+      requestAnimationFrame(() => {
+        const h = document.documentElement.scrollHeight;
+        window.parent && window.parent.postMessage({ type: 'variant:height', value: h }, '*');
+      });
+    }
+    render();
+  </script>
+</body>
+</html>
+```
+
+---
+
+## 6) Reproducible prompt template (paste into each tool)
+
+Create `prompts/variant-template.md` in your repo (and paste this when generating):
+
+````markdown
+You are generating a single-file variant of my resume website for the tool showcase
+“See this website made with <TOOL>”. Deliver **one production-ready HTML file** named `index.html`.
+It will be hosted at `/variants/<tool>/index.html` on the same origin as `/data/resume.json`.
+
+**Requirements**
+- **Data source**: Fetch `/data/resume.json` and render the resume. No other network calls.
+- **Self-contained**: Inline CSS and JS inside the HTML (no external fonts, no trackers).
+- **Namespace**: Wrap all HTML within a top-level container with id `app-<tool>` to avoid CSS/JS leaks.
+- **A11y**: Semantic HTML, good contrast, keyboard-friendly.
+- **Performance**: Mobile-first; aim Lighthouse ≥ 90 without external assets.
+- **Height messaging**: After render, notify parent iframe for auto-resize:
+  ```js
+  requestAnimationFrame(() => {
+    const h = document.documentElement.scrollHeight;
+    window.parent && window.parent.postMessage({ type: 'variant:height', value: h }, '*');
+  });
+````
+
+**Visual direction**
+
+* Feel free to be “fancy” (animations, layout, cards) but keep it tasteful.
+* Do not import external fonts; use system-ui stack.
+* Use a small accent color and subtle shadows; avoid heavy backgrounds.
+
+**Content to show**
+
+* Header: name, label, quick links (Website, Email, GitHub, LinkedIn)
+* Summary
+* Experience (title @ org, dates, summary, highlights)
+* Projects (name, link, short desc)
+* Skills (grouped chips)
+* Optional: “Generated with <TOOL> on <DATE>” line in the footer.
+
+**Delivery**
+
+* Output only the full HTML for `index.html`.
+
+```
+
+> When you paste this into Lovable, Bolt, Cursor, ChatGPT, Claude Code, or v0, also provide the JSON from `/static/data/resume.json` (or link to it if the tool can fetch local files). Save the resulting `index.html` under `static/variants/<tool>/`.
+
+---
+
+## 7) Next steps & tips
+
+- **Add more variants**: Create `static/variants/lovable/index.html`, etc. Run `npm run validate:variants`.
+- **Prefetch**: We already add `<link rel="prefetch">` for the selected variant. You can duplicate that for your most popular ones on the home page if you want instant swaps.
+- **CSP** (optional hardening): In production, add a CSP header `default-src 'self'` for the shell. Variants run in a sandboxed iframe.
+- **Noindex**: Variants are disallowed in `robots.txt` and also use meta `noindex` when viewed via `/with/[tool]`.
+
+If you want, I can tailor the `resume.json` with your exact roles (AI engineering + enablement), or wire simple Lighthouse CI badges per-variant.
+```
+</assistant>
+</file>
+
+<file path="site.json">
+{
+    "meta": {
+      "version": "1.1.0",
+      "audience": [
+        "engineering managers",
+        "tech leads",
+        "staff/IC engineers hiring for AI/coding roles",
+        "product leadership (technical-leaning)"
+      ],
+      "tone": "direct, practical, low-fluff",
+      "canonical_resume_path": "/resume",
+      "principle": "Effectiveness > output. Effectiveness = rate of progress toward goals.",
+      "contact_mode": "email-first; contact for quote or to hire"
+    },
+  
+    "hero": {
+      "title": "AI Enablement that Drives Effectiveness",
+      "subtitle": "Ship faster and safer, with workflows your team will actually use.",
+      "primary_cta": { "label": "Email me", "href": "mailto:you@example.com" },
+      "secondary_cta": { "label": "See approach", "href": "#process" },
+      "notes": "Resume remains minimal at /resume",
+      "origin": "assistant"
+    },
+  
+    "value_props": [
+      {
+        "id": "effectiveness-first",
+        "title": "Effectiveness first",
+        "bullets": [
+          "AI can increase raw output, but effectiveness = progress toward goals.",
+          "We design workflows, not just prompts, so gains stick."
+        ],
+        "origin": "user"
+      },
+      {
+        "id": "legit-wins",
+        "title": "Legitimate wins early",
+        "bullets": [
+          "People adopt AI when they feel a real speed-up in *their* work.",
+          "We minimize time-to-first-win and time-to-productivity."
+        ],
+        "origin": "user"
+      },
+      {
+        "id": "friction-reduction",
+        "title": "Friction reduction",
+        "bullets": [
+          "Standard tools, defaults, setup guides, and exemplars.",
+          "Workshops and 1:1 pairing to remove blockers quickly."
+        ],
+        "origin": "user"
+      },
+      {
+        "id": "security-grounded",
+        "title": "Security-grounded",
+        "bullets": [
+          "Risk profiles differ; we right-size controls (ZDR, sandboxing, allowlists).",
+          "Agentic safety and prompt-injection defenses from day one."
+        ],
+        "origin": "user"
+      },
+      {
+        "id": "future-advantage",
+        "title": "Advantage compounds",
+        "bullets": [
+          "Skills built now compound as models improve.",
+          "Even if gains are modest today, you’ll be ahead when capabilities jump."
+        ],
+        "origin": "user"
+      }
+    ],
+  
+    "sections": [
+      {
+        "id": "what-i-do",
+        "type": "cards",
+        "title": "How I Help",
+        "cards": [
+          {
+            "title": "Workflow & Tooling Enablement",
+            "body": "Deeply understand your organization's goals and jobs-to-be-done, pick high-leverage workflows, and fit AI into daily routines.",
+            "deliverables": ["Workflow maps", "Tool choices & defaults", "Starter prompts/snippets", "Playbooks"],
+            "origin": "user"
+          },
+          {
+            "title": "Engineering Acceleration",
+            "body": "Best practices for AI coding: codegen, review, refactors, tests, and safe agentic automation.",
+            "deliverables": ["Personalized AGENTS.md", "Codebase-specific rules", "IDE setup (e.g., AI pair tools)"],
+            "origin": "user"
+          },
+          {
+            "title": "Security, Risk & Governance",
+            "body": "Align on risk profile, data exposure limits, and safe tool use (ZDR, secrets, sandbox).",
+            "deliverables": ["Risk profile & policy", "Agent permissions model", "Incident playbook"],
+            "origin": "user"
+          },
+          {
+            "title": "Training & Adoption",
+            "body": "Group workshops, role-based coaching, training enthusiasts as coaches.",
+            "deliverables": ["Workshops", "1:1 pairing", "Role guides", "Usage & outcome metrics"],
+            "origin": "user"
+          }
+        ]
+      },
+  
+      {
+        "id": "effectiveness",
+        "type": "text",
+        "title": "Effectiveness > Output",
+        "body": [
+          "AI can raise output (e.g., more code), but that doesn’t guarantee progress on the right things.",
+          "Effectiveness is your **rate of progress toward goals**. We design prompts, tools, and workflows so quality, reliability, and alignment improve along with speed."
+        ],
+        "origin": "user"
+      },
+  
+      {
+        "id": "codebase-context",
+        "type": "bullets",
+        "title": "Your Codebase Is the Most Important Context",
+        "bullets": [
+          "Agents mirror your patterns: clean architecture and consistent practices produce better AI outputs.",
+          "LLMs have limited effective context—avoid polluting it. Smaller, focused files help models read only what’s needed.",
+          "Prefer 1,000 files × 100 lines over 100 files × 1,000 lines when feasible.",
+          "Clear READMEs, best practices, and explicit rules dramatically reduce prompt overhead; unwritten, inconsistently followed rules leak into the results."
+        ],
+        "origin": "user"
+      },
+  
+      {
+        "id": "learning-curve",
+        "type": "bullets",
+        "title": "Learning Curve: Slower Before Faster",
+        "bullets": [
+          "New workflows create temporary drag—plan for it.",
+          "Design for quick wins and practice reps so teams cross the dip fast.",
+          "Measure time-to-first-win and time-to-productivity explicitly."
+        ],
+        "origin": "user"
+      },
+  
+      {
+        "id": "adoption-curve",
+        "type": "bullets",
+        "title": "Why Adopt Now",
+        "bullets": [
+          "We can’t guarantee exponential improvement, but a reasonable baseline is that models get somewhat better over time.",
+          "Skills built today create a **compounding advantage** when capabilities step-change.",
+          "Even skeptics can benefit from targeted, low-risk wins while policies mature."
+        ],
+        "origin": "user"
+      },
+  
+      {
+        "id": "prompting-best-practices",
+        "type": "accordion",
+        "title": "Best Practices: Prompting, Planning & Agents",
+        "items": [
+          {
+            "label": "Set the AI up to succeed",
+            "content": [
+              "Imagine handing the task to a junior/intermediate with no context—what would they need?",
+              "Include purpose, constraints, acceptance criteria, examples, and the target audience."
+            ],
+            "origin": "user"
+          },
+          {
+            "label": "Right-size the instruction detail",
+            "content": [
+              "Simple tasks can succeed with lightweight prompts.",
+              "Complex tasks need detailed specs—learning the bar is a skill."
+            ],
+            "origin": "user"
+          },
+          {
+            "label": "Plan → Clarify → Execute",
+            "content": [
+              "Ask the model to propose a plan, list assumptions/risks, and ask clarifying questions.",
+              "For large efforts: generate a plan → break into tickets → produce technical designs per ticket."
+            ],
+            "origin": "user"
+          },
+          {
+            "label": "Long-lived instructions (AGENTS.md)",
+            "content": [
+              "Maintain durable, codebase-specific rules and conventions (naming, architecture, security musts).",
+              "Think: the parts you’d repeat in careful prompts almost every time—persist them so agents don’t forget.",
+              "Keep it versioned, reviewed, and discoverable next to the code (e.g., /AGENTS.md)."
+            ],
+            "origin": "user"
+          },
+          {
+            "label": "Ensure complete context & tools",
+            "content": [
+              "Give each session the documents, code, and tools it needs.",
+              "If you use tool plugins or MCP-style connectors, make sure they’re wired in each time."
+            ],
+            "origin": "user"
+          },
+          {
+            "label": "Tight feedback loops",
+            "content": [
+              "Iterate with small steps and checks (tests, linters, reviewers).",
+              "Browser-use MCPs let agents see the results of their actions."
+            ],
+            "origin": "user"
+          }
+        ]
+      },
+  
+      {
+        "id": "security",
+        "type": "accordion",
+        "title": "Security & Risk (Tradeoffs Are Real)",
+        "intro": "Different orgs need different ceilings on AI augmentation. We choose controls that match your risk profile.",
+        "items": [
+          {
+            "label": "Risk profile first",
+            "content": [
+              "If code exposure is unacceptable, your augmentation ceiling is lower; we prioritize on-device or ZDR paths and restrict tool scope."
+            ],
+            "origin": "user"
+          },
+          {
+            "label": "Zero-data-retention (ZDR) & secrets hygiene",
+            "content": [
+              "Prefer vendors/modes that don’t retain prompts/outputs; block training on your data.",
+              "Never paste secrets; rotate credentials; use ephemeral tokens."
+            ],
+            "origin": "user"
+          },
+          {
+            "label": "Agentic safety",
+            "content": [
+              "No \"skip-permissions\" for CLI or filesystem actions.",
+              "Enforce dry-runs, allowlists, and human confirmation.",
+              "Beware scripts that bundle destructive commands—review before execution."
+            ],
+            "origin": "user"
+          },
+          {
+            "label": "Prompt injection & external content",
+            "content": [
+              "Treat web/Docs/HTML as **untrusted** inputs; use content firewalls, allowlisted domains, and output filtering.",
+              "Train users to recognize \"IGNORE PREVIOUS INSTRUCTIONS\"-style attacks."
+            ],
+            "origin": "user"
+          }
+        ]
+      },
+  
+      {
+        "id": "reduce-friction",
+        "type": "bullets",
+        "title": "Reducing Friction to First Win",
+        "bullets": [
+          "Standardize on a default model and toolchain; publish setup guides.",
+          "Provide prompt libraries, code snippets, and example repos.",
+          "Offer workshops & 1:1 pairing—engineers often prefer hands-on pairing.",
+          "For non-coders, provide a research assistant template with success examples.",
+          "Listen first: gather pain points and moral concerns; tailor the plan."
+        ],
+        "origin": "user"
+      },
+  
+      {
+        "id": "metrics-usage",
+        "type": "bullets",
+        "title": "Metrics & Usage (Avoid Goodhart’s Law)",
+        "bullets": [
+          "Track usage volumes **and** patterns (model choice, CLI vs agent vs tab-completion).",
+          "Review outcomes, not just counts—link to cycle time, review quality, and defect rates.",
+          "Use metrics to inform decisions; don’t turn them into targets that distort behavior."
+        ],
+        "origin": "user"
+      },
+  
+      {
+        "id": "adoption-culture",
+        "type": "text",
+        "title": "Adoption & Culture",
+        "body": [
+          "Different objections need different responses: ethics vs speed vs quality.",
+          "Your goal is organizational effectiveness—not AI for its own sake.",
+          "Push too hard and you create resentment; instead, kindle excitement with real wins.",
+          "A practical approach: ask everyone to try once, listen to feedback, keep reducing friction, and respect those who opt out."
+        ],
+        "origin": "user"
+      },
+  
+      {
+        "id": "pitfalls",
+        "type": "bullets",
+        "title": "Pitfalls to Avoid",
+        "bullets": [
+          "80/20 trap: easy to get to 80%, hard to land the last 20%.",
+          "Checking out with agents: don’t fire-and-forget—run multiple tasks with checkpoints.",
+          "AI mistakes differ from human mistakes: it may confidently take the wrong path or over-edit.",
+          "Code quality hazards: deleting tests or violating best practices to “make it pass.”",
+          "Using AI *instead of* thinking—flip it to **learn faster** with targeted questions."
+        ],
+        "origin": "user"
+      },
+  
+      {
+        "id": "quick-wins",
+        "type": "bullets",
+        "title": "Good First Wins (Examples)",
+        "bullets": [
+          "Quickly understanding a codebase and its goals.",
+          "Write tests from examples; then refine.",
+          "Refactor small, mechanical code; add docstrings and type hints.",
+          "Summarize RFCs/PRs; generate checklists from standards.",
+          "Draft data pipelines or dbt models from schema + examples; you finalize.",
+          "Generate skeletons for tickets, runbooks, and postmortems."
+        ],
+        "origin": "user"
+      },
+  
+      {
+        "id": "process",
+        "type": "process",
+        "title": "Engagement Process",
+        "steps": [
+          "Discover: goals, constraints, risk profile, current stack.",
+          "Find quick wins: pick 2–3 high-leverage workflows; define success criteria.",
+          "Standards: prompting patterns, coding guardrails, security policies.",
+          "Pilot & train: workshops + 1:1 pairing; measure outcomes.",
+          "Scale: roll out playbooks; automate checks; ongoing evals."
+        ],
+        "origin": "assistant"
+      }
+    ],
+  
+    "resources": [
+      {
+        "title": "Measuring AI ability to complete long tasks",
+        "kind": "research",
+        "url": "https://metr.org/blog/2025-03-19-measuring-ai-ability-to-complete-long-tasks/",
+        "notes": "On task time horizons and implications for automation timelines.",
+        "origin": "user"
+      },
+      {
+        "title": "OWASP: Top 10 for LLM Applications",
+        "kind": "security",
+        "url": "https://genai.owasp.org/llm-top-10/",
+        "notes": "Key risks and mitigations (e.g., prompt injection).",
+        "origin": "assistant"
+      },
+      {
+        "title": "Cursor Trust FAQ — Privacy Mode / Zero Data Retention",
+        "kind": "vendor-docs",
+        "url": "https://trust.cursor.com/faq",
+        "notes": "Example of ZDR vendor language for enterprise posture.",
+        "origin": "assistant"
+      },
+      {
+        "title": "Model Context Protocol (MCP)",
+        "kind": "protocol",
+        "url": "https://docs.anthropic.com/en/docs/mcp",
+        "notes": "Standard for connecting models to tools/data; ensures sessions have the right capabilities.",
+        "origin": "assistant"
+      }
+    ],
+  
+    "cta": {
+      "headline": "Curious if this would work for your team?",
+      "subhead": "If these ideas resonate, let’s talk about your context.",
+      "actions": [
+        { "label": "Email me", "href": "mailto:you@example.com" }
+      ],
+      "origin": "user"
+    }
+  }
+</file>
+
+<file path="sst-env.d.ts">
+/* This file is auto-generated by SST. Do not edit. */
+/* tslint:disable */
+/* eslint-disable */
+/* deno-fmt-ignore-file */
+
+declare module "sst" {
+  export interface Resource {
+    "AustinSite": {
+      "type": "sst.aws.SvelteKit"
+      "url": string
+    }
+  }
+}
+/// <reference path="sst-env.d.ts" />
+
+import "sst"
+export {}
+</file>
+
+<file path="tsconfig.json">
+{
+  "extends": "./.svelte-kit/tsconfig.json",
+  "compilerOptions": {
+    "types": ["svelte"],
+    "moduleResolution": "bundler",
+    "strict": true
+  }
+}
+</file>
+
+<file path="vite.config.ts">
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  plugins: [sveltekit()]
+});
+</file>
+
+<file path="src/lib/components/VariantFrame.svelte">
+<script lang="ts">
+  import { onMount } from 'svelte';
+  export let src: string;
+  let height = '100%';
+
+  let lastReceivedHeight = 0;
+  
+  function onMessage(e: MessageEvent) {
+    const d = e?.data;
+    if (d && typeof d === 'object' && d.type === 'variant:height') {
+      const h = Number(d.value);
+      // Only update if height is valid and significantly different
+      if (!Number.isNaN(h) && h > 300 && Math.abs(h - lastReceivedHeight) > 5) {
+        lastReceivedHeight = h;
+        height = `${h}px`;
+      }
+    }
+  }
+
+  onMount(() => {
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  });
+</script>
+
+<iframe
+  title="Variant preview"
+  {src}
+  style={`width:100%;height:${height};border:none;background:#fff;display:block;`}
+  loading="lazy"
+  sandbox="allow-scripts allow-same-origin"
+></iframe>
+</file>
+
+<file path="src/routes/enablement/+page.svelte">
+<script lang="ts">
+  import { onMount } from 'svelte';
+  
+  export let data: any;
+  const { enablement } = data;
+  
+  let expandedSections: Record<string, boolean> = {};
+  let currentHash = '';
+  
+  onMount(() => {
+    if (window.location.hash) {
+      currentHash = window.location.hash.slice(1);
+      expandSection(currentHash);
+      setTimeout(() => {
+        document.getElementById(currentHash)?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+    
+    window.addEventListener('hashchange', () => {
+      currentHash = window.location.hash.slice(1);
+      expandSection(currentHash);
+    });
+  });
+  
+  function expandSection(id: string) {
+    const section = enablement.sections.find((s: any) => {
+      if (s.id === id) return true;
+      if (s.type === 'accordion' && s.items) {
+        return s.items.some((item: any, idx: number) => `${s.id}-${idx}` === id);
+      }
+      return false;
+    });
+    
+    if (section) {
+      expandedSections[section.id] = true;
+      if (section.type === 'accordion') {
+        const itemIdx = id.split('-').pop();
+        if (itemIdx) {
+          expandedSections[id] = true;
+        }
+      }
+    }
+  }
+  
+  function toggleSection(id: string) {
+    expandedSections[id] = !expandedSections[id];
+  }
+  
+  function copyLink(id: string) {
+    const url = `${window.location.origin}${window.location.pathname}#${id}`;
+    navigator.clipboard.writeText(url);
+  }
+  
+  const tocSections = [
+    ...enablement.value_props.map((vp: any) => ({
+      id: vp.id,
+      title: vp.title,
+      level: 2
+    })),
+    ...enablement.sections.map((s: any) => ({
+      id: s.id,
+      title: s.title,
+      level: 2,
+      items: s.type === 'accordion' ? s.items?.map((item: any, idx: number) => ({
+        id: `${s.id}-${idx}`,
+        title: item.label,
+        level: 3
+      })) : undefined
+    }))
+  ];
+</script>
+
+<style>
+  .enablement-container {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  @media (max-width: 768px) {
+    .enablement-container {
+      grid-template-columns: 1fr;
+      padding: 1rem;
+    }
+    
+    .toc-desktop {
+      display: none;
+    }
+  }
+  
+  @media (min-width: 769px) {
+    .toc-mobile {
+      display: none;
+    }
+  }
+  
+  .toc {
+    position: sticky;
+    top: 2rem;
+    height: fit-content;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+  }
+  
+  .toc h3 {
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.75rem;
+    color: var(--muted);
+  }
+  
+  .toc-list, .toc-sublist {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .toc-sublist {
+    margin-left: 1rem;
+  }
+  
+  .toc-item {
+    margin-bottom: 0.5rem;
+  }
+  
+  .toc-item.level-3 {
+    margin-left: 1rem;
+    font-size: 0.875rem;
+  }
+  
+  .toc-link {
+    color: var(--muted);
+    text-decoration: none;
+    display: block;
+    padding: 0.25rem 0;
+    transition: color 0.2s;
+  }
+  
+  .toc-link:hover {
+    color: var(--text);
+  }
+  
+  .toc-link.active {
+    color: var(--text);
+    font-weight: 500;
+  }
+  
+  .hero {
+    margin-bottom: 3rem;
+  }
+  
+  .hero h1 {
+    font-size: 2.5rem;
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.25rem;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+  
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  
+  .btn {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.2s;
+  }
+  
+  .btn-primary {
+    background: var(--text);
+    color: var(--bg);
+  }
+  
+  .btn-primary:hover {
+    opacity: 0.9;
+  }
+  
+  .btn-secondary:hover {
+    background: var(--border);
+  }
+  
+  .value-props {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+  
+  .value-prop {
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    border-radius: 4px;
+  }
+  
+  .value-prop h3 {
+    font-size: 1.125rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .value-prop ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .value-prop li {
+    margin-bottom: 0.5rem;
+    padding-left: 1.25rem;
+    position: relative;
+  }
+  
+  .value-prop li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--muted);
+  }
+  
+  .section {
+    margin-bottom: 3rem;
+  }
+  
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  
+  .section-title {
+    font-size: 1.5rem;
+    margin: 0;
+  }
+  
+  .copy-link {
+    padding: 0.25rem 0.5rem;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--muted);
+    transition: color 0.2s;
+  }
+  
+  .copy-link:hover {
+    color: var(--text);
+    border-color: var(--text);
+  }
+  
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .card {
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    border-radius: 4px;
+  }
+  
+  .card h4 {
+    margin-bottom: 0.75rem;
+  }
+  
+  .card-body {
+    margin-bottom: 1rem;
+    color: var(--muted);
+  }
+  
+  .deliverables {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .deliverables li {
+    padding: 0.25rem 0;
+    padding-left: 1.25rem;
+    position: relative;
+  }
+  
+  .deliverables li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--muted);
+  }
+  
+  .accordion {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  
+  .accordion-item {
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .accordion-item:last-child {
+    border-bottom: none;
+  }
+  
+  .accordion-header {
+    padding: 1rem 1.5rem;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.2s;
+  }
+  
+  .accordion-header:hover {
+    background: var(--border);
+  }
+  
+  .accordion-icon {
+    transition: transform 0.2s;
+  }
+  
+  .accordion-icon.expanded {
+    transform: rotate(90deg);
+  }
+  
+  .accordion-content {
+    padding: 0 1.5rem;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+  }
+  
+  .accordion-content.expanded {
+    padding: 1rem 1.5rem;
+    max-height: 500px;
+  }
+  
+  .process-steps {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: step;
+  }
+  
+  .process-step {
+    padding: 0.75rem 0;
+    padding-left: 2rem;
+    position: relative;
+    counter-increment: step;
+  }
+  
+  .process-step::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 1px solid var(--text);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  
+  .resources {
+    margin-bottom: 3rem;
+  }
+  
+  .resource-list {
+    display: grid;
+    gap: 1rem;
+  }
+  
+  .resource {
+    border: 1px solid var(--border);
+    padding: 1rem;
+    border-radius: 4px;
+  }
+  
+  .resource-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 0.5rem;
+  }
+  
+  .resource-title {
+    font-weight: 500;
+    text-decoration: none;
+    color: var(--text);
+  }
+  
+  .resource-title:hover {
+    text-decoration: underline;
+  }
+  
+  .resource-kind {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    padding: 0.125rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--muted);
+  }
+  
+  .resource-notes {
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+  
+  .cta {
+    text-align: center;
+    padding: 3rem 2rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--border);
+  }
+  
+  .cta h2 {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .cta-subhead {
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+</style>
+
+<div class="enablement-container">
+  <nav class="toc toc-desktop" aria-label="Table of contents">
+    <h3>On this page</h3>
+    <ul class="toc-list">
+      {#each tocSections as section}
+        <li class="toc-item level-{section.level}">
+          <a href="#{section.id}" class="toc-link" class:active={currentHash === section.id}>
+            {section.title}
+          </a>
+          {#if section.items}
+            <ul class="toc-sublist">
+              {#each section.items as item}
+                <li class="toc-item level-{item.level}">
+                  <a href="#{item.id}" class="toc-link" class:active={currentHash === item.id}>
+                    {item.title}
+                  </a>
+                </li>
+              {/each}
+            </ul>
+          {/if}
+        </li>
+      {/each}
+    </ul>
+  </nav>
+  
+  <div class="toc-mobile">
+    <details>
+      <summary style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; cursor: pointer;">
+        On this page
+      </summary>
+      <ul class="toc-list" style="margin-top: 0.5rem;">
+        {#each tocSections as section}
+          <li class="toc-item level-{section.level}">
+            <a href="#{section.id}" class="toc-link">
+              {section.title}
+            </a>
+          </li>
+        {/each}
+      </ul>
+    </details>
+  </div>
+  
+  <main>
+    <section class="hero">
+      <h1>{enablement.hero.title}</h1>
+      <p class="hero-subtitle">{enablement.hero.subtitle}</p>
+      <div class="hero-actions">
+        <a href={enablement.hero.primary_cta.href} class="btn btn-primary">
+          {enablement.hero.primary_cta.label}
+        </a>
+        <a href={enablement.hero.secondary_cta.href} class="btn btn-secondary">
+          {enablement.hero.secondary_cta.label}
+        </a>
+      </div>
+    </section>
+    
+    <section class="value-props">
+      {#each enablement.value_props as prop}
+        <div class="value-prop" id={prop.id}>
+          <h3>{prop.title}</h3>
+          <ul>
+            {#each prop.bullets as bullet}
+              <li>{bullet}</li>
+            {/each}
+          </ul>
+        </div>
+      {/each}
+    </section>
+    
+    {#each enablement.sections as section}
+      <section class="section" id={section.id}>
+        <div class="section-header">
+          <h2 class="section-title">{section.title}</h2>
+          <button class="copy-link" on:click={() => copyLink(section.id)} title="Copy link to section">
+            Copy link
+          </button>
+        </div>
+        
+        {#if section.type === 'cards'}
+          <div class="cards">
+            {#each section.cards as card}
+              <div class="card">
+                <h4>{card.title}</h4>
+                <p class="card-body">{card.body}</p>
+                {#if card.deliverables}
+                  <ul class="deliverables">
+                    {#each card.deliverables as deliverable}
+                      <li>{deliverable}</li>
+                    {/each}
+                  </ul>
+                {/if}
+              </div>
+            {/each}
+          </div>
+        {/if}
+        
+        {#if section.type === 'text'}
+          {#each section.body as paragraph}
+            <p>{@html paragraph.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>
+          {/each}
+        {/if}
+        
+        {#if section.type === 'bullets'}
+          <ul>
+            {#each section.bullets as bullet}
+              <li>{@html bullet.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</li>
+            {/each}
+          </ul>
+        {/if}
+        
+        {#if section.type === 'accordion'}
+          {#if section.intro}
+            <p>{section.intro}</p>
+          {/if}
+          <div class="accordion">
+            {#each section.items as item, idx}
+              {@const itemId = `${section.id}-${idx}`}
+              <div class="accordion-item">
+                <button 
+                  class="accordion-header"
+                  id={itemId}
+                  on:click={() => toggleSection(itemId)}
+                >
+                  <span>{item.label}</span>
+                  <span class="accordion-icon" class:expanded={expandedSections[itemId]}>
+                    ▶
+                  </span>
+                </button>
+                <div class="accordion-content" class:expanded={expandedSections[itemId]}>
+                  <ul>
+                    {#each item.content as line}
+                      <li>{@html line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</li>
+                    {/each}
+                  </ul>
+                </div>
+              </div>
+            {/each}
+          </div>
+        {/if}
+        
+        {#if section.type === 'process'}
+          <ol class="process-steps">
+            {#each section.steps as step}
+              <li class="process-step">{step}</li>
+            {/each}
+          </ol>
+        {/if}
+      </section>
+    {/each}
+    
+    {#if enablement.resources?.length}
+      <section class="resources">
+        <h2>Resources</h2>
+        <div class="resource-list">
+          {#each enablement.resources as resource}
+            <div class="resource">
+              <div class="resource-header">
+                <a href={resource.url} class="resource-title" target="_blank" rel="noopener noreferrer">
+                  {resource.title}
+                </a>
+                <span class="resource-kind">{resource.kind}</span>
+              </div>
+              {#if resource.notes}
+                <p class="resource-notes">{resource.notes}</p>
+              {/if}
+            </div>
+          {/each}
+        </div>
+      </section>
+    {/if}
+    
+    {#if enablement.cta}
+      <section class="cta">
+        <h2>{enablement.cta.headline}</h2>
+        <p class="cta-subhead">{enablement.cta.subhead}</p>
+        <div class="hero-actions" style="justify-content: center;">
+          {#each enablement.cta.actions as action}
+            <a href={action.href} class="btn btn-primary">
+              {action.label}
+            </a>
+          {/each}
+        </div>
+      </section>
+    {/if}
+  </main>
+</div>
+</file>
+
+<file path="static/data/resume.json">
+{
+  "basics": {
+    "name": "Austin Wallace",
+    "label": "Data Engineer",
+    "phone": "604.603.8668",
+    "email": "austeane@gmail.com",
+    "location": { "city": "Victoria, BC" },
+    "summary": "Data Engineer with 9+ years building Databricks/Snowflake/dbt platforms that move billions of rows. Known for improving team practices and collaboration, and establishing best practices for AI use in security-critical settings.",
+    "profiles": [
+      { "network": "GitHub", "username": "austeane", "url": "https://github.com/austeane" },
+      { "network": "LinkedIn", "username": "austintwallace", "url": "https://www.linkedin.com/in/austintwallace/" }
+    ]
+  },
+  "work": [
+    {
+      "name": "Clio",
+      "position": "Data Engineer",
+      "location": "Vancouver, British Columbia",
+      "startDate": "2024-08",
+      "endDate": "",
+      "summary": "Own 10+ Databricks pipelines and Terraform infrastructure.",
+      "highlights": [
+        "Unlocked $1 million+ worth of value by enabling analysis of our AI assistant's conversations",
+        "Automated token rotation for Looker/dbt→Databricks, eliminating an average of an incident every month from expired tokens",
+        "Built a schema/table diff tool (Python) used during Redshift→Databricks migration; caught 20+ data defects pre-launch and enabled final cutoff of infra costing 100k+ a year",
+        "Wrote the company AI best-practices guide; directly responsible for new model usage by 500+ engineers",
+        "Coached or onboarded 20+ engineers on their specific AI workflow; helped increase AI usage by 20x while remaining responsible"
+      ]
+    },
+    {
+      "name": "New Jersey Devils",
+      "position": "Data Developer",
+      "location": "Vancouver, British Columbia",
+      "startDate": "2022-05",
+      "endDate": "2024-08",
+      "summary": "Sole Data Developer architecting end-to-end data platform.",
+      "highlights": [
+        "Architected, built, and operated end-to-end data platform supporting 10 analysts/managers responsible for allocating millions of dollars of player salary",
+        "Ingested NHL tracking at 10 million rows a game; increasing available data by 10,000x",
+        "Built/maintained 40+ dbt models across Postgres/Snowflake; enabled both detailed analysis and summaries that directly powered live dashboards"
+      ]
+    },
+    {
+      "name": "Teck Resources – RACE21",
+      "position": "Data Developer",
+      "location": "Vancouver, British Columbia",
+      "startDate": "2020-10",
+      "endDate": "2022-05",
+      "summary": "Transformed legacy alert system into modern service.",
+      "highlights": [
+        "As part of a cross-functional team of three, transformed an untestable, unextendible, esoteric alert system based in PostgreSQL Stored Procedures",
+        "Built unit and integration tested, modularized, configurable, well-documented alert service written in Python",
+        "Deployed with Terraform to Microsoft Azure"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Qdrill",
+      "description": "Real-world quadball coaching app featuring real-time drag-and-drop practice planning and polished practice viewer. Built for real users including Team Canada.",
+      "url": "https://qdrill.app",
+      "keywords": ["SvelteKit", "Postgres", "Vercel", "87k+ LOC"],
+      "highlights": [
+        "Enforced testing and code quality while leveraging AI pair-programming to accelerate delivery"
+      ]
+    },
+    {
+      "name": "Solstice",
+      "description": "Developing a modern alternative to Topscore for Quadball Canada (target 2026). 20k+ lines of end-to-end-tested TypeScript with emphasis on professional quality and best practices.",
+      "url": "https://github.com/soleilheaney/solstice",
+      "keywords": ["TypeScript", "React", "TanStack Start"]
+    }
+  ],
+  "education": [{
+    "institution": "University of British Columbia (UBC)",
+    "location": "Vancouver",
+    "area": "Analytical Sports Management",
+    "studyType": "B.Sc.",
+    "startDate": "2012",
+    "endDate": "2018",
+    "description": "Machine Learning (Major) / Commerce (Minor). Designed and got approved an entirely unique degree combining business, statistics, and machine learning, which included graduate-level coursework."
+  }],
+  "skills": [
+    { "name": "Data Platforms", "keywords": ["Databricks", "Snowflake", "dbt", "PostgreSQL", "Delta Lake"] },
+    { "name": "Programming", "keywords": ["Python", "SQL", "Go", "pandas", "PySpark"] },
+    { "name": "Cloud & Infrastructure", "keywords": ["AWS S3/IAM", "Azure Unity Catalog", "Terraform", "CI/CD"] },
+    { "name": "Data Engineering", "keywords": ["Data Modeling", "Data Warehousing", "Batch & Near-Real-Time Pipelines", "Observability"] },
+    { "name": "AI & Collaboration", "keywords": ["Responsible AI Enablement", "Stakeholder Collaboration", "Best Practices Guide"] }
+  ],
+  "accomplishments": [
+    {
+      "title": "NHL Data Integration",
+      "summary": "Successfully integrated real-time NHL tracking data, enhancing analytical capabilities and building a competitive advantage"
+    },
+    {
+      "title": "Data Visualization Patent",
+      "summary": "Developed a patented technique for data visualization"
+    },
+    {
+      "title": "International Quidditch Association",
+      "summary": "Served as Chair of Board of Directors, leading 30+ national governing bodies of one of the fastest growing sports worldwide"
+    },
+    {
+      "title": "Media Startup CEO",
+      "summary": "As CEO of a volunteer-based media startup, propelled growth to 70 staff and 30 countries"
+    }
+  ]
+}
+</file>
+
+<file path="static/logos/lovable.svg">
+<svg width="121" height="122" viewBox="0 0 121 122" fill="none" xmlns="http://www.w3.org/2000/svg">
+<mask id="mask0_572_319" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="121" height="122">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M36.0687 0C55.9888 0 72.1373 16.1551 72.1373 36.0835V49.7975H84.141C104.061 49.7975 120.21 65.9526 120.21 85.8809C120.21 105.809 104.061 121.964 84.141 121.964H0V36.0835C0 16.1551 16.1485 0 36.0687 0Z" fill="url(#paint0_linear_572_319)"/>
+</mask>
+<g mask="url(#mask0_572_319)">
+<g filter="url(#filter0_f_572_319)">
+<ellipse cx="52.7381" cy="65.1011" rx="81.3729" ry="81.1923" fill="#4B73FF"/>
+</g>
+<g filter="url(#filter1_f_572_319)">
+<ellipse cx="61.6734" cy="20.547" rx="104.216" ry="81.1923" fill="#FF66F4"/>
+</g>
+<g filter="url(#filter2_f_572_319)">
+<ellipse cx="78.6659" cy="5.26802" rx="81.3729" ry="71.3042" fill="#FF0105"/>
+</g>
+<g filter="url(#filter3_f_572_319)">
+<ellipse cx="63.121" cy="20.5275" rx="48.9374" ry="48.8288" fill="#FE7B02"/>
+</g>
+</g>
+<defs>
+<filter id="filter0_f_572_319" x="-65.0219" y="-52.4784" width="235.52" height="235.159" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="18.1936" result="effect1_foregroundBlur_572_319"/>
+</filter>
+<filter id="filter1_f_572_319" x="-78.9301" y="-97.0324" width="281.208" height="235.159" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="18.1936" result="effect1_foregroundBlur_572_319"/>
+</filter>
+<filter id="filter2_f_572_319" x="-39.0942" y="-102.423" width="235.52" height="215.383" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="18.1936" result="effect1_foregroundBlur_572_319"/>
+</filter>
+<filter id="filter3_f_572_319" x="-22.2036" y="-64.6884" width="170.649" height="170.432" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="18.1936" result="effect1_foregroundBlur_572_319"/>
+</filter>
+<linearGradient id="paint0_linear_572_319" x1="40.4527" y1="21.4331" x2="76.9327" y2="121.971" gradientUnits="userSpaceOnUse">
+<stop offset="0.025" stop-color="#FF8E63"/>
+<stop offset="0.56" stop-color="#FF7EB0"/>
+<stop offset="0.95" stop-color="#4B73FF"/>
+</linearGradient>
+</defs>
+</svg>
+</file>
+
+<file path="static/logos/v0.svg">
+<svg width="145" height="72" viewBox="0 0 145 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_421_89)">
+<path d="M84.7967 0H119.333C133.336 0 144.689 11.3524 144.689 25.3563V58.2927H130.504V25.3563C130.504 25.0189 130.491 24.6839 130.465 24.3519L95.9291 58.2871C96.0455 58.2908 96.1624 58.2927 96.2797 58.2927H130.504V71.6897H96.2797C82.2758 71.6897 70.6117 60.2263 70.6117 46.2224V13.3736H84.7967V46.2224C84.7967 46.8548 84.8459 47.4798 84.9407 48.0926L120.236 13.4109C119.939 13.3862 119.638 13.3736 119.333 13.3736H84.7967V0Z" fill="black"/>
+<path d="M49.9128 69.2224L0 13.3677H20.0804L49.3843 46.1601V13.3677H64.3573V63.7088C64.3573 71.3067 54.9755 74.8878 49.9128 69.2224Z" fill="black"/>
+</g>
+<defs>
+<clipPath id="clip0_421_89">
+<rect width="144.69" height="72" fill="white"/>
+</clipPath>
+</defs>
+</svg>
+</file>
+
+<file path="static/variants/claude-code/enablement/index.html">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Enablement - Claude Code Variant</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --claude-primary: #D97706;
+      --claude-secondary: #F59E0B;
+      --claude-accent: #FCD34D;
+      --text-primary: #111827;
+      --text-secondary: #6B7280;
+      --bg-primary: #FFFFFF;
+      --bg-secondary: #F9FAFB;
+      --border: #E5E7EB;
+      --success: #10B981;
+      --radius: 12px;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      color: var(--text-primary);
+      background: var(--bg-primary);
+      line-height: 1.6;
+    }
+    
+    #app-claude-code {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    
+    .hero-section {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+      border-radius: var(--radius);
+      margin-bottom: 3rem;
+      border: 1px solid var(--border);
+    }
+    
+    .hero-badge {
+      display: inline-block;
+      background: var(--claude-primary);
+      color: white;
+      padding: 0.25rem 1rem;
+      border-radius: 999px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+    
+    .hero-title {
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--claude-primary), var(--claude-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .hero-subtitle {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+    
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .btn {
+      padding: 0.75rem 2rem;
+      border-radius: var(--radius);
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+    
+    .btn-primary {
+      background: var(--claude-primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--claude-secondary);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(217, 119, 6, 0.3);
+    }
+    
+    .btn-secondary {
+      background: var(--bg-primary);
+      color: var(--claude-primary);
+      border-color: var(--claude-primary);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--claude-primary);
+      color: white;
+    }
+    
+    .value-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 4rem;
+    }
+    
+    .value-card {
+      background: var(--bg-primary);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .value-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--claude-primary), var(--claude-secondary));
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+    
+    .value-card:hover {
+      border-color: var(--claude-primary);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .value-card:hover::before {
+      transform: scaleX(1);
+    }
+    
+    .value-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--claude-accent);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .value-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      color: var(--text-primary);
+    }
+    
+    .value-bullets {
+      list-style: none;
+    }
+    
+    .value-bullets li {
+      position: relative;
+      padding-left: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+    }
+    
+    .value-bullets li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      color: var(--claude-primary);
+      font-weight: bold;
+    }
+    
+    .section {
+      margin-bottom: 4rem;
+    }
+    
+    .section-header {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    
+    .section-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+    
+    .section-intro {
+      color: var(--text-secondary);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+    
+    .service-card {
+      background: var(--bg-secondary);
+      border-radius: var(--radius);
+      padding: 2rem;
+      border: 1px solid var(--border);
+      transition: all 0.3s ease;
+    }
+    
+    .service-card:hover {
+      background: var(--bg-primary);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+      transform: translateY(-4px);
+    }
+    
+    .service-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--claude-primary);
+    }
+    
+    .service-description {
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+      line-height: 1.7;
+    }
+    
+    .deliverables {
+      border-top: 1px solid var(--border);
+      padding-top: 1rem;
+    }
+    
+    .deliverables-title {
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      margin-bottom: 0.75rem;
+    }
+    
+    .deliverables-list {
+      list-style: none;
+    }
+    
+    .deliverables-list li {
+      padding: 0.25rem 0;
+      padding-left: 1.25rem;
+      position: relative;
+      color: var(--text-primary);
+    }
+    
+    .deliverables-list li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--success);
+      font-weight: bold;
+    }
+    
+    .accordion {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    
+    .accordion-item {
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .accordion-item:last-child {
+      border-bottom: none;
+    }
+    
+    .accordion-header {
+      width: 100%;
+      padding: 1.25rem 1.5rem;
+      background: none;
+      border: none;
+      text-align: left;
+      font-size: 1.125rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+    
+    .accordion-header:hover {
+      background: var(--bg-secondary);
+      color: var(--claude-primary);
+    }
+    
+    .accordion-icon {
+      transition: transform 0.3s ease;
+      color: var(--claude-primary);
+    }
+    
+    .accordion-item.active .accordion-icon {
+      transform: rotate(90deg);
+    }
+    
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: var(--bg-secondary);
+    }
+    
+    .accordion-item.active .accordion-content {
+      max-height: 500px;
+    }
+    
+    .accordion-body {
+      padding: 1.5rem;
+    }
+    
+    .process-timeline {
+      position: relative;
+      padding-left: 2rem;
+    }
+    
+    .process-timeline::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 20px;
+      bottom: 20px;
+      width: 2px;
+      background: linear-gradient(180deg, var(--claude-primary), var(--claude-secondary));
+    }
+    
+    .process-step {
+      position: relative;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      background: var(--bg-secondary);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    
+    .process-step::before {
+      content: attr(data-step);
+      position: absolute;
+      left: -2rem;
+      top: 1.5rem;
+      width: 30px;
+      height: 30px;
+      background: var(--claude-primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.875rem;
+    }
+    
+    .process-title {
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    
+    .process-description {
+      color: var(--text-secondary);
+    }
+    
+    .cta-section {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: linear-gradient(135deg, var(--claude-primary), var(--claude-secondary));
+      border-radius: var(--radius);
+      color: white;
+    }
+    
+    .cta-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+    
+    .cta-subtitle {
+      font-size: 1.25rem;
+      margin-bottom: 2rem;
+      opacity: 0.95;
+    }
+    
+    .cta-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .btn-cta {
+      background: white;
+      color: var(--claude-primary);
+      font-weight: 700;
+    }
+    
+    .btn-cta:hover {
+      background: var(--bg-secondary);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+    
+    @media (max-width: 768px) {
+      .hero-title {
+        font-size: 2rem;
+      }
+      
+      .section-title {
+        font-size: 1.75rem;
+      }
+      
+      #app-claude-code {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app-claude-code">
+    <div class="hero-section">
+      <span class="hero-badge">🤖 Claude Code Enhanced</span>
+      <h1 class="hero-title">AI Enablement that Drives Effectiveness</h1>
+      <p class="hero-subtitle">Ship faster and safer, with workflows your team will actually use.</p>
+      <div class="hero-actions">
+        <a href="mailto:you@example.com" class="btn btn-primary">
+          <span>📧</span>
+          <span>Email me</span>
+        </a>
+        <a href="#process" class="btn btn-secondary">
+          <span>See approach</span>
+          <span>↓</span>
+        </a>
+      </div>
+    </div>
+    
+    <div class="value-grid" id="value-props">
+      <!-- Value props will be inserted here -->
+    </div>
+    
+    <section class="section" id="services">
+      <div class="section-header">
+        <h2 class="section-title">How I Help</h2>
+        <p class="section-intro">Comprehensive AI enablement services tailored to your organization's needs</p>
+      </div>
+      <div class="service-grid" id="service-cards">
+        <!-- Service cards will be inserted here -->
+      </div>
+    </section>
+    
+    <section class="section" id="best-practices">
+      <div class="section-header">
+        <h2 class="section-title">Best Practices</h2>
+        <p class="section-intro">Proven approaches for effective AI integration</p>
+      </div>
+      <div class="accordion" id="practices-accordion">
+        <!-- Accordion items will be inserted here -->
+      </div>
+    </section>
+    
+    <section class="section" id="process">
+      <div class="section-header">
+        <h2 class="section-title">Engagement Process</h2>
+        <p class="section-intro">A structured approach to AI transformation</p>
+      </div>
+      <div class="process-timeline" id="process-timeline">
+        <!-- Process steps will be inserted here -->
+      </div>
+    </section>
+    
+    <div class="cta-section" id="cta">
+      <h2 class="cta-title">Ready to Transform Your Team?</h2>
+      <p class="cta-subtitle">Let's discuss how AI enablement can accelerate your organization</p>
+      <div class="cta-actions">
+        <a href="mailto:you@example.com" class="btn btn-cta">Get Started Today</a>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Height tracking
+    let lastHeight = 0;
+    let resizeTimeout;
+    let isUpdating = false;
+    
+    function updateHeight() {
+      if (isUpdating) return;
+      isUpdating = true;
+      
+      setTimeout(() => {
+        // Use body's offset height which is more stable
+        const body = document.body;
+        const html = document.documentElement;
+        const height = Math.max(
+          body.scrollHeight,
+          body.offsetHeight,
+          html.clientHeight,
+          html.offsetHeight
+        );
+        
+        // Only send if height actually changed by more than 5px
+        if (Math.abs(height - lastHeight) > 5) {
+          lastHeight = height;
+          parent?.postMessage({ type: 'variant:height', value: height }, '*');
+        }
+        isUpdating = false;
+      }, 0);
+    }
+    
+    async function init() {
+      try {
+        const response = await fetch('/data/enablement.json');
+        const data = await response.json();
+        
+        // Render value props
+        const valueGrid = document.getElementById('value-props');
+        data.value_props.forEach((prop, index) => {
+          const card = document.createElement('div');
+          card.className = 'value-card';
+          card.innerHTML = `
+            <div class="value-icon">${['🎯', '🚀', '⚡', '🔒', '📈'][index]}</div>
+            <h3 class="value-title">${prop.title}</h3>
+            <ul class="value-bullets">
+              ${prop.bullets.map(b => `<li>${b}</li>`).join('')}
+            </ul>
+          `;
+          valueGrid.appendChild(card);
+        });
+        
+        // Render service cards
+        const serviceGrid = document.getElementById('service-cards');
+        const servicesSection = data.sections.find(s => s.id === 'what-i-do');
+        if (servicesSection && servicesSection.cards) {
+          servicesSection.cards.forEach(card => {
+            const serviceCard = document.createElement('div');
+            serviceCard.className = 'service-card';
+            serviceCard.innerHTML = `
+              <h3 class="service-title">${card.title}</h3>
+              <p class="service-description">${card.body}</p>
+              <div class="deliverables">
+                <h4 class="deliverables-title">Deliverables</h4>
+                <ul class="deliverables-list">
+                  ${card.deliverables.map(d => `<li>${d}</li>`).join('')}
+                </ul>
+              </div>
+            `;
+            serviceGrid.appendChild(serviceCard);
+          });
+        }
+        
+        // Render best practices accordion
+        const accordion = document.getElementById('practices-accordion');
+        const practicesSection = data.sections.find(s => s.id === 'prompting-best-practices');
+        if (practicesSection && practicesSection.items) {
+          practicesSection.items.forEach((item, index) => {
+            const accordionItem = document.createElement('div');
+            accordionItem.className = 'accordion-item';
+            accordionItem.innerHTML = `
+              <button class="accordion-header">
+                <span>${item.label}</span>
+                <span class="accordion-icon">▶</span>
+              </button>
+              <div class="accordion-content">
+                <div class="accordion-body">
+                  <ul>
+                    ${item.content.map(c => `<li>${c}</li>`).join('')}
+                  </ul>
+                </div>
+              </div>
+            `;
+            
+            const header = accordionItem.querySelector('.accordion-header');
+            header.addEventListener('click', () => {
+              accordionItem.classList.toggle('active');
+            });
+            
+            accordion.appendChild(accordionItem);
+          });
+        }
+        
+        // Render process timeline
+        const timeline = document.getElementById('process-timeline');
+        const processSection = data.sections.find(s => s.id === 'process');
+        if (processSection && processSection.steps) {
+          processSection.steps.forEach((step, index) => {
+            const stepElement = document.createElement('div');
+            stepElement.className = 'process-step';
+            stepElement.setAttribute('data-step', index + 1);
+            
+            const parts = step.split(':');
+            stepElement.innerHTML = `
+              <div class="process-title">${parts[0]}</div>
+              <div class="process-description">${parts.slice(1).join(':').trim()}</div>
+            `;
+            
+            timeline.appendChild(stepElement);
+          });
+        }
+        
+        // Update CTA with actual data
+        if (data.cta) {
+          const ctaTitle = document.querySelector('.cta-title');
+          const ctaSubtitle = document.querySelector('.cta-subtitle');
+          const ctaButton = document.querySelector('.btn-cta');
+          
+          if (ctaTitle) ctaTitle.textContent = data.cta.headline;
+          if (ctaSubtitle) ctaSubtitle.textContent = data.cta.subhead;
+          if (ctaButton && data.cta.actions && data.cta.actions[0]) {
+            ctaButton.textContent = data.cta.actions[0].label;
+            ctaButton.href = data.cta.actions[0].href;
+          }
+        }
+        
+        // Post initial height to parent for iframe resizing
+        requestAnimationFrame(() => {
+          updateHeight();
+        });
+        
+      } catch (error) {
+        console.error('Error loading enablement data:', error);
+        document.getElementById('app-claude-code').innerHTML = `
+          <div style="text-align: center; padding: 2rem; color: #ef4444;">
+            <h2>Error Loading Content</h2>
+            <p>Unable to fetch enablement data. Please try again later.</p>
+          </div>
+        `;
+      }
+    }
+    
+    // Initialize on load
+    init();
+    
+    // Only update on actual window resize (not scrolling)
+    let windowWidth = window.innerWidth;
+    window.addEventListener('resize', () => {
+      // Check if it's an actual resize, not just a scroll
+      if (window.innerWidth !== windowWidth) {
+        windowWidth = window.innerWidth;
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          requestAnimationFrame(updateHeight);
+        }, 100);
+      }
+    });
+  </script>
+</body>
+</html>
+</file>
+
+<file path="static/variants/claude-code/index.html">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume - Claude Code Variant</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --claude-primary: #D97706;
+      --claude-secondary: #F59E0B;
+      --claude-accent: #FCD34D;
+      --text-primary: #111827;
+      --text-secondary: #6B7280;
+      --bg-primary: #FFFFFF;
+      --bg-secondary: #F9FAFB;
+      --border: #E5E7EB;
+      --success: #10B981;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      color: var(--text-primary);
+      background: var(--bg-primary);
+      line-height: 1.6;
+    }
+    
+    #app-claude-code {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .header {
+      border-bottom: 3px solid var(--claude-primary);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .name {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--claude-primary), var(--claude-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+    
+    .title {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+    
+    .contact-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      list-style: none;
+    }
+    
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .contact-icon {
+      width: 20px;
+      height: 20px;
+      color: var(--claude-primary);
+    }
+    
+    .contact-item a {
+      color: var(--text-primary);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    
+    .contact-item a:hover {
+      color: var(--claude-primary);
+    }
+    
+    .section {
+      margin-bottom: 2.5rem;
+      padding: 1.5rem;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--claude-primary), var(--claude-secondary));
+    }
+    
+    .section-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--claude-primary);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .section-icon {
+      font-size: 1.25rem;
+    }
+    
+    .summary {
+      color: var(--text-secondary);
+      line-height: 1.8;
+      max-width: 70ch;
+    }
+    
+    .experience-item {
+      margin-bottom: 1.5rem;
+      padding-left: 1.5rem;
+      border-left: 2px solid var(--claude-primary);
+    }
+    
+    .experience-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .experience-title {
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .experience-company {
+      color: var(--claude-primary);
+      font-weight: 500;
+    }
+    
+    .experience-date {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      background: var(--bg-primary);
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+    
+    .experience-description {
+      color: var(--text-secondary);
+      margin-bottom: 0.75rem;
+    }
+    
+    .highlights {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .highlights li {
+      padding: 0.5rem 0;
+      padding-left: 1.5rem;
+      position: relative;
+      color: var(--text-secondary);
+    }
+    
+    .highlights li::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--claude-primary);
+      font-weight: bold;
+    }
+    
+    .project-item {
+      margin-bottom: 1rem;
+      padding: 1rem;
+      background: var(--bg-primary);
+      border-radius: 8px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .project-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .project-name {
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+    
+    .project-link {
+      color: var(--claude-primary);
+      text-decoration: none;
+      font-size: 0.875rem;
+    }
+    
+    .project-link:hover {
+      text-decoration: underline;
+    }
+    
+    .project-description {
+      color: var(--text-secondary);
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+    }
+    
+    .project-keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+    
+    .keyword {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      background: var(--claude-accent);
+      color: var(--claude-primary);
+      border-radius: 999px;
+      font-weight: 500;
+    }
+    
+    .skills-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    
+    .skill-item {
+      padding: 0.5rem 1rem;
+      background: var(--bg-primary);
+      border: 2px solid var(--border);
+      border-radius: 999px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .skill-item:hover {
+      border-color: var(--claude-primary);
+      color: var(--claude-primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(217, 119, 6, 0.1);
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-secondary);
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--claude-primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    @media (max-width: 768px) {
+      #app-claude-code {
+        padding: 1rem;
+      }
+      
+      .name {
+        font-size: 2rem;
+      }
+      
+      .section {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app-claude-code">
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <p>Loading resume...</p>
+    </div>
+  </div>
+  
+  <script>
+    // Height tracking
+    let lastHeight = 0;
+    let resizeTimeout;
+    let isUpdating = false;
+    
+    function updateHeight() {
+      if (isUpdating) return;
+      isUpdating = true;
+      
+      setTimeout(() => {
+        // Use body's offset height which is more stable
+        const body = document.body;
+        const html = document.documentElement;
+        const height = Math.max(
+          body.scrollHeight,
+          body.offsetHeight,
+          html.clientHeight,
+          html.offsetHeight
+        );
+        
+        // Only send if height actually changed by more than 5px
+        if (Math.abs(height - lastHeight) > 5) {
+          lastHeight = height;
+          parent?.postMessage({ type: 'variant:height', value: height }, '*');
+        }
+        isUpdating = false;
+      }, 0);
+    }
+    
+    async function init() {
+      const container = document.getElementById('app-claude-code');
+      
+      try {
+        const response = await fetch('/data/resume.json');
+        const resume = await response.json();
+        
+        // Build HTML
+        let html = `
+          <header class="header">
+            <h1 class="name">${resume.basics?.name || 'Your Name'}</h1>
+            <p class="title">${resume.basics?.label || 'Professional Title'}</p>
+            <ul class="contact-info">
+        `;
+        
+        // Contact info
+        if (resume.basics?.email) {
+          html += `
+            <li class="contact-item">
+              <span class="contact-icon">📧</span>
+              <a href="mailto:${resume.basics.email}">${resume.basics.email}</a>
+            </li>
+          `;
+        }
+        
+        if (resume.basics?.website) {
+          html += `
+            <li class="contact-item">
+              <span class="contact-icon">🌐</span>
+              <a href="${resume.basics.website}" target="_blank" rel="noopener">${resume.basics.website}</a>
+            </li>
+          `;
+        }
+        
+        if (resume.basics?.location?.city) {
+          html += `
+            <li class="contact-item">
+              <span class="contact-icon">📍</span>
+              <span>${resume.basics.location.city}</span>
+            </li>
+          `;
+        }
+        
+        // GitHub
+        const github = resume.basics?.profiles?.find(p => p.network?.toLowerCase() === 'github');
+        if (github) {
+          html += `
+            <li class="contact-item">
+              <span class="contact-icon">💻</span>
+              <a href="${github.url}" target="_blank" rel="noopener">GitHub</a>
+            </li>
+          `;
+        }
+        
+        // LinkedIn
+        const linkedin = resume.basics?.profiles?.find(p => p.network?.toLowerCase() === 'linkedin');
+        if (linkedin) {
+          html += `
+            <li class="contact-item">
+              <span class="contact-icon">💼</span>
+              <a href="${linkedin.url}" target="_blank" rel="noopener">LinkedIn</a>
+            </li>
+          `;
+        }
+        
+        html += `
+            </ul>
+          </header>
+        `;
+        
+        // Summary
+        if (resume.basics?.summary) {
+          html += `
+            <section class="section">
+              <h2 class="section-title">
+                <span class="section-icon">📋</span>
+                Summary
+              </h2>
+              <p class="summary">${resume.basics.summary}</p>
+            </section>
+          `;
+        }
+        
+        // Experience
+        if (resume.work?.length) {
+          html += `
+            <section class="section">
+              <h2 class="section-title">
+                <span class="section-icon">💼</span>
+                Experience
+              </h2>
+          `;
+          
+          resume.work.forEach(job => {
+            html += `
+              <div class="experience-item">
+                <div class="experience-header">
+                  <div>
+                    <span class="experience-title">${job.position}</span>
+                    <span class="experience-company"> @ ${job.name}</span>
+                  </div>
+                  <span class="experience-date">${job.startDate}${job.endDate ? ` – ${job.endDate}` : ' – Present'}</span>
+                </div>
+            `;
+            
+            if (job.summary) {
+              html += `<p class="experience-description">${job.summary}</p>`;
+            }
+            
+            if (job.highlights?.length) {
+              html += '<ul class="highlights">';
+              job.highlights.forEach(h => {
+                html += `<li>${h}</li>`;
+              });
+              html += '</ul>';
+            }
+            
+            html += '</div>';
+          });
+          
+          html += '</section>';
+        }
+        
+        // Projects
+        if (resume.projects?.length) {
+          html += `
+            <section class="section">
+              <h2 class="section-title">
+                <span class="section-icon">🚀</span>
+                Projects
+              </h2>
+          `;
+          
+          resume.projects.forEach(project => {
+            html += `
+              <div class="project-item">
+                <div class="project-name">${project.name}</div>
+            `;
+            
+            if (project.url) {
+              html += `<a href="${project.url}" class="project-link" target="_blank" rel="noopener">${project.url}</a>`;
+            }
+            
+            if (project.description) {
+              html += `<p class="project-description">${project.description}</p>`;
+            }
+            
+            if (project.keywords?.length) {
+              html += '<div class="project-keywords">';
+              project.keywords.forEach(k => {
+                html += `<span class="keyword">${k}</span>`;
+              });
+              html += '</div>';
+            }
+            
+            html += '</div>';
+          });
+          
+          html += '</section>';
+        }
+        
+        // Skills
+        if (resume.skills?.length) {
+          html += `
+            <section class="section">
+              <h2 class="section-title">
+                <span class="section-icon">⚡</span>
+                Skills
+              </h2>
+              <div class="skills-grid">
+          `;
+          
+          resume.skills.forEach(skill => {
+            let skillText = skill.name;
+            if (skill.keywords?.length) {
+              skillText += ` — ${skill.keywords.join(', ')}`;
+            }
+            html += `<div class="skill-item">${skillText}</div>`;
+          });
+          
+          html += `
+              </div>
+            </section>
+          `;
+        }
+        
+        container.innerHTML = html;
+        
+        // Post initial height to parent
+        requestAnimationFrame(() => {
+          updateHeight();
+        });
+        
+      } catch (error) {
+        console.error('Error loading resume:', error);
+        container.innerHTML = `
+          <div style="text-align: center; padding: 2rem; color: #ef4444;">
+            <h2>Error Loading Resume</h2>
+            <p>Unable to fetch resume data. Please try again later.</p>
+          </div>
+        `;
+      }
+    }
+    
+    // Initialize
+    init();
+    
+    // Only update on actual window resize (not scrolling)
+    let windowWidth = window.innerWidth;
+    window.addEventListener('resize', () => {
+      // Check if it's an actual resize, not just a scroll
+      if (window.innerWidth !== windowWidth) {
+        windowWidth = window.innerWidth;
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          requestAnimationFrame(updateHeight);
+        }, 100);
+      }
+    });
+  </script>
+</body>
+</html>
+</file>
+
+<file path=".gitignore">
+# Dependencies
+node_modules/
+.npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build output
+.svelte-kit/
+build/
+dist/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary files
+.tmp/
+temp/
+*.tmp
+
+# Personal files
+*.docx
+*.doc
+*.pdf
+
+# sst
+.sst
+</file>
+
+<file path="package.json">
+{
+  "name": "austin-site",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "dev": "vite dev",
+    "preview": "vite preview",
+    "validate:variants": "node scripts/validate-variant.mjs"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-static": "^3.0.9",
+    "@sveltejs/kit": "^2.37.0",
+    "@sveltejs/vite-plugin-svelte": "^6.1.3",
+    "@types/node": "^24.3.0",
+    "cheerio": "^1.1.2",
+    "html-validate": "^10.0.0",
+    "sst": "^3.17.10",
+    "svelte": "^5.38.6",
+    "svelte-check": "^4.3.1",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.3"
+  },
+  "dependencies": {
+    "sst": "3.17.10",
+    "svelte-kit-sst": "2.43.5"
+  }
+}
+</file>
+
+<file path="svelte.config.js">
+import adapter from 'svelte-kit-sst';
+
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+  kit: {
+    adapter: adapter(),
+    prerender: { entries: ['*'] }
+  }
+};
+
+export default config;
+</file>
+
+<file path="src/routes/with/[tool]/enablement/+page.svelte">
+<script lang="ts">
+  import VariantFrame from '$lib/components/VariantFrame.svelte';
+  
+  export let data: any;
+  const { provider, tool } = data;
+  
+  const variantPath = `/variants/${tool}/enablement/index.html`;
+</script>
+
+<svelte:head>
+  <title>AI Enablement - {provider.name} Variant</title>
+</svelte:head>
+
+<VariantFrame src={variantPath} />
+</file>
+
+<file path="sst.config.ts">
+/// <reference path="./.sst/platform/config.d.ts" />
+
+export default $config({
+  app(input) {
+    return {
+      name: "austin-site",
+      removal: input?.stage === "production" ? "retain" : "remove",
+      protect: ["production"].includes(input?.stage),
+      home: "aws",
+    };
+  },
+  async run() {
+    // Only add custom domain if in production
+    const domainConfig = $app.stage === "production" 
+      ? {
+          domain: {
+            name: "www.austinwallace.ca",
+            redirects: ["austinwallace.ca"],
+            dns: false, // We'll manage DNS in GoDaddy
+            cert: "arn:aws:acm:us-east-1:737679990662:certificate/061f07dc-2e1e-4751-bfee-e7e26c8b7c80"
+          }
+        }
+      : {};
+    
+    const site = new sst.aws.SvelteKit("AustinSite", {
+      ...domainConfig,
+      environment: {
+        PUBLIC_STAGE: $app.stage,
+      }
+    });
+    
+    return {
+      url: site.url,
+      customDomain: site.domain,
+    };
+  },
+});
+</file>
+
+<file path="src/lib/providers.ts">
+export type Provider = {
+  id: string;
+  name: string;
+  path: string;        // static path to variant entry
+  noindex?: boolean;   // whether to add robots noindex on /with/[tool]
+  icon?: string;       // emoji or text icon for the provider
+  logo?: string;       // path to logo image
+  color?: string;      // accent color for the provider
+  comingSoon?: boolean; // whether this variant is still being developed
+};
+
+export const PROVIDERS: Provider[] = [
+  { id: 'minimal', name: 'Minimal', path: '/', icon: '◐', color: '#000' },
+  { id: 'claude-code', name: 'Claude Code', path: '/variants/claude-code/index.html', noindex: true, icon: '◈', logo: '/logos/claude.png', color: '#d97706' },
+  { id: 'chatgpt', name: 'ChatGPT', path: '/variants/chatgpt/index.html', noindex: true, icon: '◉', logo: '/logos/chatgpt.svg', color: '#10a37f', comingSoon: true },
+  { id: 'lovable', name: 'Lovable', path: '/variants/lovable/index.html', noindex: true, icon: '♥', logo: '/logos/lovable.png', color: '#ff006e', comingSoon: true },
+  { id: 'bolt', name: 'Bolt', path: '/variants/bolt/index.html', noindex: true, icon: '⚡', logo: '/logos/bolt.jpg', color: '#f59e0b', comingSoon: true },
+  { id: 'cursor', name: 'Cursor', path: '/variants/cursor/index.html', noindex: true, icon: '▮', logo: '/logos/cursor.png', color: '#3b82f6', comingSoon: true },
+  { id: 'v0', name: 'v0', path: '/variants/v0/index.html', noindex: true, icon: 'v0', logo: '/logos/v0.png', color: '#000', comingSoon: true }
+];
+</file>
+
+<file path="src/routes/+layout.svelte">
+<script>
+  import { PROVIDERS } from '$lib/providers';
+  import { page } from '$app/stores';
+  
+  $: currentPath = $page.url.pathname;
+  $: currentProvider = currentPath.startsWith('/with/') 
+    ? PROVIDERS.find(p => p.id === currentPath.split('/')[2])
+    : PROVIDERS.find(p => p.id === 'minimal');
+  
+  // Helper to build provider-aware paths
+  function getProviderPath(targetPage) {
+    if (currentProvider?.id === 'minimal') {
+      return targetPage === 'resume' ? '/' : '/enablement';
+    }
+    return targetPage === 'resume' 
+      ? `/with/${currentProvider?.id}` 
+      : `/with/${currentProvider?.id}/enablement`;
+  }
+  
+  // Handle click on sidebar items
+  function handleProviderClick(e, provider) {
+    if (provider.comingSoon) {
+      e.preventDefault();
+      // Stay on current page for coming soon variants
+    }
+  }
+</script>
+
+<style>
+  .layout-container {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .sidebar {
+    width: 80px;
+    background: #fafafa;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 0;
+    gap: 0.5rem;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  
+  .sidebar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem;
+    text-decoration: none;
+    color: var(--fg);
+    border-radius: 8px;
+    margin: 0 0.5rem;
+    transition: all 0.2s ease;
+    min-height: 60px;
+    position: relative;
+  }
+  
+  .sidebar-item:hover {
+    background: #f0f0f0;
+    transform: translateX(2px);
+  }
+  
+  .sidebar-item.active {
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  .sidebar-item.active::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 24px;
+    background: var(--accent-color, #000);
+    border-radius: 0 2px 2px 0;
+  }
+  
+  .sidebar-item.coming-soon {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .sidebar-item.coming-soon:hover {
+    opacity: 0.8;
+    transform: none;
+  }
+  
+  .sidebar-item.coming-soon .sidebar-logo,
+  .sidebar-item.coming-soon .sidebar-icon {
+    filter: grayscale(30%);
+  }
+  
+  .coming-soon-tooltip {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+    z-index: 10;
+  }
+  
+  .sidebar-item.coming-soon:hover .coming-soon-tooltip {
+    opacity: 1;
+  }
+  
+  .sidebar-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+  
+  .sidebar-logo {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    margin-bottom: 0.25rem;
+  }
+  
+  .sidebar-label {
+    font-size: 0.65rem;
+    text-align: center;
+    opacity: 0.7;
+  }
+  
+  .main-content {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  header {
+    padding: 1rem 2rem;
+    border-bottom: 1px solid var(--border);
+    background: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .content-area {
+    flex: 1;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 1.25rem;
+  }
+  
+  footer {
+    padding: 1rem 2rem;
+    border-top: 1px solid var(--border);
+    background: #fafafa;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  
+  .provider-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background: #f0f0f0;
+    border-radius: 999px;
+    font-size: 0.85rem;
+  }
+  
+  .active-page {
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: underline;
+  }
+  
+  @media (max-width: 768px) {
+    .sidebar {
+      width: 60px;
+    }
+    
+    .sidebar-label {
+      display: none;
+    }
+  }
+</style>
+
+<div class="layout-container">
+  <nav class="sidebar" aria-label="AI Variants">
+    {#each PROVIDERS as provider}
+      {@const isOnEnablement = currentPath.includes('/enablement')}
+      {@const providerHref = provider.comingSoon 
+        ? '#' 
+        : provider.id === 'minimal' 
+          ? (isOnEnablement ? '/enablement' : '/')
+          : (isOnEnablement ? `/with/${provider.id}/enablement` : `/with/${provider.id}`)}
+      <a 
+        href={providerHref}
+        class="sidebar-item"
+        class:active={currentProvider?.id === provider.id}
+        class:coming-soon={provider.comingSoon}
+        style="--accent-color: {provider.color || '#000'}"
+        title="{provider.name} version{provider.comingSoon ? ' (coming soon)' : ''}"
+        on:click={(e) => handleProviderClick(e, provider)}
+      >
+        {#if provider.logo}
+          <img src={provider.logo} alt={provider.name} class="sidebar-logo" />
+        {:else}
+          <span class="sidebar-icon" style="color: {provider.color || 'inherit'}">
+            {provider.icon}
+          </span>
+        {/if}
+        <span class="sidebar-label">{provider.name}</span>
+        {#if provider.comingSoon}
+          <span class="coming-soon-tooltip">Coming Soon</span>
+        {/if}
+      </a>
+    {/each}
+  </nav>
+
+  <div class="main-content">
+    <header>
+      <div style="display: flex; align-items: center; gap: 2rem;">
+        <a href="/" style="text-decoration:none;color:inherit;font-weight:700">
+          Austin Wallace — Data Engineer
+        </a>
+        <nav style="display: flex; gap: 1rem;">
+          <a href={getProviderPath('resume')} class:active-page={!currentPath.includes('/enablement')}>Resume</a>
+          <a href={getProviderPath('enablement')} class:active-page={currentPath.includes('/enablement')}>AI Enablement</a>
+        </nav>
+        {#if currentProvider}
+          <span class="provider-badge">
+            <span style="color: {currentProvider.color}">{currentProvider.icon}</span>
+            {currentProvider.name} Version
+          </span>
+        {/if}
+      </div>
+    </header>
+
+    <div class="content-area" id="content">
+      <slot />
+    </div>
+
+    <footer>
+      <p>See this resume styled by different AI tools. Variants are demos; canonical content is the minimal version.</p>
+    </footer>
+  </div>
+</div>
+</file>
+
+</files>
