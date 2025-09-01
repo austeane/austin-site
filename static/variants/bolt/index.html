@@ -3,39 +3,1193 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Coming Soon</title>
+  <title>Austin Wallace - Data Engineer | Bolt Variant</title>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --bolt-primary: #f59e0b;
+      --bolt-secondary: #fbbf24;
+      --bolt-accent: #fef3c7;
+      --bolt-dark: #92400e;
+      --bolt-light: #fffbeb;
+      --text-primary: #111827;
+      --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f9fafb;
+      --bg-tertiary: #f3f4f6;
+      --border: #e5e7eb;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+      --radius: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+    }
+    
     body {
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      color: var(--text-primary);
+      background: linear-gradient(135deg, var(--bolt-light) 0%, var(--bg-primary) 30%, var(--bg-secondary) 100%);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    
+    #app-bolt {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      animation: slideInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes fadeInScale {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    @keyframes shimmer {
+      0% {
+        background-position: -300px 0;
+      }
+      100% {
+        background-position: calc(300px + 100%) 0;
+      }
+    }
+    
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+    
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.05);
+        opacity: 0.9;
+      }
+    }
+    
+    .hero-section {
+      text-align: center;
+      padding: 5rem 3rem;
+      background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bolt-light) 50%, var(--bg-primary) 100%);
+      border-radius: var(--radius-xl);
+      margin-bottom: 4rem;
+      box-shadow: var(--shadow-xl);
+      border: 2px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      animation: fadeInScale 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background: linear-gradient(90deg, var(--bolt-primary), var(--bolt-secondary), var(--bolt-primary));
+      background-size: 300px 100%;
+      animation: shimmer 3s infinite linear;
+    }
+    
+    .hero-section::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, var(--bolt-accent) 0%, transparent 70%);
+      opacity: 0.3;
+      animation: float 8s ease-in-out infinite;
+      pointer-events: none;
+    }
+    
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: linear-gradient(135deg, var(--bolt-primary), var(--bolt-secondary));
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 999px;
+      font-size: 1.125rem;
+      font-weight: 800;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-xl);
+      animation: pulse 3s infinite;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .hero-title {
+      font-size: 4.5rem;
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--bolt-primary) 0%, var(--bolt-secondary) 50%, var(--bolt-dark) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .hero-subtitle {
+      font-size: 1.75rem;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .hero-contact {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .contact-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 1.5rem;
+      background: var(--bg-primary);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 600;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .contact-link:hover {
+      border-color: var(--bolt-primary);
+      background: var(--bolt-light);
+      transform: translateY(-4px) scale(1.05);
+      box-shadow: var(--shadow-xl);
+    }
+    
+    .contact-icon {
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(135deg, var(--bolt-primary), var(--bolt-secondary));
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      margin: 0;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
+      font-weight: bold;
+      font-size: 0.875rem;
     }
-    .container {
+    
+    .section {
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
+      padding: 3rem;
+      margin-bottom: 3rem;
+      box-shadow: var(--shadow-lg);
+      border: 2px solid var(--border);
+      position: relative;
+      animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    
+    .section:nth-child(3) { animation-delay: 0.2s; }
+    .section:nth-child(4) { animation-delay: 0.4s; }
+    .section:nth-child(5) { animation-delay: 0.6s; }
+    .section:nth-child(6) { animation-delay: 0.8s; }
+    
+    .section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--bolt-primary), var(--bolt-secondary));
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+    
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    
+    .section-icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, var(--bolt-primary), var(--bolt-secondary));
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: white;
+      box-shadow: var(--shadow-lg);
+      transition: transform 0.3s ease;
+      border: 3px solid white;
+    }
+    
+    .section:hover .section-icon {
+      transform: scale(1.1) rotate(5deg);
+    }
+    
+    .section-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .summary-text {
+      font-size: 1.375rem;
+      color: var(--text-secondary);
+      line-height: 1.8;
+      max-width: 800px;
+      margin: 0 auto;
       text-align: center;
-      padding: 2rem;
     }
-    h1 {
-      font-size: 3rem;
+    
+    .job-grid {
+      display: grid;
+      gap: 2.5rem;
+    }
+    
+    .job-card {
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      border: 2px solid var(--border);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .job-card::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(135deg, var(--bolt-primary), var(--bolt-secondary));
+      border-radius: var(--radius-lg);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      z-index: -1;
+    }
+    
+    .job-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: var(--shadow-xl);
+      background: var(--bg-primary);
+    }
+    
+    .job-card:hover::before {
+      opacity: 1;
+    }
+    
+    .job-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    
+    .job-title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    
+    .job-company {
+      font-size: 1.375rem;
+      color: var(--bolt-primary);
+      font-weight: 700;
+    }
+    
+    .job-dates {
+      background: var(--bolt-accent);
+      color: var(--bolt-dark);
+      padding: 0.75rem 1.5rem;
+      border-radius: 999px;
+      font-weight: 700;
+      border: 2px solid var(--bolt-secondary);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .job-summary {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+      line-height: 1.7;
+    }
+    
+    .highlights {
+      list-style: none;
+      display: grid;
+      gap: 1rem;
+    }
+    
+    .highlights li {
+      padding: 1.25rem 1.5rem;
+      background: var(--bg-primary);
+      border-radius: var(--radius);
+      border: 2px solid var(--border);
+      position: relative;
+      padding-left: 4rem;
+      transition: all 0.3s ease;
+      font-size: 1.125rem;
+      line-height: 1.6;
+    }
+    
+    .highlights li:hover {
+      background: var(--bolt-light);
+      border-color: var(--bolt-secondary);
+      transform: translateX(8px);
+    }
+    
+    .highlights li::before {
+      content: '⚡';
+      position: absolute;
+      left: 1.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--bolt-primary);
+      font-size: 1.5rem;
+      animation: pulse 2s infinite;
+    }
+    
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 2.5rem;
+    }
+    
+    .project-card {
+      background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bolt-light) 100%);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      border: 2px solid var(--border);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .project-card::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, var(--bolt-accent) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+    }
+    
+    .project-card:hover {
+      transform: translateY(-10px) scale(1.03);
+      box-shadow: var(--shadow-xl);
+      border-color: var(--bolt-primary);
+    }
+    
+    .project-card:hover::after {
+      opacity: 0.3;
+    }
+    
+    .project-header {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .project-icon {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--bolt-primary), var(--bolt-secondary));
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      color: white;
+      box-shadow: var(--shadow-lg);
+      transition: transform 0.3s ease;
+      border: 3px solid white;
+    }
+    
+    .project-card:hover .project-icon {
+      transform: scale(1.15) rotate(10deg);
+    }
+    
+    .project-title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+    
+    .project-url {
+      color: var(--bolt-primary);
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .project-url:hover {
+      color: var(--bolt-dark);
+      transform: translateX(4px);
+    }
+    
+    .project-description {
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+      line-height: 1.7;
+      font-size: 1.125rem;
+    }
+    
+    .project-keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    
+    .keyword-tag {
+      background: var(--bolt-accent);
+      color: var(--bolt-dark);
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      font-size: 0.875rem;
+      font-weight: 700;
+      border: 2px solid var(--bolt-secondary);
+      transition: all 0.3s ease;
+    }
+    
+    .keyword-tag:hover {
+      background: var(--bolt-secondary);
+      color: white;
+      transform: scale(1.1);
+    }
+    
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+    
+    .skill-category {
+      background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      border: 2px solid var(--border);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+    
+    .skill-category::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--bolt-primary), var(--bolt-secondary));
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      transform: scaleX(0);
+      transition: transform 0.4s ease;
+    }
+    
+    .skill-category:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-xl);
+      border-color: var(--bolt-primary);
+    }
+    
+    .skill-category:hover::before {
+      transform: scaleX(1);
+    }
+    
+    .skill-name {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .skill-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--bolt-primary), var(--bolt-secondary));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .skill-keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    
+    .skill-tag {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border: 2px solid var(--border);
+      transition: all 0.3s ease;
+    }
+    
+    .skill-tag:hover {
+      background: var(--bolt-accent);
+      color: var(--bolt-dark);
+      border-color: var(--bolt-secondary);
+      transform: scale(1.05);
+    }
+    
+    .education-card {
+      background: linear-gradient(135deg, var(--bolt-light) 0%, var(--bg-primary) 100%);
+      border-radius: var(--radius-lg);
+      padding: 3rem;
+      border: 3px solid var(--bolt-secondary);
+      box-shadow: var(--shadow-xl);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .education-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, var(--bolt-accent) 0%, transparent 70%);
+      opacity: 0.2;
+      animation: float 6s ease-in-out infinite;
+      pointer-events: none;
+    }
+    
+    .education-header {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .education-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, var(--bolt-primary), var(--bolt-secondary));
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      color: white;
+      box-shadow: var(--shadow-lg);
+      border: 4px solid white;
+    }
+    
+    .education-details h3 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    
+    .education-meta {
+      color: var(--text-secondary);
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    
+    .education-description {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .accomplishments-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 2rem;
+    }
+    
+    .accomplishment-card {
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      border: 2px solid var(--border);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    
+    .accomplishment-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 6px;
+      height: 100%;
+      background: linear-gradient(180deg, var(--bolt-primary), var(--bolt-secondary));
+      border-radius: 0 var(--radius) var(--radius) 0;
+      transform: scaleY(0);
+      transition: transform 0.3s ease;
+    }
+    
+    .accomplishment-card:hover {
+      transform: translateX(8px);
+      box-shadow: var(--shadow-lg);
+      background: var(--bolt-light);
+    }
+    
+    .accomplishment-card:hover::before {
+      transform: scaleY(1);
+    }
+    
+    .accomplishment-title {
+      font-size: 1.375rem;
+      font-weight: 800;
+      color: var(--text-primary);
       margin-bottom: 1rem;
     }
-    p {
+    
+    .accomplishment-summary {
+      color: var(--text-secondary);
+      line-height: 1.7;
+      font-size: 1.125rem;
+    }
+    
+    .bolt-signature {
+      text-align: center;
+      margin-top: 4rem;
+      padding: 3rem;
+      background: linear-gradient(135deg, var(--bolt-primary) 0%, var(--bolt-secondary) 100%);
+      border-radius: var(--radius-xl);
+      color: white;
+      box-shadow: var(--shadow-xl);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .bolt-signature::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><defs><pattern id="bolt-pattern" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M20 5L25 15H15L20 25L15 15H25L20 5Z" fill="white" opacity="0.1"/></pattern></defs><rect width="200" height="200" fill="url(%23bolt-pattern)"/></svg>');
+      pointer-events: none;
+    }
+    
+    .bolt-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 1rem;
+      font-weight: 900;
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .bolt-tagline {
       font-size: 1.25rem;
-      opacity: 0.9;
+      opacity: 0.95;
+      font-style: italic;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8rem 2rem;
+      color: var(--text-secondary);
+    }
+    
+    .loading-spinner {
+      width: 80px;
+      height: 80px;
+      border: 6px solid var(--border);
+      border-top-color: var(--bolt-primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 2rem;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .error-state {
+      text-align: center;
+      padding: 5rem 3rem;
+      color: var(--error);
+      background: #fef2f2;
+      border: 3px solid #fecaca;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    @media (max-width: 768px) {
+      #app-bolt {
+        padding: 1rem;
+      }
+      
+      .hero-section {
+        padding: 3rem 2rem;
+      }
+      
+      .hero-title {
+        font-size: 3rem;
+      }
+      
+      .hero-subtitle {
+        font-size: 1.25rem;
+      }
+      
+      .section {
+        padding: 2rem;
+      }
+      
+      .section-title {
+        font-size: 2rem;
+      }
+      
+      .job-header {
+        flex-direction: column;
+        align-items: start;
+      }
+      
+      .projects-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .skills-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .accomplishments-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .hero-title {
+        font-size: 2.5rem;
+      }
+      
+      .section-title {
+        font-size: 1.75rem;
+      }
+      
+      .hero-contact {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .contact-link {
+        width: 100%;
+        justify-content: center;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Coming Soon</h1>
-    <p>This variant is under development</p>
+  <div id="app-bolt">
+    <div class="loading-state">
+      <div class="loading-spinner"></div>
+      <h2>Charging up with Bolt energy...</h2>
+      <p>Loading Austin's resume with lightning speed</p>
+    </div>
   </div>
+  
   <script>
-    parent?.postMessage({ type: 'variant:height', value: document.documentElement.scrollHeight }, '*');
+    // Height tracking with performance optimization
+    let lastHeight = 0;
+    let resizeTimeout;
+    let isUpdating = false;
+    
+    function updateHeight() {
+      if (isUpdating) return;
+      isUpdating = true;
+      
+      requestAnimationFrame(() => {
+        const body = document.body;
+        const html = document.documentElement;
+        const height = Math.max(
+          body.scrollHeight,
+          body.offsetHeight,
+          html.clientHeight,
+          html.offsetHeight
+        );
+        
+        if (Math.abs(height - lastHeight) > 20) {
+          lastHeight = height;
+          parent?.postMessage({ type: 'variant:height', value: height }, '*');
+        }
+        isUpdating = false;
+      });
+    }
+    
+    async function loadResume() {
+      const container = document.getElementById('app-bolt');
+      
+      try {
+        const response = await fetch('/data/resume.json');
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        
+        const data = await response.json();
+        
+        let html = `
+          <div class="hero-section">
+            <div class="hero-badge">
+              <span>⚡</span>
+              <span>Bolt-Powered Resume</span>
+            </div>
+            <h1 class="hero-title">${data.basics?.name || 'Austin Wallace'}</h1>
+            <p class="hero-subtitle">${data.basics?.label || 'Data Engineer'}</p>
+            <div class="hero-contact">
+        `;
+        
+        // Contact links
+        const contacts = [
+          { icon: '📧', label: data.basics?.email, href: `mailto:${data.basics?.email}` },
+          { icon: '📱', label: data.basics?.phone, href: `tel:${data.basics?.phone}` },
+          { icon: '📍', label: data.basics?.location?.city, href: null }
+        ].filter(c => c.label);
+        
+        const profiles = data.basics?.profiles || [];
+        profiles.forEach(profile => {
+          if (profile.network?.toLowerCase() === 'github') {
+            contacts.push({ icon: '💻', label: 'GitHub', href: profile.url });
+          } else if (profile.network?.toLowerCase() === 'linkedin') {
+            contacts.push({ icon: '💼', label: 'LinkedIn', href: profile.url });
+          }
+        });
+        
+        contacts.forEach(contact => {
+          if (contact.href) {
+            html += `
+              <a href="${contact.href}" class="contact-link" target="_blank" rel="noopener noreferrer">
+                <div class="contact-icon">${contact.icon}</div>
+                <span>${contact.label}</span>
+              </a>
+            `;
+          } else {
+            html += `
+              <div class="contact-link">
+                <div class="contact-icon">${contact.icon}</div>
+                <span>${contact.label}</span>
+              </div>
+            `;
+          }
+        });
+        
+        html += `
+            </div>
+          </div>
+        `;
+        
+        // Summary section
+        if (data.basics?.summary) {
+          html += `
+            <section class="section">
+              <div class="section-header">
+                <div class="section-icon">📋</div>
+                <h2 class="section-title">Summary</h2>
+              </div>
+              <p class="summary-text">${data.basics.summary}</p>
+            </section>
+          `;
+        }
+        
+        // Experience section
+        if (data.work?.length) {
+          html += `
+            <section class="section">
+              <div class="section-header">
+                <div class="section-icon">💼</div>
+                <h2 class="section-title">Experience</h2>
+              </div>
+              <div class="job-grid">
+          `;
+          
+          data.work.forEach(job => {
+            const endDate = job.endDate || 'Present';
+            html += `
+              <div class="job-card">
+                <div class="job-header">
+                  <div>
+                    <h3 class="job-title">${job.position}</h3>
+                    <div class="job-company">${job.name}</div>
+                  </div>
+                  <div class="job-dates">${job.startDate} – ${endDate}</div>
+                </div>
+                ${job.summary ? `<p class="job-summary">${job.summary}</p>` : ''}
+                ${job.highlights?.length ? `
+                  <ul class="highlights">
+                    ${job.highlights.map(highlight => `<li>${highlight}</li>`).join('')}
+                  </ul>
+                ` : ''}
+              </div>
+            `;
+          });
+          
+          html += `
+              </div>
+            </section>
+          `;
+        }
+        
+        // Projects section
+        if (data.projects?.length) {
+          html += `
+            <section class="section">
+              <div class="section-header">
+                <div class="section-icon">🚀</div>
+                <h2 class="section-title">Projects</h2>
+              </div>
+              <div class="projects-grid">
+          `;
+          
+          const projectIcons = ['🎯', '⚽', '🏗️', '📊'];
+          data.projects.forEach((project, index) => {
+            html += `
+              <div class="project-card">
+                <div class="project-header">
+                  <div class="project-icon">${projectIcons[index] || '🔧'}</div>
+                  <div>
+                    <h3 class="project-title">${project.name}</h3>
+                    ${project.url ? `<a href="${project.url}" class="project-url" target="_blank" rel="noopener noreferrer">View Project →</a>` : ''}
+                  </div>
+                </div>
+                ${project.description ? `<p class="project-description">${project.description}</p>` : ''}
+                ${project.keywords?.length ? `
+                  <div class="project-keywords">
+                    ${project.keywords.map(keyword => `<span class="keyword-tag">${keyword}</span>`).join('')}
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          });
+          
+          html += `
+              </div>
+            </section>
+          `;
+        }
+        
+        // Skills section
+        if (data.skills?.length) {
+          html += `
+            <section class="section">
+              <div class="section-header">
+                <div class="section-icon">⚙️</div>
+                <h2 class="section-title">Skills</h2>
+              </div>
+              <div class="skills-grid">
+          `;
+          
+          const skillIcons = ['🗄️', '💻', '☁️', '🔧', '🤖'];
+          data.skills.forEach((skill, index) => {
+            html += `
+              <div class="skill-category">
+                <h3 class="skill-name">
+                  <div class="skill-icon">${skillIcons[index] || '⭐'}</div>
+                  ${skill.name}
+                </h3>
+                <div class="skill-keywords">
+                  ${skill.keywords?.map(keyword => `<span class="skill-tag">${keyword}</span>`).join('') || ''}
+                </div>
+              </div>
+            `;
+          });
+          
+          html += `
+              </div>
+            </section>
+          `;
+        }
+        
+        // Education section
+        if (data.education?.length) {
+          html += `
+            <section class="section">
+              <div class="section-header">
+                <div class="section-icon">🎓</div>
+                <h2 class="section-title">Education</h2>
+              </div>
+          `;
+          
+          data.education.forEach(edu => {
+            html += `
+              <div class="education-card">
+                <div class="education-header">
+                  <div class="education-icon">🎓</div>
+                  <div class="education-details">
+                    <h3>${edu.studyType} in ${edu.area}</h3>
+                    <div class="education-meta">${edu.institution} • ${edu.startDate}–${edu.endDate}</div>
+                  </div>
+                </div>
+                ${edu.description ? `<p class="education-description">${edu.description}</p>` : ''}
+              </div>
+            `;
+          });
+          
+          html += '</section>';
+        }
+        
+        // Accomplishments section
+        if (data.accomplishments?.length) {
+          html += `
+            <section class="section">
+              <div class="section-header">
+                <div class="section-icon">🏆</div>
+                <h2 class="section-title">Key Accomplishments</h2>
+              </div>
+              <div class="accomplishments-grid">
+          `;
+          
+          data.accomplishments.forEach(accomplishment => {
+            html += `
+              <div class="accomplishment-card">
+                <h3 class="accomplishment-title">${accomplishment.title}</h3>
+                <p class="accomplishment-summary">${accomplishment.summary}</p>
+              </div>
+            `;
+          });
+          
+          html += `
+              </div>
+            </section>
+          `;
+        }
+        
+        html += `
+          <div class="bolt-signature">
+            <div class="bolt-logo">
+              <span>⚡</span>
+              <span>Crafted with Bolt</span>
+            </div>
+            <p class="bolt-tagline">Lightning-fast development meets beautiful design</p>
+          </div>
+        `;
+        
+        container.innerHTML = html;
+        
+        // Update height after content loads and animations complete
+        setTimeout(() => {
+          updateHeight();
+        }, 300);
+        
+        // Add intersection observer for performance
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.style.animationPlayState = 'running';
+            }
+          });
+        }, { threshold: 0.1 });
+        
+        document.querySelectorAll('.section, .job-card, .project-card').forEach(element => {
+          observer.observe(element);
+        });
+        
+      } catch (error) {
+        console.error('Error loading resume data:', error);
+        container.innerHTML = `
+          <div class="error-state">
+            <h2>⚠️ Unable to Load Resume</h2>
+            <p>There was an error fetching the resume data.</p>
+            <p style="font-size: 0.875rem; margin-top: 1rem; opacity: 0.7;">Error: ${error.message}</p>
+          </div>
+        `;
+      }
+    }
+    
+    // Initialize
+    loadResume();
+    
+    // Optimized resize handling
+    let windowWidth = window.innerWidth;
+    window.addEventListener('resize', () => {
+      if (window.innerWidth !== windowWidth) {
+        windowWidth = window.innerWidth;
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          updateHeight();
+        }, 250);
+      }
+    });
   </script>
 </body>
 </html>
