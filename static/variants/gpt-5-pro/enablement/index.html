@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+  <meta name="color-scheme" content="light dark" />
+  <title>AI Enablement — Resume Variant</title>
+  <meta name="description" content="AI enablement that drives effectiveness: faster, safer shipping with workflows your team will actually use. Single-file variant that renders from /data/enablement.json." />
+  <!-- Scoped styles will be injected by script to avoid CSS leaks -->
+  <style id="scoped-style"></style>
+</head>
+
+<!-- The top-level container id is set dynamically to #app-<tool> from the URL (/variants/<tool>/index.html) -->
+<body>
+  <div id="app-PLACEHOLDER" data-app-root hidden>
+    <!-- Fixed progress bar (scoped styles will ensure no leakage) -->
+    <div class="progbar" aria-hidden="true"><span></span></div>
+
+    <!-- Sticky header -->
+    <header class="site-header" role="banner">
+      <div class="inner">
+        <a class="brand" href="#top" aria-label="Home">
+          <svg class="logo" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 2l8 4.5v10.9L12 22l-8-4.6V6.5L12 2zm0 2.2L6 6.3v7.9l6 3.5 6-3.5V6.3l-6-2.1z" fill="currentColor"/>
+            <circle cx="12" cy="12" r="2.2" fill="currentColor" opacity=".2"/>
+          </svg>
+          <span class="brand-text">Enablement</span>
+        </a>
+
+        <nav class="top-nav" aria-label="Primary">
+          <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links">Menu</button>
+          <ul id="nav-links" class="links">
+            <li><a href="#value">Value</a></li>
+            <li><a href="#what-i-do">How I Help</a></li>
+            <li><a href="#prompting-best-practices">Best Practices</a></li>
+            <li><a href="#security">Security</a></li>
+            <li><a href="#process">Process</a></li>
+            <li><a href="#resources">Resources</a></li>
+          </ul>
+        </nav>
+
+        <div class="actions">
+          <button class="btn ghost" id="theme-toggle" title="Toggle theme" aria-label="Toggle theme">🌓</button>
+          <button class="btn ghost" id="print-btn" title="Print / Save PDF" aria-label="Print">🖨️</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="top" class="main" role="main" tabindex="-1">
+      <section class="hero" id="hero" aria-labelledby="hero-title">
+        <div class="inner">
+          <div class="hero-copy">
+            <p class="eyebrow">AI Enablement</p>
+            <h1 id="hero-title"></h1>
+            <p class="subtitle" id="hero-subtitle"></p>
+            <div class="hero-ctas">
+              <a id="hero-cta-primary" class="btn primary" href="#" target="_self" rel="noopener">Email me</a>
+              <a id="hero-cta-secondary" class="btn secondary" href="#process">See approach</a>
+              <button id="copy-email" class="btn ghost" type="button" title="Copy email">Copy email</button>
+            </div>
+
+            <div class="audience" aria-label="Intended audience"></div>
+            <p class="note small" id="hero-note"></p>
+          </div>
+
+          <aside class="hero-aside">
+            <div class="metric-card">
+              <div class="metric">
+                <span class="num" id="metric-effectiveness">→</span>
+                <span class="label">Effectiveness First</span>
+              </div>
+              <div class="metric">
+                <span class="num">ZDR</span>
+                <span class="label">Security-Grounded</span>
+              </div>
+              <div class="metric">
+                <span class="num">TTFW</span>
+                <span class="label">Time‑to‑First‑Win</span>
+              </div>
+            </div>
+            <div class="callout">
+              <strong>Principle:</strong> <span id="meta-principle"></span>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="value" id="value" aria-labelledby="value-title">
+        <div class="inner">
+          <h2 id="value-title">Why this works</h2>
+          <div id="value-grid" class="cards"></div>
+        </div>
+      </section>
+
+      <div id="dynamic-sections"></div>
+
+      <section class="resources" id="resources" aria-labelledby="resources-title">
+        <div class="inner">
+          <h2 id="resources-title">Selected Resources</h2>
+          <ul id="resources-list" class="resource-list"></ul>
+        </div>
+      </section>
+
+      <section class="cta" id="final-cta" aria-labelledby="cta-title">
+        <div class="inner">
+          <h2 id="cta-title"></h2>
+          <p id="cta-subhead" class="subtitle"></p>
+          <div id="cta-actions" class="hero-ctas"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer" role="contentinfo">
+      <div class="inner">
+        <div class="left">
+          <p class="small">Version <span id="meta-version"></span> • <a id="resume-link" href="/resume">Minimal resume</a></p>
+          <p class="small">Contact mode: <span id="contact-mode"></span></p>
+        </div>
+        <div class="right">
+          <a class="small" href="#top">Back to top ↑</a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Sticky mini-CTA shown on scroll -->
+    <div class="dock-cta" role="dialog" aria-live="polite" aria-label="Quick contact">
+      <div class="dock-inner">
+        <span class="dock-text">Curious if this would work for your team?</span>
+        <a id="dock-email" class="btn primary small" href="#">Email me</a>
+        <a class="btn secondary small" href="#process">See approach</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    // --- Utility: get tool slug from /variants/<tool>/index.html
+    function getToolSlug() {
+      var m = (window.location.pathname || '').match(/\/variants\/([^/]+)\//);
+      return m && m[1] ? m[1] : 'tool';
+    }
+
+    // --- Scope root setup to satisfy the "id=app-<tool>" requirement
+    var tool = getToolSlug();
+    var appRoot = document.querySelector('[data-app-root]');
+    var scopedId = 'app-' + tool;
+    appRoot.id = scopedId;
+    appRoot.hidden = false;
+
+    // --- Inject fully scoped CSS (no global leakage)
+    var CSS = `
+#${scopedId} * { box-sizing: border-box; }
+#${scopedId} { --bg: #0b0d10; --bg-elev: #131720; --bg-soft: #0f1218; --text: #e9eef5;
+  --muted: #a9b4c0; --accent: #72e5b2; --accent-2: #8bb8ff; --danger: #ff6b6b;
+  --card: #12161f; --border: #1d2330; --ring: #2a3242; --shadow: rgba(0,0,0,0.4);
+  --radius: 14px; --radius-sm: 10px; --radius-xs: 8px; --gap: 18px; --maxw: 1100px;
+  --focus: 2px solid var(--accent); --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  color: var(--text); background: var(--bg); font-family: var(--font); line-height: 1.55; }
+@media (prefers-color-scheme: light) {
+  #${scopedId}[data-theme="light"] { --bg: #f7f9fb; --bg-elev: #ffffff; --bg-soft: #f0f4f8; --text: #0e1217; --muted: #4b5563; --card: #ffffff; --border: #e5e9f0; --ring: #dfe6ef; --shadow: rgba(2, 8, 20, .06); }
+}
+#${scopedId} a { color: var(--accent-2); text-decoration: none; }
+#${scopedId} a:hover { text-decoration: underline; }
+#${scopedId} .inner { max-width: var(--maxw); margin: 0 auto; padding: 0 20px; }
+
+/* Progress bar */
+#${scopedId} .progbar { position: fixed; inset: 0 0 auto 0; height: 3px; background: transparent; z-index: 60; }
+#${scopedId} .progbar > span { display:block; height:100%; width:0%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .12s ease; }
+
+/* Header */
+#${scopedId} .site-header { position: sticky; top: 0; z-index: 50; backdrop-filter: saturate(1.2) blur(8px); background: color-mix(in srgb, var(--bg-elev) 80%, transparent); border-bottom: 1px solid var(--border); }
+#${scopedId} .site-header .inner { display:flex; align-items:center; gap:14px; padding: 14px 20px; }
+#${scopedId} .brand { display:flex; align-items:center; gap:10px; color: var(--text); text-decoration:none; font-weight:600; }
+#${scopedId} .logo { opacity:.9 }
+#${scopedId} .brand-text { letter-spacing:.2px; }
+#${scopedId} .top-nav .links { display:flex; gap:16px; list-style:none; padding:0; margin:0; }
+#${scopedId} .top-nav a { display:inline-block; padding:8px 10px; border-radius: 8px; }
+#${scopedId} .top-nav a:hover { background: var(--bg-soft); text-decoration:none; }
+#${scopedId} .nav-toggle { display:none; }
+#${scopedId} .actions { margin-left:auto; display:flex; gap:8px; }
+
+/* Buttons */
+#${scopedId} .btn { --padx: 16px; --pady: 12px; display:inline-flex; align-items:center; justify-content:center; gap:10px; padding: var(--pady) var(--padx); border-radius: 999px; border:1px solid var(--ring); background: var(--bg-elev); color: var(--text); text-decoration:none; font-weight:600; box-shadow: 0 6px 20px var(--shadow); transition: transform .08s ease, background .2s ease, border-color .2s ease; }
+#${scopedId} .btn:hover { transform: translateY(-1px); text-decoration:none; }
+#${scopedId} .btn:focus-visible { outline: var(--focus); outline-offset: 2px; }
+#${scopedId} .btn.primary { background: linear-gradient(180deg, var(--accent), #48c896); color:#06140d; border-color: transparent; }
+#${scopedId} .btn.secondary { background: var(--bg-soft); }
+#${scopedId} .btn.ghost { background: transparent; border-color: var(--ring); }
+#${scopedId} .btn.small { --padx:12px; --pady:8px; font-size:.9rem; }
+
+/* Hero */
+#${scopedId} .hero { padding: 56px 0 24px; border-bottom: 1px solid var(--border); background:
+  radial-gradient(1200px 500px at 15% -10%, color-mix(in srgb, var(--accent) 22%, transparent), transparent),
+  radial-gradient(800px 400px at 90% -10%, color-mix(in srgb, var(--accent-2) 22%, transparent), transparent); }
+#${scopedId} .hero .inner { display:grid; grid-template-columns: 1.2fr .8fr; gap: 28px; align-items: center; }
+#${scopedId} .eyebrow { color: var(--muted); letter-spacing:.12em; text-transform: uppercase; font-weight:700; margin:0 0 8px; font-size:.85rem; }
+#${scopedId} .hero h1 { font-size: clamp(1.8rem, 4vw, 3rem); line-height:1.15; margin:.2em 0 .3em; }
+#${scopedId} .subtitle { color: var(--muted); font-size: clamp(1rem, 1.5vw, 1.15rem); }
+#${scopedId} .hero-ctas { margin-top: 18px; display:flex; gap: 10px; flex-wrap: wrap; }
+#${scopedId} .audience { margin-top: 16px; display:flex; gap:8px; flex-wrap:wrap; }
+#${scopedId} .chip { display:inline-flex; align-items:center; gap:8px; padding:8px 12px; background: var(--bg-soft); border:1px solid var(--ring); border-radius:999px; font-size:.9rem; color: var(--muted); }
+#${scopedId} .hero-aside .metric-card { display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: var(--card); border:1px solid var(--ring); border-radius: var(--radius); padding: 14px; }
+#${scopedId} .metric { background: var(--bg-soft); border:1px solid var(--ring); border-radius: var(--radius-sm); padding: 12px; text-align:center; }
+#${scopedId} .metric .num { display:block; font-weight:800; font-size: 1.05rem; margin-bottom: 4px; color: var(--accent); }
+#${scopedId} .metric .label { color: var(--muted); font-size:.9rem; }
+#${scopedId} .callout { margin-top: 12px; padding: 12px 14px; background: var(--bg-soft); border:1px solid var(--ring); border-radius: var(--radius); color: var(--muted); }
+
+/* Cards / Value */
+#${scopedId} .value { padding: 28px 0; }
+#${scopedId} h2 { font-size: clamp(1.35rem, 2.2vw, 1.8rem); margin: 0 0 12px; }
+#${scopedId} .cards { display:grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 14px; }
+@media (min-width: 720px) { #${scopedId} .cards { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1040px) { #${scopedId} .cards { grid-template-columns: repeat(3, 1fr); } }
+#${scopedId} .card { background: var(--card); border:1px solid var(--ring); border-radius: var(--radius); padding: 16px; box-shadow: 0 10px 30px var(--shadow); }
+#${scopedId} .card h3 { margin:.1em 0 .4em; font-size: 1.1rem; }
+#${scopedId} .card ul { margin: 8px 0 0 18px; color: var(--muted); }
+#${scopedId} .pill { display:inline-block; padding:6px 10px; border:1px solid var(--ring); background: var(--bg-soft); border-radius: 999px; font-size:.85rem; color: var(--muted); margin: 6px 6px 0 0; }
+
+/* Section wrapper */
+#${scopedId} section { padding: 26px 0; border-top: 1px solid var(--border); }
+#${scopedId} section:first-of-type { border-top: none; }
+
+/* Text & Bullets */
+#${scopedId} .text p { margin: 0 0 10px; color: var(--text); }
+#${scopedId} .bullets ul { margin: 6px 0 0 18px; }
+#${scopedId} .small { font-size: .92rem; color: var(--muted); }
+
+/* Accordion */
+#${scopedId} .accordion { display:grid; gap: 10px; }
+#${scopedId} .acc-item { border:1px solid var(--ring); border-radius: var(--radius-sm); background: var(--bg-elev); overflow:hidden; }
+#${scopedId} .acc-head { display:flex; justify-content:space-between; align-items:center; padding: 12px 14px; cursor:pointer; }
+#${scopedId} .acc-head:hover { background: var(--bg-soft); }
+#${scopedId} .acc-body { padding: 0 14px 12px; display:none; }
+#${scopedId} .acc-item[open] .acc-body { display:block; }
+
+/* Process stepper */
+#${scopedId} .process { --col: #2f394a; background: var(--card); border: 1px solid var(--ring); border-radius: var(--radius); padding: 16px; }
+#${scopedId} .steps { counter-reset: step; display:grid; gap: 12px; }
+#${scopedId} .step { display:grid; grid-template-columns: 36px 1fr; gap: 12px; align-items:start; }
+#${scopedId} .dot { width: 36px; height: 36px; border-radius: 999px; background: var(--bg-soft); border: 1px solid var(--ring); display:grid; place-items:center; font-weight: 800; color: var(--accent-2); }
+#${scopedId} .step p { margin: 4px 0 0; color: var(--muted); }
+
+/* Resources */
+#${scopedId} .resources .resource-list { list-style:none; padding:0; margin:0; display:grid; gap: 12px; }
+#${scopedId} .resource { display:flex; gap: 12px; padding: 12px; border:1px solid var(--ring); background: var(--bg-elev); border-radius: var(--radius-sm); align-items: flex-start; }
+#${scopedId} .badge { font-size:.75rem; padding: 4px 8px; border-radius: 999px; border:1px solid var(--ring); background: var(--bg-soft); color: var(--muted); }
+
+/* CTA */
+#${scopedId} .cta { padding: 32px 0 46px; }
+#${scopedId} .cta .inner { text-align:center; }
+#${scopedId} .cta .hero-ctas { justify-content:center; }
+
+/* Footer */
+#${scopedId} .site-footer { border-top:1px solid var(--border); padding: 16px 0 32px; }
+#${scopedId} .site-footer .inner { display:flex; align-items:center; justify-content:space-between; gap: 10px; }
+
+/* Docked CTA */
+#${scopedId} .dock-cta { position: fixed; inset: auto 20px 20px auto; z-index: 40; }
+#${scopedId} .dock-inner { display:flex; gap: 10px; align-items:center; padding: 10px 12px; border: 1px solid var(--ring); background: var(--bg-elev); border-radius: 999px; box-shadow: 0 10px 26px var(--shadow); }
+#${scopedId} .dock-text { color: var(--muted); display:none; }
+@media (min-width: 900px) { #${scopedId} .dock-text { display:inline; } }
+
+/* Print */
+@media print {
+  #${scopedId} .site-header, #${scopedId} .progbar, #${scopedId} .dock-cta, #${scopedId} #copy-email, #${scopedId} #theme-toggle, #${scopedId} #print-btn { display:none !important; }
+  #${scopedId} a { color: inherit; text-decoration: underline; }
+  #${scopedId} .btn { border: 1px solid #888; background: transparent; box-shadow:none; }
+  #${scopedId} .inner { max-width: 100%; }
+}
+
+/* Responsive nav */
+@media (max-width: 820px) {
+  #${scopedId} .hero .inner { grid-template-columns: 1fr; }
+  #${scopedId} .top-nav .links { display:none; position:absolute; top: 58px; right: 10px; background: var(--bg-elev); border:1px solid var(--ring); border-radius: 12px; padding: 8px; flex-direction:column; }
+  #${scopedId} .top-nav .links[aria-expanded="true"] { display:flex; }
+  #${scopedId} .nav-toggle { display:inline-flex; align-items:center; justify-content:center; padding: 8px 12px; border:1px solid var(--ring); background: var(--bg-elev); border-radius: 8px; }
+}
+    `.trim();
+
+    document.getElementById('scoped-style').textContent = CSS;
+
+    // --- Helpers
+    const $ = (sel, root = appRoot) => root.querySelector(sel);
+    const el = (tag, props = {}, ...children) => {
+      const node = document.createElement(tag);
+      Object.entries(props || {}).forEach(([k, v]) => {
+        if (k === 'class') node.className = v;
+        else if (k === 'dataset') Object.assign(node.dataset, v);
+        else if (k.startsWith('on') && typeof v === 'function') node.addEventListener(k.substring(2), v);
+        else if (k === 'html') node.innerHTML = v;
+        else if (v !== null && v !== undefined) node.setAttribute(k, v);
+      });
+      children.flat().forEach((c) => {
+        if (c === null || c === undefined) return;
+        if (typeof c === 'string') node.appendChild(document.createTextNode(c));
+        else node.appendChild(c);
+      });
+      return node;
+    };
+    const escapeHtml = (s) => s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    // minimal rich text: **bold**, *italic* (safe: escape first)
+    function toRichHTML(s) {
+      let out = escapeHtml(String(s || ''));
+      out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      out = out.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      return out;
+    }
+
+    // --- UI widgets
+    function bulletList(items) {
+      const ul = el('ul');
+      (items || []).forEach(txt => {
+        const li = el('li'); li.innerHTML = toRichHTML(txt); ul.appendChild(li);
+      });
+      return ul;
+    }
+
+    function renderValueProps(list) {
+      const grid = $('#value-grid');
+      grid.innerHTML = '';
+      (list || []).forEach(v => {
+        const card = el('article', { class: 'card' },
+          el('h3', {}, v.title),
+          bulletList(v.bullets || [])
+        );
+        grid.appendChild(card);
+      });
+    }
+
+    function renderSections(sections) {
+      const mount = $('#dynamic-sections');
+      mount.innerHTML = '';
+      (sections || []).forEach(section => {
+        const wrap = el('section', { id: section.id });
+        const inner = el('div', { class: 'inner' });
+        wrap.appendChild(inner);
+        const title = el('h2', {}, section.title || '');
+        inner.appendChild(title);
+
+        if (section.type === 'cards') {
+          const grid = el('div', { class: 'cards' });
+          (section.cards || []).forEach(c => {
+            const card = el('article', { class: 'card' },
+              el('h3', {}, c.title),
+              el('p', { class: 'small' }, c.body || '')
+            );
+            if (c.deliverables && c.deliverables.length) {
+              const pills = el('div', {});
+              c.deliverables.forEach(d => pills.appendChild(el('span', { class: 'pill' }, d)));
+              card.appendChild(pills);
+            }
+            grid.appendChild(card);
+          });
+          inner.appendChild(grid);
+
+        } else if (section.type === 'text') {
+          const container = el('div', { class: 'text' });
+          (section.body || []).forEach(p => {
+            const para = el('p'); para.innerHTML = toRichHTML(p); container.appendChild(para);
+          });
+          inner.appendChild(container);
+
+        } else if (section.type === 'bullets') {
+          const div = el('div', { class: 'bullets' });
+          div.appendChild(bulletList(section.bullets || []));
+          inner.appendChild(div);
+
+        } else if (section.type === 'accordion') {
+          if (section.intro) {
+            const intro = el('p', { class: 'small' }, section.intro);
+            inner.appendChild(intro);
+          }
+          const acc = el('div', { class: 'accordion' });
+          (section.items || []).forEach(it => {
+            const item = el('div', { class: 'acc-item' });
+            const head = el('button', { class: 'acc-head', type: 'button', 'aria-expanded': 'false' },
+              el('span', {}, it.label || ''),
+              el('span', { 'aria-hidden': 'true' }, '▸')
+            );
+            const body = el('div', { class: 'acc-body' });
+            (it.content || []).forEach(p => {
+              const para = el('p'); para.innerHTML = toRichHTML(p); body.appendChild(para);
+            });
+            head.addEventListener('click', () => {
+              const open = item.hasAttribute('open');
+              item.toggleAttribute('open');
+              head.setAttribute('aria-expanded', String(!open));
+              head.querySelector('span[aria-hidden]').textContent = !open ? '▾' : '▸';
+            });
+            item.append(head, body);
+            acc.appendChild(item);
+          });
+          inner.appendChild(acc);
+
+        } else if (section.type === 'process') {
+          const box = el('div', { class: 'process' });
+          const steps = el('div', { class: 'steps' });
+          (section.steps || []).forEach((txt, i) => {
+            const step = el('div', { class: 'step' },
+              el('div', { class: 'dot' }, String(i + 1)),
+              el('div', {},
+                el('strong', {}, txt.split(':')[0] || ('Step ' + (i + 1))),
+                el('p', {}, txt.includes(':') ? txt.split(':').slice(1).join(':').trim() : '')
+              )
+            );
+            steps.appendChild(step);
+          });
+          box.appendChild(steps);
+          inner.appendChild(box);
+        }
+
+        mount.appendChild(wrap);
+      });
+    }
+
+    function renderResources(items) {
+      const list = $('#resources-list');
+      list.innerHTML = '';
+      (items || []).forEach(r => {
+        const li = el('li', { class: 'resource' });
+        const icon = el('span', { class: 'badge' }, r.kind || 'link');
+        const block = el('div', {},
+          el('a', { href: r.url, target: '_blank', rel: 'noopener' }, r.title),
+          r.notes ? el('div', { class: 'small' }, r.notes) : null
+        );
+        li.append(icon, block);
+        list.appendChild(li);
+      });
+    }
+
+    function setHero(hero, meta) {
+      $('#hero-title').textContent = hero.title || '';
+      $('#hero-subtitle').textContent = hero.subtitle || '';
+      $('#hero-note').textContent = hero.notes || '';
+      $('#meta-principle').textContent = (meta && meta.principle) ? meta.principle : '';
+      const aud = $('.audience');
+      aud.innerHTML = '';
+      (meta && meta.audience || []).forEach(a => aud.appendChild(el('span', { class: 'chip' }, a)));
+
+      const primary = $('#hero-cta-primary');
+      const secondary = $('#hero-cta-secondary');
+      if (hero.primary_cta) { primary.textContent = hero.primary_cta.label || 'Email me'; primary.href = hero.primary_cta.href || '#'; }
+      if (hero.secondary_cta) { secondary.textContent = hero.secondary_cta.label || 'See approach'; secondary.href = hero.secondary_cta.href || '#process'; }
+
+      // Docked CTA mirrors primary email
+      const dockEmail = $('#dock-email');
+      dockEmail.href = hero.primary_cta && hero.primary_cta.href ? hero.primary_cta.href : '#';
+    }
+
+    function setMeta(meta) {
+      $('#meta-version').textContent = meta.version || '';
+      $('#contact-mode').textContent = meta.contact_mode || '';
+      const resume = $('#resume-link');
+      if (meta.canonical_resume_path) resume.setAttribute('href', meta.canonical_resume_path);
+    }
+
+    // --- Progressive enhancements
+    function setupProgressBar() {
+      const bar = $('.progbar > span');
+      const onScroll = () => {
+        const h = document.documentElement;
+        const scrollTop = h.scrollTop || document.body.scrollTop;
+        const height = (h.scrollHeight - h.clientHeight) || 1;
+        const pct = Math.min(1, Math.max(0, scrollTop / height));
+        bar.style.width = (pct * 100) + '%';
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    }
+
+    function setupThemeToggle() {
+      const key = 'theme:' + tool;
+      const root = document.getElementById(scopedId);
+      const btn = $('#theme-toggle');
+      const saved = localStorage.getItem(key);
+      if (saved) root.dataset.theme = saved;
+      btn.addEventListener('click', () => {
+        const next = root.dataset.theme === 'light' ? '' : 'light';
+        if (next) { root.dataset.theme = next; localStorage.setItem(key, next); }
+        else { delete root.dataset.theme; localStorage.removeItem(key); }
+      });
+    }
+
+    function setupPrint() {
+      $('#print-btn').addEventListener('click', () => window.print());
+    }
+
+    function setupCopyEmail(primaryHref) {
+      const btn = $('#copy-email');
+      const email = (primaryHref || '').replace(/^mailto:/i, '');
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(email);
+          btn.textContent = 'Copied!';
+          setTimeout(() => (btn.textContent = 'Copy email'), 1200);
+        } catch (_) {
+          btn.textContent = 'Copy failed';
+          setTimeout(() => (btn.textContent = 'Copy email'), 1200);
+        }
+      });
+    }
+
+    function setupMobileNav() {
+      const toggle = $('.nav-toggle');
+      const links = $('#nav-links');
+      const closeMenu = () => { links.setAttribute('aria-expanded', 'false'); toggle.setAttribute('aria-expanded', 'false'); };
+      toggle.addEventListener('click', () => {
+        const exp = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', String(!exp));
+        links.setAttribute('aria-expanded', String(!exp));
+      });
+      links.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
+    }
+
+    function setupDockCTA() {
+      let shown = false;
+      const dock = $('.dock-cta');
+      const show = () => { if (!shown) { dock.style.transform = 'translateY(0)'; shown = true; } };
+      const hide = () => { dock.style.transform = 'translateY(120%)'; shown = false; };
+      hide();
+      let lastY = window.scrollY;
+      window.addEventListener('scroll', () => {
+        const y = window.scrollY;
+        if (y > 400 && y > lastY) show(); else if (y < lastY) hide();
+        lastY = y;
+      }, { passive: true });
+    }
+
+    // --- Load data and render
+    async function init() {
+      setupProgressBar();
+      setupThemeToggle();
+      setupPrint();
+      setupMobileNav();
+      setupDockCTA();
+
+      // Only network call allowed by spec
+      const res = await fetch('/data/enablement.json', { credentials: 'same-origin', cache: 'no-store' });
+      if (!res.ok) throw new Error('Failed to load /data/enablement.json');
+      const data = await res.json();
+
+      // Hero & meta
+      setHero(data.hero || {}, data.meta || {});
+      setMeta(data.meta || {});
+      setupCopyEmail((data.hero && data.hero.primary_cta && data.hero.primary_cta.href) || '');
+
+      // Value props
+      renderValueProps(data.value_props || []);
+
+      // Sections
+      renderSections(data.sections || []);
+
+      // Resources
+      renderResources(data.resources || []);
+
+      // Final CTA
+      const cta = data.cta || {};
+      $('#cta-title').textContent = cta.headline || 'Let’s talk';
+      $('#cta-subhead').textContent = cta.subhead || '';
+      const actions = $('#cta-actions'); actions.innerHTML = '';
+      (cta.actions || []).forEach(a => {
+        actions.appendChild(el('a', { class: 'btn primary', href: a.href || '#', target: '_self', rel: 'noopener' }, a.label || 'Contact'));
+      });
+
+      // Update nav anchors based on actual sections present
+      const ids = (data.sections || []).map(s => s.id);
+      const navList = $('#nav-links');
+      navList.innerHTML = '';
+      const navItems = [
+        { id: 'value', label: 'Value' },
+        ...ids.map(id => ({ id, label: startCase(id) })),
+        { id: 'resources', label: 'Resources' },
+      ];
+      navItems.forEach(item => {
+        const li = el('li', {}, el('a', { href: '#' + item.id }, item.label));
+        navList.appendChild(li);
+      });
+
+      // Smooth scroll
+      appRoot.addEventListener('click', (e) => {
+        const t = e.target.closest('a[href^="#"]');
+        if (!t) return;
+        const hash = t.getAttribute('href');
+        const target = hash && $(hash);
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          target.focus({ preventScroll: true });
+        }
+      });
+    }
+
+    function startCase(id) {
+      return String(id || '')
+        .replace(/[-_]+/g, ' ')
+        .replace(/\b\w/g, s => s.toUpperCase());
+    }
+
+    // --- Bootstrap
+    init().catch(err => {
+      // Minimal inline error UI inside the scoped container only
+      const main = $('.main');
+      const msg = el('section', {},
+        el('div', { class: 'inner' },
+          el('div', { class: 'card' },
+            el('h3', {}, 'Unable to load resume'),
+            el('p', { class: 'small' }, 'I couldn’t fetch /data/enablement.json. Please ensure the file exists on the same origin and try again.'),
+            el('pre', { class: 'small' }, String(err && err.message || err || 'Unknown error'))
+          )
+        )
+      );
+      main.appendChild(msg);
+      console.error(err);
+    });
+  })();
+  </script>
+</body>
+</html>
