@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Enablement - Claude Code Variant</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --claude-primary: #D97706;
+      --claude-secondary: #F59E0B;
+      --claude-accent: #FCD34D;
+      --text-primary: #111827;
+      --text-secondary: #6B7280;
+      --bg-primary: #FFFFFF;
+      --bg-secondary: #F9FAFB;
+      --border: #E5E7EB;
+      --success: #10B981;
+      --radius: 12px;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      color: var(--text-primary);
+      background: var(--bg-primary);
+      line-height: 1.6;
+    }
+    
+    #app-claude-code {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    
+    .hero-section {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+      border-radius: var(--radius);
+      margin-bottom: 3rem;
+      border: 1px solid var(--border);
+    }
+    
+    .hero-badge {
+      display: inline-block;
+      background: var(--claude-primary);
+      color: white;
+      padding: 0.25rem 1rem;
+      border-radius: 999px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+    
+    .hero-title {
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--claude-primary), var(--claude-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .hero-subtitle {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+    
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .btn {
+      padding: 0.75rem 2rem;
+      border-radius: var(--radius);
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+    
+    .btn-primary {
+      background: var(--claude-primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--claude-secondary);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(217, 119, 6, 0.3);
+    }
+    
+    .btn-secondary {
+      background: var(--bg-primary);
+      color: var(--claude-primary);
+      border-color: var(--claude-primary);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--claude-primary);
+      color: white;
+    }
+    
+    .value-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 4rem;
+    }
+    
+    .value-card {
+      background: var(--bg-primary);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .value-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--claude-primary), var(--claude-secondary));
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+    
+    .value-card:hover {
+      border-color: var(--claude-primary);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .value-card:hover::before {
+      transform: scaleX(1);
+    }
+    
+    .value-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--claude-accent);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .value-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      color: var(--text-primary);
+    }
+    
+    .value-bullets {
+      list-style: none;
+    }
+    
+    .value-bullets li {
+      position: relative;
+      padding-left: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+    }
+    
+    .value-bullets li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      color: var(--claude-primary);
+      font-weight: bold;
+    }
+    
+    .section {
+      margin-bottom: 4rem;
+    }
+    
+    .section-header {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    
+    .section-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+    
+    .section-intro {
+      color: var(--text-secondary);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+    
+    .service-card {
+      background: var(--bg-secondary);
+      border-radius: var(--radius);
+      padding: 2rem;
+      border: 1px solid var(--border);
+      transition: all 0.3s ease;
+    }
+    
+    .service-card:hover {
+      background: var(--bg-primary);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+      transform: translateY(-4px);
+    }
+    
+    .service-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--claude-primary);
+    }
+    
+    .service-description {
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+      line-height: 1.7;
+    }
+    
+    .deliverables {
+      border-top: 1px solid var(--border);
+      padding-top: 1rem;
+    }
+    
+    .deliverables-title {
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      margin-bottom: 0.75rem;
+    }
+    
+    .deliverables-list {
+      list-style: none;
+    }
+    
+    .deliverables-list li {
+      padding: 0.25rem 0;
+      padding-left: 1.25rem;
+      position: relative;
+      color: var(--text-primary);
+    }
+    
+    .deliverables-list li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--success);
+      font-weight: bold;
+    }
+    
+    .accordion {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    
+    .accordion-item {
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .accordion-item:last-child {
+      border-bottom: none;
+    }
+    
+    .accordion-header {
+      width: 100%;
+      padding: 1.25rem 1.5rem;
+      background: none;
+      border: none;
+      text-align: left;
+      font-size: 1.125rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+    
+    .accordion-header:hover {
+      background: var(--bg-secondary);
+      color: var(--claude-primary);
+    }
+    
+    .accordion-icon {
+      transition: transform 0.3s ease;
+      color: var(--claude-primary);
+    }
+    
+    .accordion-item.active .accordion-icon {
+      transform: rotate(90deg);
+    }
+    
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: var(--bg-secondary);
+    }
+    
+    .accordion-item.active .accordion-content {
+      max-height: 500px;
+    }
+    
+    .accordion-body {
+      padding: 1.5rem;
+    }
+    
+    .process-timeline {
+      position: relative;
+      padding-left: 2rem;
+    }
+    
+    .process-timeline::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 20px;
+      bottom: 20px;
+      width: 2px;
+      background: linear-gradient(180deg, var(--claude-primary), var(--claude-secondary));
+    }
+    
+    .process-step {
+      position: relative;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      background: var(--bg-secondary);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    
+    .process-step::before {
+      content: attr(data-step);
+      position: absolute;
+      left: -2rem;
+      top: 1.5rem;
+      width: 30px;
+      height: 30px;
+      background: var(--claude-primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.875rem;
+    }
+    
+    .process-title {
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    
+    .process-description {
+      color: var(--text-secondary);
+    }
+    
+    .cta-section {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: linear-gradient(135deg, var(--claude-primary), var(--claude-secondary));
+      border-radius: var(--radius);
+      color: white;
+    }
+    
+    .cta-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+    
+    .cta-subtitle {
+      font-size: 1.25rem;
+      margin-bottom: 2rem;
+      opacity: 0.95;
+    }
+    
+    .cta-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .btn-cta {
+      background: white;
+      color: var(--claude-primary);
+      font-weight: 700;
+    }
+    
+    .btn-cta:hover {
+      background: var(--bg-secondary);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+    
+    @media (max-width: 768px) {
+      .hero-title {
+        font-size: 2rem;
+      }
+      
+      .section-title {
+        font-size: 1.75rem;
+      }
+      
+      #app-claude-code {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app-claude-code">
+    <div class="hero-section">
+      <span class="hero-badge">🤖 Claude Code Enhanced</span>
+      <h1 class="hero-title">AI Enablement that Drives Effectiveness</h1>
+      <p class="hero-subtitle">Ship faster and safer, with workflows your team will actually use.</p>
+      <div class="hero-actions">
+        <a href="mailto:you@example.com" class="btn btn-primary">
+          <span>📧</span>
+          <span>Email me</span>
+        </a>
+        <a href="#process" class="btn btn-secondary">
+          <span>See approach</span>
+          <span>↓</span>
+        </a>
+      </div>
+    </div>
+    
+    <div class="value-grid" id="value-props">
+      <!-- Value props will be inserted here -->
+    </div>
+    
+    <section class="section" id="services">
+      <div class="section-header">
+        <h2 class="section-title">How I Help</h2>
+        <p class="section-intro">Comprehensive AI enablement services tailored to your organization's needs</p>
+      </div>
+      <div class="service-grid" id="service-cards">
+        <!-- Service cards will be inserted here -->
+      </div>
+    </section>
+    
+    <section class="section" id="best-practices">
+      <div class="section-header">
+        <h2 class="section-title">Best Practices</h2>
+        <p class="section-intro">Proven approaches for effective AI integration</p>
+      </div>
+      <div class="accordion" id="practices-accordion">
+        <!-- Accordion items will be inserted here -->
+      </div>
+    </section>
+    
+    <section class="section" id="process">
+      <div class="section-header">
+        <h2 class="section-title">Engagement Process</h2>
+        <p class="section-intro">A structured approach to AI transformation</p>
+      </div>
+      <div class="process-timeline" id="process-timeline">
+        <!-- Process steps will be inserted here -->
+      </div>
+    </section>
+    
+    <div class="cta-section" id="cta">
+      <h2 class="cta-title">Ready to Transform Your Team?</h2>
+      <p class="cta-subtitle">Let's discuss how AI enablement can accelerate your organization</p>
+      <div class="cta-actions">
+        <a href="mailto:you@example.com" class="btn btn-cta">Get Started Today</a>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Height tracking
+    let lastHeight = 0;
+    let resizeTimeout;
+    let isUpdating = false;
+    
+    function updateHeight() {
+      if (isUpdating) return;
+      isUpdating = true;
+      
+      setTimeout(() => {
+        // Use body's offset height which is more stable
+        const body = document.body;
+        const html = document.documentElement;
+        const height = Math.max(
+          body.scrollHeight,
+          body.offsetHeight,
+          html.clientHeight,
+          html.offsetHeight
+        );
+        
+        // Only send if height actually changed by more than 5px
+        if (Math.abs(height - lastHeight) > 5) {
+          lastHeight = height;
+          parent?.postMessage({ type: 'variant:height', value: height }, '*');
+        }
+        isUpdating = false;
+      }, 0);
+    }
+    
+    async function init() {
+      try {
+        const response = await fetch('/data/enablement.json');
+        const data = await response.json();
+        
+        // Render value props
+        const valueGrid = document.getElementById('value-props');
+        data.value_props.forEach((prop, index) => {
+          const card = document.createElement('div');
+          card.className = 'value-card';
+          card.innerHTML = `
+            <div class="value-icon">${['🎯', '🚀', '⚡', '🔒', '📈'][index]}</div>
+            <h3 class="value-title">${prop.title}</h3>
+            <ul class="value-bullets">
+              ${prop.bullets.map(b => `<li>${b}</li>`).join('')}
+            </ul>
+          `;
+          valueGrid.appendChild(card);
+        });
+        
+        // Render service cards
+        const serviceGrid = document.getElementById('service-cards');
+        const servicesSection = data.sections.find(s => s.id === 'what-i-do');
+        if (servicesSection && servicesSection.cards) {
+          servicesSection.cards.forEach(card => {
+            const serviceCard = document.createElement('div');
+            serviceCard.className = 'service-card';
+            serviceCard.innerHTML = `
+              <h3 class="service-title">${card.title}</h3>
+              <p class="service-description">${card.body}</p>
+              <div class="deliverables">
+                <h4 class="deliverables-title">Deliverables</h4>
+                <ul class="deliverables-list">
+                  ${card.deliverables.map(d => `<li>${d}</li>`).join('')}
+                </ul>
+              </div>
+            `;
+            serviceGrid.appendChild(serviceCard);
+          });
+        }
+        
+        // Render best practices accordion
+        const accordion = document.getElementById('practices-accordion');
+        const practicesSection = data.sections.find(s => s.id === 'prompting-best-practices');
+        if (practicesSection && practicesSection.items) {
+          practicesSection.items.forEach((item, index) => {
+            const accordionItem = document.createElement('div');
+            accordionItem.className = 'accordion-item';
+            accordionItem.innerHTML = `
+              <button class="accordion-header">
+                <span>${item.label}</span>
+                <span class="accordion-icon">▶</span>
+              </button>
+              <div class="accordion-content">
+                <div class="accordion-body">
+                  <ul>
+                    ${item.content.map(c => `<li>${c}</li>`).join('')}
+                  </ul>
+                </div>
+              </div>
+            `;
+            
+            const header = accordionItem.querySelector('.accordion-header');
+            header.addEventListener('click', () => {
+              accordionItem.classList.toggle('active');
+            });
+            
+            accordion.appendChild(accordionItem);
+          });
+        }
+        
+        // Render process timeline
+        const timeline = document.getElementById('process-timeline');
+        const processSection = data.sections.find(s => s.id === 'process');
+        if (processSection && processSection.steps) {
+          processSection.steps.forEach((step, index) => {
+            const stepElement = document.createElement('div');
+            stepElement.className = 'process-step';
+            stepElement.setAttribute('data-step', index + 1);
+            
+            const parts = step.split(':');
+            stepElement.innerHTML = `
+              <div class="process-title">${parts[0]}</div>
+              <div class="process-description">${parts.slice(1).join(':').trim()}</div>
+            `;
+            
+            timeline.appendChild(stepElement);
+          });
+        }
+        
+        // Update CTA with actual data
+        if (data.cta) {
+          const ctaTitle = document.querySelector('.cta-title');
+          const ctaSubtitle = document.querySelector('.cta-subtitle');
+          const ctaButton = document.querySelector('.btn-cta');
+          
+          if (ctaTitle) ctaTitle.textContent = data.cta.headline;
+          if (ctaSubtitle) ctaSubtitle.textContent = data.cta.subhead;
+          if (ctaButton && data.cta.actions && data.cta.actions[0]) {
+            ctaButton.textContent = data.cta.actions[0].label;
+            ctaButton.href = data.cta.actions[0].href;
+          }
+        }
+        
+        // Post initial height to parent for iframe resizing
+        requestAnimationFrame(() => {
+          updateHeight();
+        });
+        
+      } catch (error) {
+        console.error('Error loading enablement data:', error);
+        document.getElementById('app-claude-code').innerHTML = `
+          <div style="text-align: center; padding: 2rem; color: #ef4444;">
+            <h2>Error Loading Content</h2>
+            <p>Unable to fetch enablement data. Please try again later.</p>
+          </div>
+        `;
+      }
+    }
+    
+    // Initialize on load
+    init();
+    
+    // Only update on actual window resize (not scrolling)
+    let windowWidth = window.innerWidth;
+    window.addEventListener('resize', () => {
+      // Check if it's an actual resize, not just a scroll
+      if (window.innerWidth !== windowWidth) {
+        windowWidth = window.innerWidth;
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          requestAnimationFrame(updateHeight);
+        }, 100);
+      }
+    });
+  </script>
+</body>
+</html>

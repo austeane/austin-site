@@ -111,7 +111,8 @@
 
         /* Hero Section */
         .hero {
-            min-height: 100vh;
+            min-height: 90vh;
+            max-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -900,6 +901,29 @@
 
             // Load content when page loads
             document.addEventListener('DOMContentLoaded', loadContent);
+
+            // Height reporting for iframe resizing
+            function postHeight() {
+                // Measure the whole document, not just <body>
+                var h = Math.max(
+                    document.documentElement.scrollHeight,
+                    document.body.scrollHeight
+                );
+                // Cap the height to prevent infinite growth issues
+                // Maximum reasonable height for a page (about 10 screens tall)
+                var maxHeight = window.innerHeight * 10;
+                if (h > maxHeight) {
+                    console.warn('Excessive height detected:', h, 'pixels. Capping to:', maxHeight);
+                    h = maxHeight;
+                }
+                parent?.postMessage({ type: 'variant:height', value: h }, '*');
+            }
+            // Initial and follow‑ups (handle reflow and font load)
+            window.addEventListener('load', postHeight);
+            window.addEventListener('resize', postHeight);
+            document.fonts?.ready?.then(postHeight);
+            setTimeout(postHeight, 0);
+            setTimeout(postHeight, 250); // catch late reflows/accordions
         </script>
     </div>
 </body>

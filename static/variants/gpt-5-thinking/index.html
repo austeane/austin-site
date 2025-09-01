@@ -645,6 +645,22 @@ GitHub: ${qs('#ghLink').href}`;
       });
 
   }());
+
+  // Height reporting for iframe resizing
+  function postHeight() {
+    // Measure the whole document, not just <body>
+    var h = Math.max(
+      document.documentElement.scrollHeight,
+      document.body.scrollHeight
+    );
+    parent?.postMessage({ type: 'variant:height', value: h }, '*');
+  }
+  // Initial and follow‑ups (handle reflow and font load)
+  window.addEventListener('load', postHeight);
+  window.addEventListener('resize', postHeight);
+  document.fonts?.ready?.then(postHeight);
+  setTimeout(postHeight, 0);
+  setTimeout(postHeight, 250); // catch late reflows/accordions
   </script>
 </body>
 </html>

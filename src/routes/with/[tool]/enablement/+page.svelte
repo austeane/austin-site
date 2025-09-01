@@ -2,13 +2,19 @@
   import VariantFrame from '$lib/components/VariantFrame.svelte';
   
   export let data: any;
-  const { provider, tool } = data;
   
-  const variantPath = `/variants/${tool}/enablement/index.html`;
+  // Reactive so it updates on param changes
+  $: provider = data.provider;
+  $: tool = data.tool;
+  $: variantPath = `/variants/${tool}/enablement/index.html`;
 </script>
 
 <svelte:head>
-  <title>AI Enablement - {provider.name} Variant</title>
+  {#if provider?.name}
+    <title>AI Enablement - {provider.name} Variant</title>
+  {/if}
 </svelte:head>
 
-<VariantFrame src={variantPath} />
+{#key tool}
+  <VariantFrame src={variantPath} />
+{/key}

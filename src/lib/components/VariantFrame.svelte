@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   export let src: string;
-  let height = '100%';
+  // Good default while waiting for the variant to report its real height:
+  let height = 'clamp(480px, 70svh, 1200px)';
 
   let lastReceivedHeight = 0;
   

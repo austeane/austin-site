@@ -1,16 +1,18 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
   import { PROVIDERS } from '$lib/providers';
   import VariantFrame from '$lib/components/VariantFrame.svelte';
 
   export let data: { provider: any; providers: typeof PROVIDERS };
 
-  const p = data.provider;
-  const providers = data.providers;
-  const idx = providers.findIndex((x) => x.id === p?.id);
+  // Make these reactive to route param changes
+  $: p = data.provider;
+  $: providers = data.providers;
+  $: idx = providers.findIndex((x) => x.id === p?.id);
 
-  function goto(id: string) {
-    window.location.href = id === 'minimal' ? '/' : `/with/${id}`;
+  function navigate(id: string) {
+    goto(id === 'minimal' ? '/' : `/with/${id}`);
   }
 
   // Keyboard: [ ] to cycle through variants
@@ -18,10 +20,10 @@
     if (!p) return;
     if (e.key === ']') {
       const next = providers[(idx + 1) % providers.length];
-      goto(next.id);
+      navigate(next.id);
     } else if (e.key === '[') {
       const prev = providers[(idx - 1 + providers.length) % providers.length];
-      goto(prev.id);
+      navigate(prev.id);
     }
   }
 
@@ -48,11 +50,21 @@
       This route is for AI-generated variants. The minimal version is shown on the home page.
     </p>
   {:else}
-    <div style="position: relative; height: calc(100vh - 200px); min-height: 600px;">
-      <VariantFrame src={p.path} />
+    <div class="variant-wrap">
+      {#key p.id}
+        <VariantFrame src={p.path} />
+      {/key}
     </div>
     <p style="text-align: center; margin-top: 1rem; color: var(--muted); font-size: 0.85rem;">
       Tip: Use [ and ] keys to cycle through variants
     </p>
   {/if}
 {/if}
+
+<style>
+  .variant-wrap {
+    /* No fixed height: the iframe will dictate height via postMessage */
+    /* Provide a sensible minimum for initial paint while content loads */
+    min-height: clamp(480px, 70svh, 1200px);
+  }
+</style>
