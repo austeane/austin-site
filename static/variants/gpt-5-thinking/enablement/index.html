@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>AI Enablement — Variant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <style>
+    /* ===============================
+       Scoped Styles (no CSS leaks)
+       Everything lives under [id^="app-"]
+       =============================== */
+    [id^="app-"] { --bg: #0b0c0f; --panel:#11131a; --panel-2:#0f1117; --text:#e6e8ee; --muted:#a6adbb; --link:#7dd3fc; --brand:#8b5cf6;
+      --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444; --ring:#334155; --card:#0e1016; --border:#1f2430; --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px; --radius-sm: 10px; --radius-lg: 22px; --gap: 16px; --gap-lg: 28px; --maxw: 1100px; font: 500 16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
+      color: var(--text); background: radial-gradient(1200px 800px at 10% -10%, #1a1942 0%, transparent 40%), radial-gradient(1000px 700px at 120% 10%, #0a3b5e 0%, transparent 45%), var(--bg);
+      min-height: 100svh; }
+    @media (prefers-color-scheme: light){
+      [id^="app-"]{ --bg:#f7f7fb; --panel:#ffffff; --panel-2:#f9fafb; --text:#0f1222; --muted:#525a70; --link:#0ea5e9; --brand:#6d28d9; --card:#ffffff; --border:#e6e8ee; --ring:#d6d9e2; box-shadow:none; background: linear-gradient(180deg,#f7f8ff, #fff 20%, #fafbff);}
+    }
+
+    [id^="app-"] .shell{ max-width: var(--maxw); margin-inline:auto; padding: 24px; }
+    [id^="app-"] .topbar{ position: sticky; top: 0; z-index: 50; backdrop-filter: blur(8px);
+      background: color-mix(in oklab, var(--panel) 70%, transparent); border-bottom: 1px solid var(--border); }
+    [id^="app-"] .topbar-inner{ max-width: var(--maxw); margin: 0 auto; display:grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 10px 24px; }
+    [id^="app-"] .brand{ display:flex; gap:10px; align-items:center; text-decoration: none; color: var(--text); }
+    [id^="app-"] .logo{ inline-size: 36px; block-size: 36px; display:grid; place-items:center; border-radius: 10px; background: linear-gradient(135deg, var(--brand), #22d3ee); color:white; font-weight: 800; box-shadow: var(--shadow) }
+    [id^="app-"] .brand small{ color: var(--muted); display:block; font-weight: 600; margin-top:-4px; }
+    [id^="app-"] nav a{ color: var(--muted); text-decoration:none; padding:8px 10px; border-radius: 999px; border:1px solid transparent}
+    [id^="app-"] nav a.active{ color: var(--text); border-color: var(--border); background: color-mix(in oklab, var(--panel) 70%, transparent)}
+    [id^="app-"] .nav{ display:flex; flex-wrap: wrap; gap: 6px; align-items:center; }
+    [id^="app-"] .top-actions{ display:flex; gap:8px; align-items:center; }
+    [id^="app-"] .btn{ --bgc: color-mix(in oklab, var(--brand) 60%, #3b82f6); --fg: white; background: var(--bgc); color: var(--fg); border:none; padding:10px 14px; border-radius: 999px; font-weight:700; cursor:pointer; box-shadow: var(--shadow); }
+    [id^="app-"] .btn.secondary{ background: transparent; color: var(--text); border:1px solid var(--border); box-shadow:none; }
+    [id^="app-"] .btn.ghost{ background: transparent; color: var(--muted); border:1px solid var(--border); box-shadow:none; }
+    [id^="app-"] .icon{ inline-size: 1.1em; block-size: 1.1em; vertical-align: -0.15em }
+
+    /* Hero */
+    [id^="app-"] .hero{ display:grid; gap: 18px; padding: 40px 24px 12px; align-items:center; }
+    [id^="app-"] .hero h1{ font-size: clamp(28px, 4vw, 44px); line-height:1.1; letter-spacing:-0.02em; margin:0; }
+    [id^="app-"] .hero p.lead{ color: var(--muted); font-size: clamp(16px, 2.2vw, 20px); margin: 0 }
+    [id^="app-"] .hero-ctas{ display:flex; flex-wrap:wrap; gap:10px; margin-top: 8px; }
+    [id^="app-"] .meta{ display:flex; flex-wrap: wrap; gap: 10px; color: var(--muted); font-size: 14px; }
+    [id^="app-"] .meta span{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border:1px solid var(--border); border-radius:999px; background: color-mix(in oklab, var(--panel) 75%, transparent) }
+
+    /* Surfaces */
+    [id^="app-"] .card{ background: var(--card); border:1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow) }
+    [id^="app-"] .panel{ background: var(--panel); border:1px solid var(--border); border-radius: var(--radius); }
+
+    /* Value props */
+    [id^="app-"] .props{ display:grid; gap: var(--gap); grid-template-columns: repeat( auto-fit, minmax(220px,1fr) ); margin-top: 18px;}
+    [id^="app-"] .prop{ padding: 16px; display:grid; gap:10px; }
+    [id^="app-"] .prop h3{ margin:0; font-size: 18px }
+    [id^="app-"] .prop ul{ margin:0; padding-left: 1.1em; color: var(--muted) }
+
+    /* Sections */
+    [id^="app-"] section{ scroll-margin-top: 90px; }
+    [id^="app-"] .section{ padding: 24px; margin-top: 18px }
+    [id^="app-"] .section header{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom: 10px;}
+    [id^="app-"] .section h2{ margin:0; font-size: clamp(20px, 3vw, 26px) }
+    [id^="app-"] .section .copylink{ color: var(--muted); border:1px solid var(--border); border-radius: 999px; padding:6px 10px; background:transparent; }
+    [id^="app-"] .two-col{ display:grid; grid-template-columns: 1.2fr .8fr; gap: var(--gap); }
+    @media (max-width: 880px){ [id^="app-"] .two-col{ grid-template-columns: 1fr } }
+
+    /* Cards grid */
+    [id^="app-"] .cards{ display:grid; gap: var(--gap); grid-template-columns: repeat( auto-fit, minmax(240px,1fr) ); }
+    [id^="app-"] .kard{ padding: 16px; display:grid; gap:8px }
+    [id^="app-"] .kard h3{ margin:0; font-size: 18px }
+    [id^="app-"] .kard .deliver{ display:flex; flex-wrap:wrap; gap:8px; margin-top:6px }
+    [id^="app-"] .pill{ padding:6px 10px; border-radius:999px; background: color-mix(in oklab, var(--panel) 85%, transparent); border: 1px solid var(--border); font-size: 13px; color: var(--muted) }
+
+    /* Lists */
+    [id^="app-"] .bullets ul{ margin: 0; padding-left: 1.1em; }
+    [id^="app-"] .text p{ margin: 0 0 8px; }
+
+    /* Accordion */
+    [id^="app-"] .accordion details{ border:1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; background: var(--panel-2) }
+    [id^="app-"] .accordion details + details{ margin-top: 8px }
+    [id^="app-"] .accordion summary{ cursor:pointer; list-style: none; display:flex; align-items:center; gap:10px; font-weight: 700 }
+    [id^="app-"] .accordion summary::-webkit-details-marker{ display:none }
+    [id^="app-"] .accordion .acontent{ color: var(--muted); padding: 6px 2px 2px 2px }
+    [id^="app-"] .accordion .acontent p{ margin: 0 0 6px }
+
+    /* Process timeline */
+    [id^="app-"] .process{ position:relative; padding-left: 26px }
+    [id^="app-"] .process::before{ content:""; position:absolute; left: 9px; top: 6px; bottom: 6px; width: 2px; background: linear-gradient(180deg, var(--brand), transparent) }
+    [id^="app-"] .step{ position:relative; margin: 0 0 12px; padding: 0 0 0 4px }
+    [id^="app-"] .step::before{ content:""; position:absolute; left: -18px; top: 2px; width: 14px; height:14px; border-radius:50%; background: color-mix(in oklab, var(--brand) 70%, #22d3ee); box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand) 25%, transparent); }
+
+    /* Resources */
+    [id^="app-"] .resources{ display:grid; gap: var(--gap); grid-template-columns: repeat( auto-fit, minmax(260px,1fr) ); }
+    [id^="app-"] .resource{ padding: 14px; display:grid; gap:6px }
+    [id^="app-"] .resource .kind{ font-size: 12px; color: var(--muted) }
+    [id^="app-"] .resource a.link{ text-decoration:none; color: var(--link); font-weight: 700 }
+
+    /* Footer CTA */
+    [id^="app-"] .cta{ text-align:center; padding: 28px; display:grid; gap: 10px }
+    [id^="app-"] .cta h3{ margin:0; font-size: 24px }
+    [id^="app-"] .cta p{ margin:0; color: var(--muted) }
+
+    /* Toolbar (theme, print, search) */
+    [id^="app-"] .toolbar{ display:flex; gap:6px; align-items:center; flex-wrap: wrap; }
+    [id^="app-"] .input{ background: var(--panel-2); color:var(--text); border:1px solid var(--border); border-radius: 999px; padding: 8px 12px; outline:none; min-width: 180px }
+    [id^="app-"] .kbd{ font: 600 12px/1 system-ui; color: var(--muted); border:1px solid var(--border); border-radius: 6px; padding: 2px 6px; background: var(--panel-2) }
+
+    /* Toast */
+    [id^="app-"] .toast{ position: fixed; inset-inline: 0; bottom: 18px; display:grid; place-items:center; pointer-events: none; z-index: 60 }
+    [id^="app-"] .toast span{ pointer-events:auto; background: var(--panel); border: 1px solid var(--border); padding: 10px 14px; border-radius: 999px; box-shadow: var(--shadow); }
+
+    /* Loader skeletons */
+    [id^="app-"] .skeleton{ display:block; border-radius: 8px; background: linear-gradient(90deg, color-mix(in oklab, var(--panel) 75%, transparent), color-mix(in oklab, var(--panel) 60%, transparent), color-mix(in oklab, var(--panel) 75%, transparent)); background-size: 200% 100%; animation: s 1.2s infinite linear; }
+    [id^="app-"] .sk-title{ height: 28px; width: 60%; }
+    [id^="app-"] .sk-line{ height: 14px; width: 100% }
+    @keyframes s{ to{ background-position: -200% 0 } }
+
+    /* Print */
+    @media print{
+      [id^="app-"] .topbar,[id^="app-"] .hero-ctas,[id^="app-"] .top-actions,[id^="app-"] .copylink,[id^="app-"] .toast{ display:none !important }
+      [id^="app-"]{ background:white; color:#111 }
+      [id^="app-"] .card, [id^="app-"] .panel{ box-shadow:none; border-color:#ddd }
+      [id^="app-"] a{ color:#000; text-decoration:underline }
+    }
+  </style>
+</head>
+<body>
+<div id="app-tool">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top" aria-label="Go to top">
+        <div class="logo" aria-hidden="true">AE</div>
+        <div>
+          <strong>AI Enablement</strong>
+          <small>Effectiveness &gt; Output</small>
+        </div>
+      </a>
+      <div class="top-actions">
+        <nav class="nav" aria-label="Primary">
+          <!-- Populated from data -->
+        </nav>
+        <div class="toolbar">
+          <input id="q" class="input" placeholder="Search sections…" aria-label="Search" />
+          <button class="btn ghost" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3a9 9 0 0 0 9 9 9 9 0 1 1-9-9Z" stroke-width="2"/></svg>
+          </button>
+          <button class="btn ghost" id="printBtn" title="Print / Save PDF" aria-label="Print">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M8 22h8v-7H8v7Z" stroke-width="2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="shell" id="top" tabindex="-1">
+    <!-- Hero -->
+    <section class="hero">
+      <h1 class="skeleton sk-title" id="hero-title"></h1>
+      <p class="lead skeleton sk-line" id="hero-sub"></p>
+      <div class="hero-ctas" id="hero-ctas">
+        <!-- CTAs from data -->
+      </div>
+      <div class="meta" id="meta">
+        <!-- meta chips -->
+      </div>
+    </section>
+
+    <!-- Value Props -->
+    <section class="section card" id="value-props">
+      <header>
+        <h2>Why this works</h2>
+        <button class="copylink" data-target="value-props" title="Copy link">#</button>
+      </header>
+      <div class="props" id="props-grid">
+        <!-- populated -->
+      </div>
+    </section>
+
+    <!-- Dynamic Sections -->
+    <div id="sections">
+      <!-- populated -->
+    </div>
+
+    <!-- Resources -->
+    <section id="resources" class="section card">
+      <header>
+        <h2>Resources</h2>
+        <button class="copylink" data-target="resources" title="Copy link">#</button>
+      </header>
+      <div class="resources" id="resources-grid"></div>
+    </section>
+
+    <!-- CTA -->
+    <section class="section panel cta" id="contact">
+      <h3 id="cta-head">Let's talk</h3>
+      <p id="cta-sub">Email is best—happy to tailor a plan to your context.</p>
+      <div class="hero-ctas" id="cta-actions"></div>
+      <p class="meta">
+        <span><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 8v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8m18-3H3m18 0-9 7L3 5" stroke-width="2"/></svg> email-first; contact for quote or to hire</span>
+        <span><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 18l6-6-6-6" stroke-width="2"/></svg> Minimal resume: <a href="/resume">/resume</a></span>
+      </p>
+    </section>
+  </main>
+
+  <!-- Toasts -->
+  <div class="toast" id="toast" aria-live="polite" aria-atomic="true" hidden>
+    <span id="toast-msg"></span>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Scope root id = app-<tool> inferred from URL
+  const root = document.getElementById('app-tool');
+  const match = location.pathname.match(/\/variants\/([^/]+)/i);
+  const tool = (match && match[1]) ? match[1] : 'tool';
+  root.id = `app-${tool}`;
+
+  // Helpers
+  const $ = (sel, base=root) => base.querySelector(sel);
+  const $$ = (sel, base=root) => Array.from(base.querySelectorAll(sel));
+  const el = (tag, props={}, children=[]) => {
+    const n = document.createElement(tag);
+    Object.entries(props).forEach(([k,v])=>{
+      if (k === 'class') n.className = v;
+      else if (k === 'html') n.innerHTML = v;
+      else if (k.startsWith('on') && typeof v === 'function') n.addEventListener(k.substring(2), v);
+      else if (v !== undefined && v !== null) n.setAttribute(k, v);
+    });
+    (Array.isArray(children)?children:[children]).filter(Boolean).forEach(c => n.append(c.nodeType?c:document.createTextNode(c)));
+    return n;
+  };
+  const icon = (name) => {
+    const svgs = {
+      mail:'<path d="M21 8v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8m18-3H3m18 0-9 7L3 5" stroke-width="2"/>',
+      arrow:'<path d="M9 18l6-6-6-6" stroke-width="2"/>',
+      check:'<path d="M20 6 9 17l-5-5" stroke-width="2"/>',
+      bolt:'<path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z" stroke-width="2"/>',
+      lock:'<rect x="4" y="10" width="16" height="10" rx="2" stroke-width="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke-width="2"/>',
+      list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" stroke-width="2"/>',
+      link:'<path d="M10 13a5 5 0 0 0 7.07 0l3.54-3.54a5 5 0 0 0-7.07-7.07L11 4M14 11a5 5 0 0 1-7.07 0L3.39 7.46a5 5 0 0 1 7.07-7.07L13 2" stroke-width="2"/>'
+    };
+    const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('viewBox','0 0 24 24');
+    svg.setAttribute('fill','none'); svg.setAttribute('stroke','currentColor'); svg.setAttribute('class','icon');
+    svg.innerHTML = svgs[name] || svgs['bolt'];
+    return svg;
+  };
+  const toast = (msg) => {
+    const t = $('#toast'), m = $('#toast-msg');
+    m.textContent = msg; t.hidden = false;
+    clearTimeout(t._h); t._h = setTimeout(()=> t.hidden = true, 1600);
+  };
+  const copy = async (text) => { try{ await navigator.clipboard.writeText(text); toast('Link copied'); }catch(e){ toast('Copy failed'); } };
+
+  // Theme toggle
+  const THEME_KEY = 'ae:theme';
+  const setTheme = (mode) => { if(mode==='dark'){ root.dataset.theme='dark'; document.documentElement.style.colorScheme='dark'; } else { delete root.dataset.theme; document.documentElement.style.colorScheme='light'; } localStorage.setItem(THEME_KEY, mode); };
+  const loadTheme = ()=> { const saved = localStorage.getItem(THEME_KEY); if(saved) setTheme(saved); };
+  $('#themeBtn').addEventListener('click', ()=> setTheme(root.dataset.theme==='dark'?'light':'dark'));
+  loadTheme();
+
+  // Print
+  $('#printBtn').addEventListener('click', ()=> window.print());
+
+  // Fetch and render
+  const hrefSafe = (s)=> (typeof s==='string'?s:'#');
+  const fetchData = async () => {
+    const res = await fetch('/data/enablement.json', {cache:'no-store'});
+    if(!res.ok) throw new Error('Failed to load /data/enablement.json');
+    return res.json();
+  };
+
+  const makeNav = (data) => {
+    const nav = $('.nav');
+    const items = [
+      ['Approach', '#value-props'],
+      ...(data.sections||[]).map(s => [s.title, `#${s.id}`]),
+      ['Resources', '#resources'],
+      ['Contact', '#contact']
+    ];
+    items.forEach(([label, href])=>{
+      const a = el('a', {href, 'data-nav': href}, label);
+      nav.append(a);
+    });
+    // Active-on-scroll
+    const obs = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{
+        if(e.isIntersecting){
+          const id = '#'+e.target.id;
+          $$('.nav a').forEach(a=> a.classList.toggle('active', a.getAttribute('data-nav')===id));
+        }
+      });
+    }, { rootMargin: '-45% 0px -45% 0px', threshold: 0.01 });
+    ['value-props', ...(data.sections||[]).map(s=>s.id), 'resources', 'contact'].forEach(id=>{
+      const n = document.getElementById(id);
+      if(n) obs.observe(n);
+    });
+  };
+
+  const renderHero = (hero, meta) => {
+    const title = $('#hero-title'), sub = $('#hero-sub'), ctas = $('#hero-ctas'), metaBox = $('#meta');
+    title.classList.remove('skeleton','sk-title'); title.textContent = hero?.title || 'AI Enablement';
+    sub.classList.remove('skeleton','sk-line'); sub.textContent = hero?.subtitle || '';
+    ctas.innerHTML = '';
+    if(hero?.primary_cta){ const a = el('a',{href:hrefSafe(hero.primary_cta.href), class:'btn'}, [icon('mail'),' ', hero.primary_cta.label||'Email']); ctas.append(a); }
+    if(hero?.secondary_cta){ const a2 = el('a',{href:hrefSafe(hero.secondary_cta.href), class:'btn secondary'}, [hero.secondary_cta.label||'Learn more']); ctas.append(a2); }
+    metaBox.innerHTML='';
+    if(meta?.audience) meta.audience.forEach(a=> metaBox.append(el('span',{},[icon('list'),' ', a])));
+    if(meta?.principle) metaBox.append(el('span',{},[icon('check'),' ', meta.principle]));
+  };
+
+  const renderValueProps = (props=[]) => {
+    const grid = $('#props-grid'); grid.innerHTML='';
+    props.forEach(p=>{
+      const card = el('article', {class:'prop panel', id:p.id || ''});
+      card.append(el('h3',{},p.title||''));
+      if(p.bullets?.length){
+        const ul = el('ul'); p.bullets.forEach(b=> ul.append(el('li',{},b))); card.append(ul);
+      }
+      grid.append(card);
+    });
+  };
+
+  const renderSections = (sections=[]) => {
+    const wrap = $('#sections'); wrap.innerHTML = '';
+    sections.forEach(s=>{
+      const sec = el('section',{id:s.id, class:'section card'});
+      const header = el('header'); header.append(el('h2',{},s.title||''));
+      const btn = el('button',{class:'copylink','data-target':s.id, title:'Copy link'},'#');
+      btn.addEventListener('click', ()=> copy(location.origin + location.pathname + '#' + s.id));
+      header.append(btn); sec.append(header);
+
+      if(s.type==='cards'){
+        const grid = el('div',{class:'cards'});
+        (s.cards||[]).forEach(k=>{
+          const c = el('article',{class:'kard panel'});
+          c.append(el('h3',{},k.title||''), el('p',{class:'muted'}, k.body||''));
+          if(k.deliverables?.length){
+            const row = el('div',{class:'deliver'});
+            k.deliverables.forEach(d=> row.append(el('span',{class:'pill'}, d)));
+            c.append(row);
+          }
+          grid.append(c);
+        });
+        sec.append(grid);
+      }
+
+      if(s.type==='text'){ const bx = el('div',{class:'text'}); (s.body||[]).forEach(p=> bx.append(el('p',{},p))); sec.append(bx); }
+
+      if(s.type==='bullets'){
+        const bx = el('div',{class:'bullets'});
+        const ul = el('ul'); (s.bullets||[]).forEach(b=> ul.append(el('li',{},b)));
+        bx.append(ul); sec.append(bx);
+      }
+
+      if(s.type==='accordion'){
+        const ac = el('div',{class:'accordion'});
+        if(s.intro) ac.append(el('p',{class:'muted'}, s.intro));
+        (s.items||[]).forEach(it=>{
+          const d = el('details'); const sum = el('summary',{},[icon('arrow'), ' ', it.label||'']);
+          const cont = el('div',{class:'acontent'}); (it.content||[]).forEach(p=> cont.append(el('p',{},p)));
+          d.append(sum, cont); ac.append(d);
+        });
+        sec.append(ac);
+      }
+
+      if(s.type==='process'){
+        const proc = el('div',{class:'process panel', role:'list'});
+        (s.steps||[]).forEach(step=> proc.append(el('div',{class:'step', role:'listitem'}, step)));
+        sec.append(proc);
+      }
+
+      wrap.append(sec);
+    });
+  };
+
+  const renderResources = (resources=[]) => {
+    const grid = $('#resources-grid'); grid.innerHTML='';
+    resources.forEach(r=>{
+      const c = el('article',{class:'resource panel'});
+      c.append(el('span',{class:'kind'}, r.kind || 'link'));
+      c.append(el('a',{href:hrefSafe(r.url), class:'link', target:'_blank', rel:'noopener'}, r.title || r.url));
+      if(r.notes) c.append(el('p',{class:'muted'}, r.notes));
+      grid.append(c);
+    });
+  };
+
+  const renderCTA = (cta={}, meta={}) => {
+    $('#cta-head').textContent = cta.headline || 'Curious if this would work for your team?';
+    $('#cta-sub').textContent = cta.subhead || 'If these ideas resonate, let\'s talk about your context.';
+    const actions = $('#cta-actions'); actions.innerHTML='';
+    (cta.actions||[]).forEach(a=> actions.append(el('a',{href:hrefSafe(a.href), class:'btn'}, [icon('mail'),' ', a.label||'Email me'])));
+    // meta chips already shown in hero, but surface contact mode here too
+    if(meta?.contact_mode){
+      const p = $('#contact .meta'); if(p) p.firstElementChild && (p.firstElementChild.innerHTML = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 8v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8m18-3H3m18 0-9 7L3 5" stroke-width="2"/></svg> '+ meta.contact_mode);
+    }
+  };
+
+  const applySearch = () => {
+    const q = $('#q').value.trim().toLowerCase();
+    const sections = ['#value-props', ...($$('#sections .section').map(s=> '#'+s.id)), '#resources', '#contact'];
+    if(!q){ sections.forEach(id=> root.querySelector(id).style.removeProperty('display')); return; }
+    sections.forEach(id=>{
+      const node = root.querySelector(id);
+      const text = node.textContent.toLowerCase();
+      node.style.display = text.includes(q) ? '' : 'none';
+    });
+  };
+  $('#q').addEventListener('input', applySearch);
+
+  // Copy link buttons
+  root.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.copylink');
+    if(!btn) return;
+    const id = btn.getAttribute('data-target');
+    const link = location.origin + location.pathname + '#' + id;
+    copy(link);
+  });
+
+  // Load + render
+  (async function init(){
+    try{
+      const data = await fetchData();
+      renderHero(data.hero, data.meta);
+      renderValueProps(data.value_props);
+      renderSections(data.sections);
+      renderResources(data.resources);
+      renderCTA(data.cta, data.meta);
+      makeNav(data);
+    }catch(err){
+      // Graceful fallback content
+      $('#hero-title').classList.remove('skeleton','sk-title');
+      $('#hero-sub').classList.remove('skeleton','sk-line');
+      $('#hero-title').textContent = 'AI Enablement';
+      $('#hero-sub').textContent = 'Ship faster and safer with workflows your team will actually use.';
+      $('#hero-ctas').append(el('a',{href:'#contact', class:'btn'}, [icon('mail'),' ','Get in touch']));
+      $('#props-grid').innerHTML = '<div class="prop panel"><h3>Effectiveness first</h3><ul><li>Progress towards goals beats raw output.</li></ul></div>';
+      toast('Using fallback content (data not found)');
+      console.error(err);
+    }
+  })();
+})();
+</script>
+</body>
+</html>
