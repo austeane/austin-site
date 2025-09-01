@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPT-5 Pro Resume</title>
+</head>
+<body>
+    <div id="app">
+        <h1>GPT-5 Pro Resume</h1>
+        <p>This variant will be styled by GPT-5 Pro.</p>
+    </div>
+
+    <script>
+        // Post height updates to parent frame
+        function updateHeight() {
+            if (parent) {
+                parent.postMessage({ 
+                    type: 'variant:height', 
+                    value: document.body.scrollHeight 
+                }, '*');
+            }
+        }
+
+        // Initial height update
+        updateHeight();
+
+        // Update height when content changes
+        window.addEventListener('resize', updateHeight);
+        
+        // Observe DOM changes for height updates
+        const observer = new ResizeObserver(updateHeight);
+        observer.observe(document.body);
+    </script>
+</body>
+</html>
