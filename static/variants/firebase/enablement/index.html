@@ -1,196 +1,235 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Template Variant - AI Enablement</title>
+    <title>AI Enablement</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* Basic reset and typography */
-        * {
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #ECEFF1; /* Light grey background */
+            color: #37474F;
             margin: 0;
-            padding: 0;
+            padding: 1.5rem;
             box-sizing: border-box;
         }
-        
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            padding: 2rem;
-            max-width: 900px;
-            margin: 0 auto;
+        .container {
+            max-width: 1000px;
+            margin: auto;
         }
-        
-        /* Basic styling - replace with your own design */
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-        }
-        
-        h2 {
-            font-size: 1.5rem;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 0.5rem;
-        }
-        
-        h3 {
-            font-size: 1.2rem;
-            margin-top: 1.5rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .section {
+        header {
+            background: #039BE5; /* Firebase Blue */
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 8px;
+            text-align: center;
             margin-bottom: 2rem;
         }
-        
-        ul {
-            padding-left: 1.5rem;
+        header h1 {
+            font-size: 2.8rem;
+            font-weight: 500;
+            margin: 0 0 0.5rem 0;
         }
-        
-        li {
+        header p {
+            font-size: 1.3rem;
+            font-weight: 300;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .section {
+            background-color: #FFFFFF;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .section h2 {
+            font-size: 1.8rem;
+            font-weight: 500;
+            color: #0277BD; /* Darker Firebase Blue */
+            margin-top: 0;
+            border-bottom: 2px solid #B3E5FC; /* Lighter Blue */
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        .card {
+            background: #F5F5F5; /* Light background for cards */
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #E0E0E0;
+        }
+        .card h3 {
+            font-size: 1.25rem;
+            margin: 0 0 0.75rem 0;
+            color: #0288D1;
+        }
+        .card ul {
+            list-style-type: '✓ ';
+            padding-left: 1rem;
+            margin: 0;
+        }
+         .card ul li, .bullet-list li {
             margin-bottom: 0.5rem;
         }
-        
-        .metric {
-            display: inline-block;
-            margin-right: 2rem;
-            margin-bottom: 1rem;
+        .accordion .item {
+            border-bottom: 1px solid #E0E0E0;
         }
-        
-        .metric-value {
+        .accordion .item:last-child {
+            border-bottom: none;
+        }
+        .accordion .label {
+            padding: 1rem 0;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .accordion .label::after {
+            content: '+';
             font-size: 1.5rem;
-            font-weight: bold;
+            transition: transform 0.2s;
         }
-        
-        .metric-label {
-            font-size: 0.9rem;
-            color: #666;
+        .accordion .content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+            padding: 0 1rem;
         }
-        
-        /* Loading state */
-        .loading {
-            text-align: center;
-            padding: 4rem;
-            color: #666;
-        }
-        
-        /* Error state */
-        .error {
-            text-align: center;
-            padding: 4rem;
-            color: #d00;
-        }
+         .bullet-list {
+            list-style-type: '→ ';
+            padding-left: 1.2rem;
+         }
     </style>
 </head>
 <body>
-    <div id="app" class="loading">Loading enablement data...</div>
+    <div id="enablement-content" class="container">
+        <!-- Content will be injected here -->
+    </div>
 
     <script>
-        // IMPORTANT: Post height updates to parent for iframe resizing
-        function updateHeight() {
-            const height = document.documentElement.scrollHeight;
-            parent?.postMessage({ type: 'variant:height', value: height }, '*');
-        }
-
-        // Fetch enablement data from the centralized JSON endpoint
-        async function loadEnablement() {
+        async function fetchData() {
             try {
                 const response = await fetch('/data/enablement.json');
-                if (!response.ok) throw new Error('Failed to load enablement data');
-                
+                if (!response.ok) throw new Error(`HTTP Error: ${"\u007b"}response.status{"\u007d"}`);
                 const data = await response.json();
-                renderEnablement(data);
+                renderContent(data);
             } catch (error) {
-                document.getElementById('app').innerHTML = `
-                    <div class="error">Error loading enablement data: ${error.message}</div>
-                `;
+                console.error("Failed to load enablement data:", error);
+                document.getElementById('enablement-content').innerHTML = `<p style="color:red; text-align:center;">Failed to load content.</p>`;
             }
         }
 
-        // Render the enablement data into HTML
-        function renderEnablement(data) {
-            const app = document.getElementById('app');
-            app.className = ''; // Remove loading class
-            
-            // Build HTML from enablement data
-            let html = `
+        function renderContent(data) {
+            const container = document.getElementById('enablement-content');
+
+            const hero = `
                 <header>
-                    <h1>${data.title}</h1>
-                    <p>${data.subtitle}</p>
+                    <h1>${"\u007b"}data.hero.title{"\u007d"}</h1>
+                    <p>${"\u007b"}data.hero.subtitle{"\u007d"}</p>
                 </header>
-
-                <section class="section">
-                    <h2>Overview</h2>
-                    <p>${data.overview}</p>
-                    
-                    <div class="metrics">
-                        ${data.metrics.map(metric => `
-                            <div class="metric">
-                                <div class="metric-value">${metric.value}</div>
-                                <div class="metric-label">${metric.label}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </section>
-
-                <section class="section">
-                    <h2>Key Initiatives</h2>
-                    ${data.initiatives.map(initiative => `
-                        <div class="initiative">
-                            <h3>${initiative.title}</h3>
-                            <p>${initiative.description}</p>
-                            <ul>
-                                ${initiative.outcomes.map(outcome => `
-                                    <li>${outcome}</li>
-                                `).join('')}
-                            </ul>
-                        </div>
-                    `).join('')}
-                </section>
-
-                <section class="section">
-                    <h2>Implementation Approach</h2>
-                    ${data.approach.map(phase => `
-                        <div class="phase">
-                            <h3>${phase.phase}</h3>
-                            <p>${phase.description}</p>
-                            <ul>
-                                ${phase.activities.map(activity => `
-                                    <li>${activity}</li>
-                                `).join('')}
-                            </ul>
-                        </div>
-                    `).join('')}
-                </section>
-
-                <section class="section">
-                    <h2>Success Stories</h2>
-                    ${data.successStories.map(story => `
-                        <div class="story">
-                            <h3>${story.title}</h3>
-                            <p>${story.description}</p>
-                            <p><strong>Impact:</strong> ${story.impact}</p>
-                        </div>
-                    `).join('')}
-                </section>
             `;
-            
-            app.innerHTML = html;
-            
-            // Update height after rendering
-            setTimeout(updateHeight, 100);
+
+            const sections = data.sections.map(section => {
+                let content = '';
+                switch (section.type) {
+                    case 'cards':
+                        content = `<div class="card-grid">
+                            ${"\u007b"}section.cards.map(card => `
+                                <div class="card">
+                                    <h3>${"\u007b"}card.title{"\u007d"}</h3>
+                                    <p>${"\u007b"}card.body{"\u007d"}</p>
+                                    <ul>${"\u007b"}card.deliverables.map(d => `<li>${"\u007b"}d{"\u007d"}</li>`).join(''){"\u007d"}</ul>
+                                </div>
+                            `).join(''){"\u007d"}
+                        </div>`;
+                        break;
+                    case 'accordion':
+                         content = `<div class="accordion">
+                            ${"\u007b"}section.items.map(item => `
+                                <div class="item">
+                                    <div class="label">${"\u007b"}item.label{"\u007d"}</div>
+                                    <div class="content">
+                                        <ul>${"\u007b"}item.content.map(c => `<li>${"\u007b"}c{"\u007d"}</li>`).join(''){"\u007d"}</ul>
+                                    </div>
+                                </div>
+                            `).join(''){"\u007d"}
+                        </div>`;
+                        break;
+                    case 'bullets':
+                        content = `<ul class="bullet-list">
+                            ${"\u007b"}section.bullets.map(bullet => `<li>${"\u007b"}bullet{"\u007d"}</li>`).join(''){"\u007d"}
+                        </ul>`;
+                        break;
+                    case 'text':
+                        content = section.body.map(p => `<p>${"\u007b"}p{"\u007d"}</p>`).join('');
+                        break;
+                }
+                return `<div class="section" id="${"\u007b"}section.id{"\u007d"}">
+                            <h2>${"\u007b"}section.title{"\u007d"}</h2>
+                            ${"\u007b"}content{"\u007d"}
+                        </div>`;
+            }).join('');
+
+            container.innerHTML = hero + sections;
+
+            // Add accordion functionality
+            document.querySelectorAll('.accordion .label').forEach(label => {
+                label.addEventListener('click', () => {
+                    const content = label.nextElementSibling;
+                    const item = label.parentElement;
+                    const isOpen = item.classList.toggle('open');
+
+                    if (isOpen) {
+                        label.style.color = '#0288D1';
+                        label.style.fontWeight = '700';
+                        label.nextElementSibling.style.maxHeight = content.scrollHeight + "px";
+                        label.nextElementSibling.style.padding = "1rem";
+                        label.style.setProperty('--transform', 'rotate(45deg)');
+                    } else {
+                        label.style.color = '';
+                         label.style.fontWeight = '500';
+                        label.nextElementSibling.style.maxHeight = '0';
+                        label.nextElementSibling.style.padding = "0 1rem";
+                        label.style.setProperty('--transform', 'rotate(0deg)');
+                    }
+                     updateHeight();
+                });
+            });
+
+            updateHeight();
         }
 
-        // Initialize
-        loadEnablement();
+        function updateHeight() {
+            clearTimeout(window.heightUpdateTimeout);
+            window.heightUpdateTimeout = setTimeout(() => {
+                const height = document.documentElement.scrollHeight;
+                parent?.postMessage({ type: 'variant:height', value: height }, '*');
+            }, 100);
+        }
 
-        // Update height on window resize
+        // Initial fetch and render
+        fetchData();
+
+         // Update height on resize
         window.addEventListener('resize', updateHeight);
-        
-        // Also update height when fonts load
-        document.fonts?.ready?.then(updateHeight);
+
+        // Use a MutationObserver to update height when content changes dynamically
+        const observer = new MutationObserver(updateHeight);
+        observer.observe(document.getElementById('enablement-content'), {
+            childList: true,
+            subtree: true,
+            attributes: true
+        });
+
     </script>
 </body>
 </html>

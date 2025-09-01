@@ -1,173 +1,242 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Template Variant - Resume</title>
+    <title>Austin Wallace - Resume</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* Basic reset and typography */
-        * {
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #ECEFF1;
+            color: #37474F;
             margin: 0;
-            padding: 0;
+            padding: 1.5rem;
             box-sizing: border-box;
         }
-        
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            padding: 2rem;
+        .container {
             max-width: 900px;
-            margin: 0 auto;
+            margin: auto;
+            background-color: #FFFFFF;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
-        
-        /* Basic styling - replace with your own design */
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
+        header {
+            background-color: #039BE5; /* Firebase Blue */
+            color: white;
+            padding: 2rem;
+            text-align: center;
         }
-        
-        h2 {
-            font-size: 1.5rem;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 0.5rem;
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 500;
         }
-        
-        h3 {
+        header p {
+            margin: 0.5rem 0 0;
             font-size: 1.2rem;
-            margin-top: 1.5rem;
-            margin-bottom: 0.5rem;
+            font-weight: 300;
         }
-        
         .contact-info {
-            margin-bottom: 2rem;
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 1rem;
         }
-        
+        .contact-info a {
+            color: white;
+            text-decoration: none;
+            font-weight: 400;
+        }
+        main {
+            padding: 2rem;
+        }
         .section {
             margin-bottom: 2rem;
         }
-        
-        ul {
-            padding-left: 1.5rem;
+        .section h2 {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #0277BD;
+            border-bottom: 2px solid #B3E5FC;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
         }
-        
-        li {
-            margin-bottom: 0.5rem;
+        .work-item, .project-item, .education-item {
+            margin-bottom: 1.5rem;
         }
-        
-        /* Loading state */
-        .loading {
-            text-align: center;
-            padding: 4rem;
-            color: #666;
+        .work-item h3, .project-item h3, .education-item h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
         }
-        
-        /* Error state */
-        .error {
-            text-align: center;
-            padding: 4rem;
-            color: #d00;
+        .work-item .position, .education-item .area {
+            font-weight: 500;
+            color: #546E7A;
+        }
+        .work-item .date, .education-item .date {
+            float: right;
+            font-style: italic;
+            color: #78909C;
+        }
+        .highlights {
+            list-style-type: '– ';
+            padding-left: 1.2rem;
+            margin-top: 0.5rem;
+        }
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        .skill-card {
+            background-color: #F5F5F5;
+            padding: 1rem;
+            border-radius: 4px;
+        }
+        .skill-card h4 {
+            margin: 0 0 0.5rem;
+            color: #0288D1;
+        }
+        .skill-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .skill-card li {
+            background-color: #CFD8DC;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
-    <div id="app" class="loading">Loading resume data...</div>
+
+    <div id="resume" class="container">
+        <!-- Resume content will be injected here -->
+    </div>
 
     <script>
-        // IMPORTANT: Post height updates to parent for iframe resizing
-        function updateHeight() {
-            const height = document.documentElement.scrollHeight;
-            parent?.postMessage({ type: 'variant:height', value: height }, '*');
-        }
-
-        // Fetch resume data from the centralized JSON endpoint
-        async function loadResume() {
+        async function fetchData() {
             try {
                 const response = await fetch('/data/resume.json');
-                if (!response.ok) throw new Error('Failed to load resume data');
-                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${"\u007b"}response.status{"\u007d"}`);
+                }
                 const data = await response.json();
                 renderResume(data);
             } catch (error) {
-                document.getElementById('app').innerHTML = `
-                    <div class="error">Error loading resume: ${error.message}</div>
-                `;
+                console.error("Failed to fetch resume data:", error);
+                document.getElementById('resume').innerHTML = '<p style="text-align:center;color:red;">Error loading data. Please check the console.</p>';
             }
         }
 
-        // Render the resume data into HTML
         function renderResume(data) {
-            const app = document.getElementById('app');
-            app.className = ''; // Remove loading class
-            
-            // Build HTML from resume data
-            let html = `
+            const resumeContainer = document.getElementById('resume');
+            resumeContainer.innerHTML = `
                 <header>
-                    <h1>${data.name}</h1>
+                    <h1>${"\u007b"}data.basics.name{"\u007d"}</h1>
+                    <p>${"\u007b"}data.basics.label{"\u007d"}</p>
                     <div class="contact-info">
-                        <div>${data.title}</div>
-                        <div>${data.email} | ${data.phone}</div>
-                        <div>${data.location}</div>
+                        <a href="mailto:${"\u007b"}data.basics.email{"\u007d"}">${"\u007b"}data.basics.email{"\u007d"}</a>
+                        <span>|</span>
+                        <span>${"\u007b"}data.basics.location.city{"\u007d"}</span>
+                        ${"\u007b"}data.basics.profiles.map(p => `<span>|</span> <a href="${"\u007b"}p.url{"\u007d"}" target="_blank">${"\u007b"}p.network{"\u007d"}</a>`).join(''){"\u007d"}
                     </div>
                 </header>
+                <main>
+                    <div class="section">
+                        <h2>Summary</h2>
+                        <p>${"\u007b"}data.basics.summary{"\u007d"}</p>
+                    </div>
 
-                <section class="section">
-                    <h2>Summary</h2>
-                    <p>${data.summary}</p>
-                </section>
+                    <div class="section">
+                        <h2>Work Experience</h2>
+                        ${"\u007b"}data.work.map(job => `
+                            <div class="work-item">
+                                <p class="date">${"\u007b"}job.startDate{"\u007d"} - ${"\u007b"}job.endDate || 'Present'{"\u007d"}</p>
+                                <h3>${"\u007b"}job.name{"\u007d"}</h3>
+                                <p class="position">${"\u007b"}job.position{"\u007d"}</p>
+                                <p>${"\u007b"}job.summary{"\u007d"}</p>
+                                <ul class="highlights">
+                                    ${"\u007b"}job.highlights.map(h => `<li>${"\u007b"}h{"\u007d"}</li>`).join(''){"\u007d"}
+                                </ul>
+                            </div>
+                        `).join(''){"\u007d"}
+                    </div>
 
-                <section class="section">
-                    <h2>Experience</h2>
-                    ${data.experience.map(job => `
-                        <div class="job">
-                            <h3>${job.title} at ${job.company}</h3>
-                            <div>${job.duration} | ${job.location}</div>
-                            <p>${job.description}</p>
-                            <ul>
-                                ${job.achievements.map(achievement => `
-                                    <li>${achievement}</li>
-                                `).join('')}
-                            </ul>
+                     <div class="section">
+                        <h2>Projects</h2>
+                        ${"\u007b"}data.projects.map(proj => `
+                            <div class="project-item">
+                                <h3><a href="${"\u007b"}proj.url || '#'{"\u007d"}" target="_blank">${"\u007b"}proj.name{"\u007d"}</a></h3>
+                                <p>${"\u007b"}proj.description{"\u007d"}</p>
+                                <ul class="highlights">
+                                    ${"\u007b"}proj.highlights.map(h => `<li>${"\u007b"}h{"\u007d"}</li>`).join(''){"\u007d"}
+                                </ul>
+                            </div>
+                        `).join(''){"\u007d"}
+                    </div>
+
+                    <div class="section">
+                        <h2>Skills</h2>
+                        <div class="skills-grid">
+                            ${"\u007b"}data.skills.map(skill => `
+                                <div class="skill-card">
+                                    <h4>${"\u007b"}skill.name{"\u007d"}</h4>
+                                    <ul>
+                                        ${"\u007b"}skill.keywords.map(k => `<li>${"\u007b"}k{"\u007d"}</li>`).join(''){"\u007d"}
+                                    </ul>
+                                </div>
+                            `).join(''){"\u007d"}
                         </div>
-                    `).join('')}
-                </section>
+                    </div>
 
-                <section class="section">
-                    <h2>Skills</h2>
-                    ${Object.entries(data.skills).map(([category, skills]) => `
-                        <div>
-                            <strong>${category}:</strong> ${skills.join(', ')}
-                        </div>
-                    `).join('')}
-                </section>
-
-                <section class="section">
-                    <h2>Education</h2>
-                    ${data.education.map(edu => `
-                        <div>
-                            <h3>${edu.degree}</h3>
-                            <div>${edu.school} | ${edu.year}</div>
-                        </div>
-                    `).join('')}
-                </section>
+                    <div class="section">
+                        <h2>Education</h2>
+                        ${"\u007b"}data.education.map(edu => `
+                            <div class="education-item">
+                                <p class="date">${"\u007b"}edu.startDate{"\u007d"} - ${"\u007b"}edu.endDate{"\u007d"}</p>
+                                <h3>${"\u007b"}edu.institution{"\u007d"}</h3>
+                                <p class="area">${"\u007b"}edu.studyType{"\u007d"} in ${"\u007b"}edu.area{"\u007d"}</p>
+                                <p>${"\u007b"}edu.description{"\u007d"}</p>
+                            </div>
+                        `).join(''){"\u007d"}
+                    </div>
+                </main>
             `;
-            
-            app.innerHTML = html;
-            
-            // Update height after rendering
-            setTimeout(updateHeight, 100);
+            // After rendering, post height to parent
+            updateHeight();
         }
 
-        // Initialize
-        loadResume();
+        function updateHeight() {
+             // Debounce height updates to avoid excessive messages
+            clearTimeout(window.heightUpdateTimeout);
+            window.heightUpdateTimeout = setTimeout(() => {
+                const height = document.documentElement.scrollHeight;
+                parent?.postMessage({ type: 'variant:height', value: height }, '*');
+            }, 100);
+        }
 
-        // Update height on window resize
+        // Initial fetch and render
+        fetchData();
+
+        // Update height on resize
         window.addEventListener('resize', updateHeight);
-        
-        // Also update height when fonts load
-        document.fonts?.ready?.then(updateHeight);
+
+        // Use a MutationObserver to update height when content changes dynamically
+        const observer = new MutationObserver(updateHeight);
+        observer.observe(document.getElementById('resume'), {
+            childList: true,
+            subtree: true,
+            attributes: true
+        });
     </script>
 </body>
 </html>
