@@ -95,8 +95,9 @@ npx vercel --prod
 ```bash
 cd variants/react-azure
 npm run build
-cp staticwebapp.config.json dist/  # CRITICAL: Must copy config
-npx @azure/static-web-apps-cli deploy ./dist \
+# Build outputs to dist/azure/react per vite.config.ts
+cp staticwebapp.config.json dist/azure/react/  # CRITICAL: Must copy config to build dir
+npx @azure/static-web-apps-cli deploy ./dist/azure/react \
   --app-name gray-pebble-049c9b91e \
   --deployment-token $AZURE_STATIC_WEB_APPS_API_TOKEN \
   --env production

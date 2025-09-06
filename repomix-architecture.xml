@@ -1,0 +1,2143 @@
+This file is a merged representation of a subset of the codebase, containing specifically included files and files not matching ignore patterns, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Only files matching these patterns are included: ARCHITECTURE.md, CLAUDE.md, sst.config.ts, src/routes/data/**/*.ts, src/lib/data/*.json, src/lib/providers.ts, src/routes/+layout.svelte, scripts/test-routes.sh, scripts/deploy-azure-react.sh, scripts/deploy-production.sh, variants/nextjs-azure/src/app/page.tsx, variants/nextjs-azure/next.config.mjs, variants/react-azure/src/App.tsx, variants/react-azure/vite.config.ts, variants/react-azure/staticwebapp.config.json, svelte.config.js, netlify.toml
+- Files matching these patterns are excluded: **/node_modules/**, **/package-lock.json, **/.next/**, **/dist/**, **/.git/**, **/build/**, **/*.png, **/*.jpg, **/*.gif, **/*.ico, **/repomix*.xml, **/variants/tanstack-gcp/**, **/static/variants/**, **/.sst/**, **/sst-env.d.ts
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+scripts/
+  deploy-azure-react.sh
+  deploy-production.sh
+  test-routes.sh
+src/
+  lib/
+    data/
+      enablement.json
+      resume.json
+    providers.ts
+  routes/
+    data/
+      enablement.json/
+        +server.ts
+      resume.json/
+        +server.ts
+    +layout.svelte
+variants/
+  nextjs-azure/
+    src/
+      app/
+        page.tsx
+    next.config.mjs
+  react-azure/
+    src/
+      App.tsx
+    staticwebapp.config.json
+    vite.config.ts
+ARCHITECTURE.md
+CLAUDE.md
+netlify.toml
+sst.config.ts
+svelte.config.js
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="scripts/deploy-azure-react.sh">
+#!/bin/bash
+
+# Deploy React to Azure Static Web Apps
+set -e
+
+echo "==================================="
+echo "Deploying React to Azure Static Web Apps"
+echo "==================================="
+
+# Load deployment token from .env.azure if it exists
+if [ -f .env.azure ]; then
+    source .env.azure
+fi
+
+if [ -z "$AZURE_SWA_DEPLOYMENT_TOKEN" ]; then
+    echo "Error: AZURE_SWA_DEPLOYMENT_TOKEN not found."
+    echo "Run ./scripts/setup-azure-react.sh first or set the token manually."
+    exit 1
+fi
+
+# Check if SWA CLI is installed
+if ! command -v swa &> /dev/null; then
+    echo "Installing Azure Static Web Apps CLI..."
+    npm install -g @azure/static-web-apps-cli
+fi
+
+cd variants/react-azure
+
+# Ensure dependencies are installed for reproducible builds
+if [ -f package-lock.json ]; then
+  npm ci
+else
+  npm install
+fi
+
+echo "Building React app..."
+npm run build
+
+echo "Copying Static Web Apps config into dist..."
+mkdir -p dist
+if [ -f staticwebapp.config.json ]; then
+  cp staticwebapp.config.json dist/staticwebapp.config.json
+else
+  echo "Error: staticwebapp.config.json missing. See variants/react-azure/."
+  exit 1
+fi
+
+echo "Deploying to Azure Static Web Apps..."
+swa deploy ./dist \
+    --deployment-token $AZURE_SWA_DEPLOYMENT_TOKEN \
+    --env production
+
+echo ""
+echo "Deployment complete!"
+echo "View at: https://austin-resume-react.azurestaticapps.net"
+</file>
+
+<file path="scripts/deploy-production.sh">
+#!/bin/bash
+
+# Production Deployment Script for SST Router Architecture
+# This script sets up all environment variables and deploys everything
+
+set -e
+
+echo "🚀 SST Router Production Deployment"
+echo "==================================="
+echo ""
+
+# Configuration - Update these with your actual production URLs
+ROUTER_DOMAIN="https://d2li8p8xclq49l.cloudfront.net"  # Your CloudFront URL
+# ROUTER_DOMAIN="https://www.austinwallace.ca"         # Or your custom domain
+
+# Origin URLs - Update these with your deployed app URLs
+AZURE_NEXT_ORIGIN="https://austin-site-seven.vercel.app"
+AZURE_REACT_ORIGIN="https://gray-pebble-049c9b91e.1.azurestaticapps.net"
+GCP_TANSTACK_ORIGIN="https://austin-site.netlify.app"
+
+echo "📋 Configuration:"
+echo "  Router Domain: $ROUTER_DOMAIN"
+echo "  Next.js Origin: $AZURE_NEXT_ORIGIN"
+echo "  React Origin: $AZURE_REACT_ORIGIN"
+echo "  TanStack Origin: $GCP_TANSTACK_ORIGIN"
+echo ""
+
+# Export environment variables for SST
+export AZURE_NEXT_ORIGIN
+export AZURE_REACT_ORIGIN
+export GCP_TANSTACK_ORIGIN
+
+echo "1️⃣  Deploying framework apps with proper DATA_URL..."
+echo ""
+
+# Deploy Next.js with DATA_URL
+echo "Deploying Next.js to Vercel..."
+cd variants/nextjs-azure
+export NEXT_PUBLIC_DATA_URL="$ROUTER_DOMAIN/data/resume.json"
+npm run build
+vercel --prod --build-env NEXT_PUBLIC_DATA_URL="$ROUTER_DOMAIN/data/resume.json"
+cd ../..
+
+# Deploy React with DATA_URL
+echo ""
+echo "Deploying React to Azure..."
+cd variants/react-azure
+export VITE_DATA_URL="$ROUTER_DOMAIN/data/resume.json"
+npm run build
+# For Azure Static Web Apps deployment:
+# swa deploy ./dist --deployment-token $AZURE_SWA_DEPLOYMENT_TOKEN --env production
+echo "⚠️  Note: Manual Azure deployment may be needed via portal or GitHub Actions"
+cd ../..
+
+# Deploy TanStack with DATA_URL
+echo ""
+echo "Deploying TanStack to Netlify..."
+cd variants/tanstack-gcp
+export VITE_DATA_URL="$ROUTER_DOMAIN/data/resume.json"
+npm run build
+netlify deploy --prod --dir=dist
+cd ../..
+
+echo ""
+echo "2️⃣  Deploying SST with Router configuration..."
+echo ""
+
+# Deploy SST
+AWS_PROFILE=prod npx sst deploy --stage production
+
+echo ""
+echo "3️⃣  Running smoke tests..."
+echo ""
+
+# Wait a bit for CloudFront to propagate
+echo "Waiting 30 seconds for CloudFront propagation..."
+sleep 30
+
+# Run smoke tests
+./scripts/test-routes.sh "$ROUTER_DOMAIN"
+
+echo ""
+echo "==================================="
+echo "✅ Deployment Complete!"
+echo ""
+echo "Access your site at: $ROUTER_DOMAIN"
+echo ""
+echo "Framework routes:"
+echo "  • Next.js: $ROUTER_DOMAIN/azure/next"
+echo "  • React: $ROUTER_DOMAIN/azure/react"
+echo "  • TanStack: $ROUTER_DOMAIN/gcp/tanstack"
+echo "  • Data API: $ROUTER_DOMAIN/data/resume.json"
+echo "==================================="
+</file>
+
+<file path="scripts/test-routes.sh">
+#!/bin/bash
+
+# SST Router Smoke Test Script
+# Tests all routes through the CloudFront distribution
+# Usage: ./scripts/test-routes.sh [router-domain]
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Get router domain from argument or use default
+ROUTER_DOMAIN=${1:-"https://d2li8p8xclq49l.cloudfront.net"}
+
+echo "🔍 Testing SST Router Routes"
+echo "================================"
+echo "Router Domain: $ROUTER_DOMAIN"
+echo "================================"
+echo ""
+
+# Function to test a route
+test_route() {
+    local path=$1
+    local description=$2
+    local expected_status=${3:-200}
+    
+    printf "Testing %-30s" "$path"
+    
+    # Get HTTP status code (with -L to follow redirects)
+    status=$(curl -sL -o /dev/null -w "%{http_code}" "$ROUTER_DOMAIN$path")
+    
+    if [ "$status" = "$expected_status" ]; then
+        echo -e " ${GREEN}✅ $status OK${NC} - $description"
+        return 0
+    else
+        echo -e " ${RED}❌ $status${NC} - Expected $expected_status - $description"
+        return 1
+    fi
+}
+
+# Function to test with headers
+test_route_headers() {
+    local path=$1
+    local description=$2
+    
+    printf "Testing %-30s" "$path (headers)"
+    
+    # Get response headers using GET instead of HEAD for accurate CORS headers
+    headers=$(curl -sL -D - -o /dev/null "$ROUTER_DOMAIN$path")
+    
+    # Check for CORS header
+    if echo "$headers" | grep -qi "access-control-allow-origin"; then
+        echo -e " ${GREEN}✅ CORS${NC} - $description"
+        return 0
+    else
+        echo -e " ${YELLOW}⚠️  No CORS${NC} - $description"
+        return 1
+    fi
+}
+
+# Counter for failures
+failures=0
+
+echo "🏠 Main Routes"
+echo "-------------"
+test_route "/" "SvelteKit homepage" || ((failures++))
+test_route "/enablement" "SvelteKit enablement page" || ((failures++))
+
+echo ""
+echo "📊 Data Routes"
+echo "-------------"
+test_route "/data/resume.json" "Shared resume data" || ((failures++))
+test_route_headers "/data/resume.json" "CORS headers present" || ((failures++))
+
+echo ""
+echo "🎨 Framework Variants"
+echo "--------------------"
+test_route "/azure/next" "Next.js on Vercel" || ((failures++))
+
+# Discover actual Next.js asset from HTML (using extended regex)
+next_asset=$(curl -sL "$ROUTER_DOMAIN/azure/next" | grep -oE '/azure/next/_next/[^"]+\.(js|css)' | head -n1)
+if [ -n "$next_asset" ]; then
+    ct=$(curl -sLI "$ROUTER_DOMAIN$next_asset" | tr -d '\r' | awk -F': ' '/[Cc]ontent-[Tt]ype/{print $2}' | head -n1)
+    if echo "$ct" | grep -qiE 'javascript|css|font|image'; then
+        echo -e " ${GREEN}✅ Next.js asset OK${NC} (content-type: $ct)"
+    else
+        echo -e " ${RED}❌ Next.js asset wrong type${NC} (got: $ct for $next_asset)"
+        ((failures++))
+    fi
+else
+    echo -e " ${YELLOW}⚠️  Could not find Next.js asset${NC}"
+    ((failures++))
+fi
+
+test_route "/azure/react" "React on Azure" || ((failures++))
+test_route "/gcp/tanstack" "TanStack on Netlify" || ((failures++))
+
+echo ""
+echo "🧪 Asset MIME checks"
+echo "--------------------"
+asset_mime_check() {
+  local page="$1"
+  local label="$2"
+  local css=$(curl -sL "$ROUTER_DOMAIN$page" | grep -o "$page/assets/[^\"']\+\.css" | head -n1)
+  if [ -z "$css" ]; then
+    echo -e " ${YELLOW}⚠️  No CSS discovered on $label${NC}"
+    return 1
+  fi
+  local ct=$(curl -sLI "$ROUTER_DOMAIN$css" | tr -d '\r' | awk -F': ' '/[Cc]ontent-[Tt]ype/{print $2}')
+  if echo "$ct" | grep -qi 'text/css'; then
+    echo -e " ${GREEN}✅ $label CSS content-type OK ($ct)${NC}"
+    return 0
+  else
+    echo -e " ${RED}❌ $label CSS wrong content-type ($ct)${NC}"
+    return 1
+  fi
+}
+asset_mime_check "/azure/react" "React (Azure)" || ((failures++))
+asset_mime_check "/gcp/tanstack" "TanStack (Netlify)" || ((failures++))
+
+echo ""
+echo "================================"
+if [ $failures -eq 0 ]; then
+    echo -e "${GREEN}✅ All tests passed!${NC}"
+else
+    echo -e "${RED}❌ $failures test(s) failed${NC}"
+    echo ""
+    echo "Common issues to check:"
+    echo "1. Ensure all framework apps are deployed to their origins"
+    echo "2. Check that origins are publicly accessible (no auth)"
+    echo "3. Verify SST deployment completed successfully"
+    echo "4. Confirm CloudFront distribution has propagated (~5-10 mins)"
+fi
+echo "================================"
+
+# Return non-zero if any tests failed
+exit $failures
+</file>
+
+<file path="src/lib/data/enablement.json">
+{
+  "hero": {
+    "title": "AI Code Generation Enablement",
+    "subtitle": "Transform your development workflow with AI-powered coding assistants",
+    "primary_cta": {
+      "label": "Schedule Discovery",
+      "href": "mailto:austin.wallace@hotmail.com?subject=AI%20Code%20Generation%20Discovery"
+    },
+    "secondary_cta": {
+      "label": "View Resources",
+      "href": "#resources"
+    }
+  },
+  "value_props": [
+    {
+      "id": "productivity",
+      "title": "Productivity Gains",
+      "bullets": [
+        "30-50% faster feature development",
+        "Reduce boilerplate and repetitive tasks",
+        "Focus on architecture and business logic"
+      ]
+    },
+    {
+      "id": "quality",
+      "title": "Code Quality",
+      "bullets": [
+        "Consistent coding patterns",
+        "Built-in best practices",
+        "Real-time code review and suggestions"
+      ]
+    },
+    {
+      "id": "learning",
+      "title": "Team Learning",
+      "bullets": [
+        "Learn new languages and frameworks",
+        "Discover APIs and patterns",
+        "Upskill junior developers faster"
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "id": "approach",
+      "title": "Our Approach",
+      "type": "cards",
+      "cards": [
+        {
+          "title": "Discovery & Assessment",
+          "body": "Evaluate your team's needs and current development workflows",
+          "deliverables": [
+            "Team readiness assessment",
+            "Tool selection matrix",
+            "ROI projections"
+          ]
+        },
+        {
+          "title": "Pilot Program",
+          "body": "Run controlled experiments with selected teams and projects",
+          "deliverables": [
+            "Pilot team training",
+            "Success metrics tracking",
+            "Feedback loops"
+          ]
+        },
+        {
+          "title": "Scale & Optimize",
+          "body": "Roll out successful patterns across the organization",
+          "deliverables": [
+            "Playbooks and guidelines",
+            "Training programs",
+            "Continuous improvement"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tools",
+      "title": "AI Coding Tools",
+      "type": "accordion",
+      "intro": "Compare leading AI code generation tools and their capabilities",
+      "items": [
+        {
+          "label": "GitHub Copilot",
+          "content": [
+            "**Best for:** Teams already using GitHub and VS Code",
+            "**Strengths:** Deep IDE integration, multi-language support, enterprise features",
+            "**Pricing:** $10-19/user/month depending on plan",
+            "**Key Features:** Code completion, test generation, documentation, chat interface"
+          ]
+        },
+        {
+          "label": "Claude (Anthropic)",
+          "content": [
+            "**Best for:** Complex reasoning and large context windows",
+            "**Strengths:** Superior understanding of requirements, excellent at refactoring",
+            "**Pricing:** $20/month for Pro, API pricing available",
+            "**Key Features:** 100K+ token context, code explanation, architecture design"
+          ]
+        },
+        {
+          "label": "Cursor",
+          "content": [
+            "**Best for:** Teams wanting AI-first IDE experience",
+            "**Strengths:** Built-in AI features, codebase understanding, multi-file edits",
+            "**Pricing:** $20/month per user",
+            "**Key Features:** AI-native IDE, codebase chat, automatic refactoring"
+          ]
+        },
+        {
+          "label": "ChatGPT/GPT-4",
+          "content": [
+            "**Best for:** Versatile coding assistance and learning",
+            "**Strengths:** Wide knowledge base, good at explaining concepts",
+            "**Pricing:** $20/month for Plus, API pricing varies",
+            "**Key Features:** Code generation, debugging help, architecture discussions"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "best-practices",
+      "title": "Best Practices",
+      "type": "bullets",
+      "bullets": [
+        "**Start Small:** Begin with low-risk projects and willing early adopters",
+        "**Prompt Engineering:** Train teams on effective prompt writing techniques",
+        "**Code Review:** Always review AI-generated code before merging",
+        "**Security First:** Implement policies for handling sensitive data",
+        "**Measure Impact:** Track metrics like velocity, quality, and developer satisfaction",
+        "**Continuous Learning:** Share successful patterns and learnings across teams"
+      ]
+    },
+    {
+      "id": "implementation",
+      "title": "Implementation Roadmap",
+      "type": "process",
+      "steps": [
+        "Executive alignment and budget approval",
+        "Form AI enablement task force",
+        "Select pilot teams and projects",
+        "Choose and procure tools",
+        "Develop governance and security policies",
+        "Train pilot teams",
+        "Run 30-60 day pilot",
+        "Gather feedback and metrics",
+        "Refine approach based on learnings",
+        "Scale to additional teams",
+        "Establish center of excellence",
+        "Continuous improvement and optimization"
+      ]
+    },
+    {
+      "id": "challenges",
+      "title": "Common Challenges",
+      "type": "accordion",
+      "items": [
+        {
+          "label": "Security and IP Concerns",
+          "content": [
+            "Implement clear policies on code sharing",
+            "Use enterprise versions with data protection",
+            "Regular security audits and compliance checks",
+            "Train teams on secure AI usage"
+          ]
+        },
+        {
+          "label": "Quality Control",
+          "content": [
+            "Maintain rigorous code review processes",
+            "Implement automated testing for AI-generated code",
+            "Set clear quality standards and metrics",
+            "Regular audits of AI-generated code"
+          ]
+        },
+        {
+          "label": "Developer Resistance",
+          "content": [
+            "Focus on AI as augmentation, not replacement",
+            "Showcase success stories and productivity gains",
+            "Provide comprehensive training and support",
+            "Address concerns transparently"
+          ]
+        },
+        {
+          "label": "Cost Justification",
+          "content": [
+            "Track concrete metrics: velocity, bug rates, time-to-market",
+            "Calculate ROI based on developer time saved",
+            "Start with small pilot to prove value",
+            "Compare against cost of not adopting"
+          ]
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "title": "GitHub Copilot Enterprise Documentation",
+      "url": "https://docs.github.com/en/copilot",
+      "kind": "Documentation",
+      "notes": "Official guide for enterprise deployment"
+    },
+    {
+      "title": "Anthropic Claude Best Practices",
+      "url": "https://www.anthropic.com/claude",
+      "kind": "Guide",
+      "notes": "Tips for effective Claude usage in development"
+    },
+    {
+      "title": "AI Code Generation Security Guidelines",
+      "url": "https://owasp.org/",
+      "kind": "Security",
+      "notes": "OWASP guidelines for secure AI adoption"
+    },
+    {
+      "title": "Developer Productivity Metrics",
+      "url": "https://github.blog/2021-08-11-metrics-for-developer-productivity/",
+      "kind": "Research",
+      "notes": "How to measure impact of AI tools"
+    }
+  ],
+  "cta": {
+    "headline": "Ready to Transform Your Development Process?",
+    "subhead": "Let's discuss how AI code generation can accelerate your team",
+    "actions": [
+      {
+        "label": "Schedule Consultation",
+        "href": "mailto:austin.wallace@hotmail.com?subject=AI%20Code%20Generation%20Consultation"
+      }
+    ]
+  }
+}
+</file>
+
+<file path="src/lib/data/resume.json">
+{
+  "basics": {
+    "name": "Austin Wallace",
+    "label": "Data Engineer",
+    "phone": "604.603.8668",
+    "email": "austeane@gmail.com",
+    "location": { "city": "Victoria, BC" },
+    "summary": "Data Engineer with 9+ years building Databricks/Snowflake/dbt platforms that move billions of rows. Known for improving team practices and collaboration, and establishing best practices for AI use in security-critical settings.",
+    "profiles": [
+      { "network": "GitHub", "username": "austeane", "url": "https://github.com/austeane" },
+      { "network": "LinkedIn", "username": "austintwallace", "url": "https://www.linkedin.com/in/austintwallace/" }
+    ]
+  },
+  "work": [
+    {
+      "name": "Clio",
+      "position": "Data Engineer",
+      "location": "Vancouver, British Columbia",
+      "startDate": "2024-08",
+      "endDate": "",
+      "summary": "Own 10+ Databricks pipelines and Terraform infrastructure.",
+      "highlights": [
+        "Unlocked $1 million+ worth of value by enabling analysis of our AI assistant's conversations",
+        "Automated token rotation for Looker/dbt→Databricks, eliminating an average of an incident every month from expired tokens",
+        "Built a schema/table diff tool (Python) used during Redshift→Databricks migration; caught 20+ data defects pre-launch and enabled final cutoff of infra costing 100k+ a year",
+        "Wrote the company AI best-practices guide; directly responsible for new model usage by 500+ engineers",
+        "Coached or onboarded 20+ engineers on their specific AI workflow; helped increase AI usage by 20x while remaining responsible"
+      ]
+    },
+    {
+      "name": "New Jersey Devils",
+      "position": "Data Developer",
+      "location": "Vancouver, British Columbia",
+      "startDate": "2022-05",
+      "endDate": "2024-08",
+      "summary": "Sole Data Developer architecting end-to-end data platform.",
+      "highlights": [
+        "Architected, built, and operated end-to-end data platform supporting 10 analysts/managers responsible for allocating millions of dollars of player salary",
+        "Ingested NHL tracking at 10 million rows a game; increasing available data by 10,000x",
+        "Built/maintained 40+ dbt models across Postgres/Snowflake; enabled both detailed analysis and summaries that directly powered live dashboards"
+      ]
+    },
+    {
+      "name": "Teck Resources – RACE21",
+      "position": "Data Developer",
+      "location": "Vancouver, British Columbia",
+      "startDate": "2020-10",
+      "endDate": "2022-05",
+      "summary": "Transformed legacy alert system into modern service.",
+      "highlights": [
+        "As part of a cross-functional team of three, transformed an untestable, unextendible, esoteric alert system based in PostgreSQL Stored Procedures",
+        "Built unit and integration tested, modularized, configurable, well-documented alert service written in Python",
+        "Deployed with Terraform to Microsoft Azure"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Qdrill",
+      "description": "Real-world quadball coaching app featuring real-time drag-and-drop practice planning and polished practice viewer. Built for real users including Team Canada.",
+      "url": "https://qdrill.app",
+      "keywords": ["SvelteKit", "Postgres", "Vercel", "87k+ LOC"],
+      "highlights": [
+        "Enforced testing and code quality while leveraging AI pair-programming to accelerate delivery"
+      ]
+    },
+    {
+      "name": "Solstice",
+      "description": "Developing a modern alternative to Topscore for Quadball Canada (target 2026). 20k+ lines of end-to-end-tested TypeScript with emphasis on professional quality and best practices.",
+      "url": "https://github.com/soleilheaney/solstice",
+      "keywords": ["TypeScript", "React", "TanStack Start"]
+    }
+  ],
+  "education": [{
+    "institution": "University of British Columbia (UBC)",
+    "location": "Vancouver",
+    "area": "Analytical Sports Management",
+    "studyType": "B.Sc.",
+    "startDate": "2012",
+    "endDate": "2018",
+    "description": "Machine Learning (Major) / Commerce (Minor). Designed and got approved an entirely unique degree combining business, statistics, and machine learning, which included graduate-level coursework."
+  }],
+  "skills": [
+    { "name": "Data Platforms", "keywords": ["Databricks", "Unity Catalog", "Snowflake", "dbt", "PostgreSQL", "Delta Lake"] },
+    { "name": "Programming", "keywords": ["Python", "SQL", "Go", "pandas", "PySpark"] },
+    { "name": "Cloud & Infrastructure", "keywords": ["AWS S3/IAM", "Azure",  "Terraform", "CI/CD"] },
+    { "name": "Data Engineering", "keywords": ["Data Modeling", "Data Warehousing", "Batch & Near-Real-Time Pipelines", "Observability"] },
+    { "name": "AI & Collaboration", "keywords": ["Responsible AI Enablement", "Stakeholder Collaboration", "Best Practices Guide"] }
+  ],
+  "accomplishments": [
+    {
+      "title": "NHL Data Integration",
+      "summary": "Successfully integrated real-time NHL tracking data, enhancing analytical capabilities and building a competitive advantage"
+    },
+    {
+      "title": "Data Visualization Patent",
+      "summary": "Developed a patented technique for data visualization"
+    },
+    {
+      "title": "International Quidditch Association",
+      "summary": "Served as Chair of Board of Directors, leading 30+ national governing bodies of one of the fastest growing sports worldwide"
+    },
+    {
+      "title": "Media Startup CEO",
+      "summary": "As CEO of a volunteer-based media startup, propelled growth to 70 staff and 30 countries"
+    }
+  ]
+}
+</file>
+
+<file path="src/routes/data/enablement.json/+server.ts">
+import { json } from '@sveltejs/kit';
+import enablementData from '$lib/data/enablement.json';
+
+export const prerender = false;
+
+export function GET() {
+  return json(enablementData, {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400',
+      'Content-Type': 'application/json'
+    }
+  });
+}
+
+export function OPTIONS() {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    }
+  });
+}
+</file>
+
+<file path="src/routes/data/resume.json/+server.ts">
+import { json } from '@sveltejs/kit';
+import resumeData from '$lib/data/resume.json';
+
+export const prerender = false;
+
+export function GET() {
+  return json(resumeData, {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400',
+      'Content-Type': 'application/json'
+    }
+  });
+}
+
+export function OPTIONS() {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    }
+  });
+}
+</file>
+
+<file path="variants/nextjs-azure/src/app/page.tsx">
+'use client';
+
+import { useEffect, useState } from 'react';
+
+interface ResumeData {
+  name: string;
+  title: string;
+  location: string;
+  email: string;
+  linkedin: string;
+  github: string;
+  summary: string;
+  experience: Array<{
+    title: string;
+    company: string;
+    location: string;
+    period: string;
+    responsibilities: string[];
+  }>;
+  education: Array<{
+    degree: string;
+    school: string;
+    location: string;
+    year: string;
+  }>;
+  skills: Record<string, string[]>;
+}
+
+// Transform the shared resume schema (src/lib/data/resume.json)
+// into the simplified structure this page expects
+function transformSharedResume(shared: any): ResumeData {
+  const basics = shared?.basics ?? {};
+  const profiles: Array<any> = basics?.profiles ?? [];
+  const findProfile = (name: string) =>
+    profiles.find((p) => (p.network || '').toLowerCase().includes(name))?.url || '';
+
+  const experience = (shared?.work ?? []).map((w: any) => ({
+    title: w?.position || '',
+    company: w?.name || '',
+    location: w?.location || '',
+    period: [w?.startDate, w?.endDate || 'Present'].filter(Boolean).join(' - '),
+    responsibilities: Array.isArray(w?.highlights) ? w.highlights : [],
+  }));
+
+  const education = (shared?.education ?? []).map((e: any) => ({
+    degree: e?.studyType ? `${e.studyType}${e?.area ? ` in ${e.area}` : ''}` : (e?.area || ''),
+    school: e?.institution || '',
+    location: e?.location || '',
+    year: e?.endDate || '',
+  }));
+
+  const skills: Record<string, string[]> = {};
+  for (const s of shared?.skills ?? []) {
+    if (s?.name) skills[s.name] = Array.isArray(s?.keywords) ? s.keywords : [];
+  }
+
+  return {
+    name: basics?.name || '',
+    title: basics?.label || '',
+    location: basics?.location?.city || '',
+    email: basics?.email || '',
+    linkedin: findProfile('linkedin'),
+    github: findProfile('github'),
+    summary: basics?.summary || '',
+    experience,
+    education,
+    skills,
+  };
+}
+
+export default function Home() {
+  const [resume, setResume] = useState<ResumeData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Use CloudFront URL for data to work across all environments
+    const dataUrl = process.env.NEXT_PUBLIC_DATA_URL || 'https://d2li8p8xclq49l.cloudfront.net/data/resume.json';
+    fetch(dataUrl)
+      .then((res) => res.json())
+      .then((shared) => {
+        const transformed = transformSharedResume(shared);
+        setResume(transformed);
+      })
+      .catch((err) => {
+        console.error('Failed to load resume:', err);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+  if (!resume) return <div className="flex justify-center items-center min-h-screen">Failed to load resume</div>;
+
+  return (
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
+      <div className="max-w-4xl mx-auto p-8">
+        {/* Header */}
+        <header className="mb-8 text-center border-b-2 border-blue-500 pb-6">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">{resume.name}</h1>
+          <h2 className="text-2xl text-blue-600 mb-4">{resume.title}</h2>
+          <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600">
+            <span>{resume.location}</span>
+            <a href={`mailto:${resume.email}`} className="hover:text-blue-600">{resume.email}</a>
+            <a href={resume.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600">LinkedIn</a>
+            <a href={resume.github} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600">GitHub</a>
+          </div>
+        </header>
+
+        {/* Summary */}
+        <section className="mb-8">
+          <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center">
+            <span className="mr-2">📋</span> Summary
+          </h3>
+          <p className="text-gray-700 leading-relaxed">{resume.summary}</p>
+        </section>
+
+        {/* Experience */}
+        <section className="mb-8">
+          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <span className="mr-2">💼</span> Experience
+          </h3>
+          {resume.experience.map((job, index) => (
+            <div key={index} className="mb-6 bg-white rounded-lg shadow-sm p-6">
+              <h4 className="font-bold text-lg text-gray-900">{job.title}</h4>
+              <div className="text-blue-600 font-medium">{job.company}</div>
+              <div className="text-sm text-gray-500 mb-3">{job.period} | {job.location}</div>
+              <ul className="list-disc list-inside space-y-1">
+                {job.responsibilities.map((resp, i) => (
+                  <li key={i} className="text-gray-700">{resp}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </section>
+
+        {/* Education */}
+        <section className="mb-8">
+          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <span className="mr-2">🎓</span> Education
+          </h3>
+          {resume.education.map((edu, index) => (
+            <div key={index} className="mb-4 bg-white rounded-lg shadow-sm p-4">
+              <h4 className="font-bold text-gray-900">{edu.degree}</h4>
+              <div className="text-blue-600">{edu.school}</div>
+              <div className="text-sm text-gray-500">{edu.year} | {edu.location}</div>
+            </div>
+          ))}
+        </section>
+
+        {/* Skills */}
+        <section className="mb-8">
+          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <span className="mr-2">🛠️</span> Skills
+          </h3>
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            {Object.entries(resume.skills).map(([category, skills]) => (
+              <div key={category} className="mb-4">
+                <h4 className="font-semibold text-gray-900 mb-2">{category}:</h4>
+                <div className="flex flex-wrap gap-2">
+                  {skills.map((skill, i) => (
+                    <span key={i} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="text-center text-sm text-gray-500 pt-6 border-t">
+          <p>Next.js on Azure App Service | Part of Multi-Framework Resume</p>
+        </footer>
+      </div>
+    </main>
+  );
+}
+</file>
+
+<file path="variants/nextjs-azure/next.config.mjs">
+/** @type {import('next').NextConfig} */
+const isVercel = !!process.env.VERCEL;
+
+const nextConfig = {
+  // Make Next generate links/assets under /azure/next
+  basePath: "/azure/next",
+
+  // Ensure static exports work properly with the base path
+  images: {
+    unoptimized: true,
+  },
+
+  // For Azure App Service zip/container deploys use standalone output.
+  // Keep default on Vercel.
+  ...(isVercel ? {} : { output: "standalone" }),
+};
+
+export default nextConfig;
+</file>
+
+<file path="variants/react-azure/src/App.tsx">
+import { useState, useEffect } from 'react';
+import './App.css';
+
+interface ResumeData {
+  name: string;
+  title: string;
+  location: string;
+  email: string;
+  linkedin: string;
+  github: string;
+  summary: string;
+  experience: Array<{
+    title: string;
+    company: string;
+    location: string;
+    period: string;
+    responsibilities: string[];
+  }>;
+  education: Array<{
+    degree: string;
+    school: string;
+    location: string;
+    year: string;
+  }>;
+  skills: {
+    [category: string]: string[];
+  };
+}
+
+// Transform the shared schema (basics/work/education/skills[]) to the shape this UI expects
+function transformSharedResume(shared: any): ResumeData {
+  const basics = shared?.basics ?? {};
+  const profiles: Array<any> = basics?.profiles ?? [];
+  const findProfile = (name: string) =>
+    profiles.find((p) => (p.network || '').toLowerCase().includes(name))?.url || '';
+
+  const experience = (shared?.work ?? []).map((w: any) => ({
+    title: w?.position || '',
+    company: w?.name || '',
+    location: w?.location || '',
+    period: [w?.startDate, w?.endDate || 'Present'].filter(Boolean).join(' - '),
+    responsibilities: Array.isArray(w?.highlights) ? w.highlights : [],
+  }));
+
+  const education = (shared?.education ?? []).map((e: any) => ({
+    degree: e?.studyType ? `${e.studyType}${e?.area ? ` in ${e.area}` : ''}` : (e?.area || ''),
+    school: e?.institution || '',
+    location: e?.location || '',
+    year: e?.endDate || '',
+  }));
+
+  const skills: Record<string, string[]> = {};
+  for (const s of shared?.skills ?? []) {
+    if (s?.name) skills[s.name] = Array.isArray(s?.keywords) ? s.keywords : [];
+  }
+
+  return {
+    name: basics?.name || '',
+    title: basics?.label || '',
+    location: basics?.location?.city || '',
+    email: basics?.email || '',
+    linkedin: findProfile('linkedin'),
+    github: findProfile('github'),
+    summary: basics?.summary || '',
+    experience,
+    education,
+    skills,
+  };
+}
+
+function App() {
+  const [resume, setResume] = useState<ResumeData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('experience');
+
+  useEffect(() => {
+    // Fetch from shared /data endpoint
+    // Set VITE_DATA_URL in production to your router domain
+    const dataUrl = import.meta.env.VITE_DATA_URL || '/data/resume.json';
+    
+    fetch(dataUrl)
+      .then(res => res.json())
+      .then(shared => {
+        setResume(transformSharedResume(shared));
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to load resume:', err);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+      </div>
+    );
+  }
+
+  if (!resume) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white">
+        <p>Failed to load resume data</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen py-8 px-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Glass-morphism card */}
+        <div className="backdrop-blur-lg bg-white/90 rounded-3xl shadow-2xl overflow-hidden">
+          
+          {/* Header */}
+          <header className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8">
+            <h1 className="text-5xl font-bold mb-2">{resume.name}</h1>
+            <h2 className="text-2xl mb-4 opacity-90">{resume.title}</h2>
+            <div className="flex flex-wrap gap-4 text-sm">
+              <span className="flex items-center gap-1">
+                📍 {resume.location}
+              </span>
+              <a href={`mailto:${resume.email}`} className="flex items-center gap-1 hover:underline">
+                ✉️ {resume.email}
+              </a>
+              <a href={resume.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:underline">
+                💼 LinkedIn
+              </a>
+              <a href={resume.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:underline">
+                🔗 GitHub
+              </a>
+            </div>
+          </header>
+
+          {/* Summary */}
+          <div className="p-8 border-b">
+            <h3 className="text-2xl font-bold mb-4 text-gray-800">Professional Summary</h3>
+            <p className="text-gray-600 leading-relaxed">{resume.summary}</p>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex border-b">
+            {['experience', 'education', 'skills'].map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 py-4 px-6 text-lg font-semibold capitalize transition-colors ${
+                  activeTab === tab 
+                    ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600' 
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab Content */}
+          <div className="p-8">
+            {/* Experience Tab */}
+            {activeTab === 'experience' && (
+              <div className="space-y-6">
+                {resume.experience.map((job, index) => (
+                  <div key={index} className="border-l-4 border-blue-500 pl-6 hover:border-purple-500 transition-colors">
+                    <h4 className="text-xl font-bold text-gray-800">{job.title}</h4>
+                    <div className="text-lg text-blue-600 font-medium">{job.company}</div>
+                    <div className="text-sm text-gray-500 mb-3">
+                      {job.period} | {job.location}
+                    </div>
+                    <ul className="space-y-2">
+                      {job.responsibilities.map((resp, i) => (
+                        <li key={i} className="text-gray-600 flex">
+                          <span className="text-blue-500 mr-2">▸</span>
+                          <span>{resp}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Education Tab */}
+            {activeTab === 'education' && (
+              <div className="space-y-6">
+                {resume.education.map((edu, index) => (
+                  <div key={index} className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
+                    <h4 className="text-xl font-bold text-gray-800">{edu.degree}</h4>
+                    <div className="text-lg text-blue-600 font-medium">{edu.school}</div>
+                    <div className="text-sm text-gray-500">
+                      {edu.year} | {edu.location}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Skills Tab */}
+            {activeTab === 'skills' && (
+              <div className="space-y-6">
+                {Object.entries(resume.skills).map(([category, skills]) => (
+                  <div key={category}>
+                    <h4 className="text-lg font-bold text-gray-800 mb-3">{category}</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {skills.map((skill, i) => (
+                        <span 
+                          key={i} 
+                          className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-full text-sm font-medium hover:scale-105 transition-transform"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <footer className="bg-gray-50 px-8 py-4 text-center text-sm text-gray-500">
+            <p>React (Vite) on Azure Static Web Apps | Multi-Framework Resume Platform</p>
+          </footer>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default App;
+</file>
+
+<file path="variants/react-azure/staticwebapp.config.json">
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": [
+      "/azure/react/assets/*",
+      "/assets/*",
+      "/images/*.{png,jpg,gif}",
+      "/css/*",
+      "/js/*",
+      "/data/*"
+    ]
+  },
+  "forwardingGateway": {
+    "allowedForwardedHosts": [
+      "d2li8p8xclq49l.cloudfront.net",
+      "www.austinwallace.ca"
+    ]
+  },
+  "routes": [
+    {
+      "route": "/azure/react/assets/*",
+      "rewrite": "/assets/{*path}"
+    },
+    {
+      "route": "/azure/react/*",
+      "rewrite": "/{*path}"
+    }
+  ],
+  "mimeTypes": {
+    ".json": "application/json",
+    ".js": "application/javascript",
+    ".mjs": "application/javascript"
+  },
+  "globalHeaders": {
+    "Cache-Control": "public, max-age=3600"
+  }
+}
+</file>
+
+<file path="variants/react-azure/vite.config.ts">
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  // Ensure assets & routes are under /azure/react
+  base: '/azure/react/',
+  build: {
+    // Place build under dist/azure/react so files are served at /azure/react/* without rewrites
+    outDir: 'dist/azure/react',
+    assetsDir: 'assets',
+    sourcemap: false,
+  },
+});
+</file>
+
+<file path="ARCHITECTURE.md">
+# Multi-Framework Resume Platform Architecture
+
+## Overview
+
+This project demonstrates a sophisticated multi-cloud, multi-framework architecture where a single CloudFront distribution serves a main SvelteKit application alongside three framework variants (Next.js, React, TanStack) deployed on different cloud providers (Vercel, Azure, Netlify). All variants share centralized data served through CloudFront.
+
+## Architecture Diagram
+
+```
+CloudFront Distribution (https://d2li8p8xclq49l.cloudfront.net)
+├── /                    → SvelteKit on AWS Lambda (Main Site)
+├── /enablement          → SvelteKit Enablement Page
+├── /data/*              → Centralized JSON Data (CORS-enabled)
+├── /azure/next/*        → Next.js on Vercel
+├── /azure/react/*       → React on Azure Static Web Apps
+└── /gcp/tanstack/*      → TanStack on Netlify
+```
+
+## Core Components
+
+### 1. SST Router Configuration (`sst.config.ts`)
+
+The SST Router uses **prefix matching** (NOT glob patterns):
+
+```typescript
+// CRITICAL: SST Router uses startsWith() matching
+router.route("/azure/next", AZURE_NEXT_ORIGIN);      // ✅ Correct
+router.route("/azure/next/*", AZURE_NEXT_ORIGIN);    // ❌ Wrong - wildcards don't work
+
+// Router-level rewrites for Azure React
+router.route("/azure/react/assets", AZURE_REACT_ORIGIN, {
+  rewrite: { regex: "^/azure/react/assets/(.*)$", to: "/assets/$1" }
+});
+router.route("/azure/react", AZURE_REACT_ORIGIN, {
+  rewrite: { regex: "^/azure/react/(.*)$", to: "/$1" }
+});
+```
+
+### 2. Framework Variants
+
+#### Next.js on Vercel (`variants/nextjs-azure/`)
+- **Base Path**: `/azure/next` configured in `next.config.mjs`
+- **Data URL**: Must use CloudFront URL: `https://d2li8p8xclq49l.cloudfront.net/data/resume.json`
+- **Key Files**:
+  - `src/app/page.tsx` - Main page with `transformSharedResume` function
+  - `next.config.mjs` - Base path configuration
+
+#### React on Azure Static Web Apps (`variants/react-azure/`)
+- **Base Path**: `/azure/react` configured in `vite.config.ts`
+- **Build Output**: `dist/azure/react/` (aligned with URL structure)
+- **Key Files**:
+  - `staticwebapp.config.json` - Must be copied to `dist/` during deploy
+  - `src/App.tsx` - Contains `transformSharedResume` function
+
+#### TanStack on Netlify (`variants/tanstack-gcp/`)
+- **Base Path**: `/gcp/tanstack` configured in `vite.config.ts`
+- **Redirects**: Generated during deploy in `dist/_redirects`
+- **Key Files**:
+  - `src/routes/index.tsx` - Contains `transformSharedResume` function
+
+### 3. Data Layer
+
+Centralized JSON data served from SvelteKit with CORS headers:
+
+- `/data/resume.json` - Resume data
+- `/data/enablement.json` - AI enablement content
+
+Located in `src/lib/data/` and served via `src/routes/data/[slug]/+server.ts`
+
+## Deployment
+
+### Quick Deploy All
+
+```bash
+# Deploy all framework variants
+./scripts/deploy-all.sh
+
+# Deploy SST Router (after setting environment variables)
+export AZURE_NEXT_ORIGIN="https://austin-site-seven.vercel.app"
+export AZURE_REACT_ORIGIN="https://gray-pebble-049c9b91e.1.azurestaticapps.net"
+export GCP_TANSTACK_ORIGIN="https://austin-site.netlify.app"
+AWS_PROFILE=prod npx sst deploy --stage production
+```
+
+### Individual Deployments
+
+#### Next.js to Vercel
+```bash
+cd variants/nextjs-azure
+npm run build
+npx vercel --prod
+```
+
+#### React to Azure Static Web Apps
+```bash
+cd variants/react-azure
+npm run build
+cp staticwebapp.config.json dist/  # CRITICAL: Must copy config
+npx @azure/static-web-apps-cli deploy ./dist \
+  --app-name gray-pebble-049c9b91e \
+  --deployment-token $AZURE_STATIC_WEB_APPS_API_TOKEN \
+  --env production
+```
+
+#### TanStack to Netlify
+```bash
+cd variants/tanstack-gcp
+npm run build
+# Generate redirects
+echo '/gcp/tanstack/assets/*  /assets/:splat  200
+/gcp/tanstack/*         /index.html     200' > dist/_redirects
+netlify deploy --prod --dir=dist
+```
+
+## Testing
+
+Run the comprehensive test suite:
+
+```bash
+./scripts/test-routes.sh "https://d2li8p8xclq49l.cloudfront.net"
+```
+
+This tests:
+- Main routes (/, /enablement)
+- Data endpoints with CORS headers
+- Framework variant routes
+- Asset MIME types
+- CSS content-type headers
+
+## Common Issues & Solutions
+
+### Issue 1: Framework Routes Return 404
+
+**Symptom**: `/azure/react` returns 404 from SvelteKit
+
+**Cause**: SST Router not configured correctly
+
+**Solution**: 
+- Remove wildcards from router patterns
+- Ensure environment variables are set before SST deploy
+- SST Router uses `startsWith()` prefix matching
+
+### Issue 2: Assets Return Wrong MIME Type
+
+**Symptom**: CSS files return `text/html` instead of `text/css`
+
+**Cause**: Origin rewrite rules not working
+
+**Solutions**:
+
+1. **Azure Static Web Apps**: Ensure `staticwebapp.config.json` is in `dist/`
+2. **Netlify**: Generate `_redirects` file during deploy
+3. **SST Router**: Use router-level rewrites for path transformation
+
+### Issue 3: Data Fetching Fails
+
+**Symptom**: "Cannot read properties of undefined" errors
+
+**Cause**: Framework trying to fetch from its own origin instead of CloudFront
+
+**Solution**: Update data URLs to use CloudFront:
+```javascript
+const dataUrl = 'https://d2li8p8xclq49l.cloudfront.net/data/resume.json';
+```
+
+### Issue 4: CORS Errors
+
+**Symptom**: Cross-origin requests blocked
+
+**Solution**: Ensure SvelteKit data endpoints return proper CORS headers:
+```typescript
+headers: {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type'
+}
+```
+
+## Key Configuration Files
+
+### Azure Static Web Apps (`staticwebapp.config.json`)
+```json
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/azure/react/assets/*"]
+  },
+  "forwardingGateway": {
+    "allowedForwardedHosts": [
+      "d2li8p8xclq49l.cloudfront.net",
+      "www.austinwallace.ca"
+    ]
+  },
+  "routes": [
+    {
+      "route": "/azure/react/assets/*",
+      "rewrite": "/assets/{*path}"
+    }
+  ]
+}
+```
+
+### Netlify (`_redirects`)
+```
+/gcp/tanstack/assets/*  /assets/:splat  200
+/gcp/tanstack/*         /index.html     200
+```
+
+### Next.js (`next.config.mjs`)
+```javascript
+const nextConfig = {
+  basePath: "/azure/next",
+  images: { unoptimized: true }
+};
+```
+
+### Vite (`vite.config.ts`)
+```javascript
+export default defineConfig({
+  base: '/azure/react/',  // or '/gcp/tanstack/'
+  build: {
+    outDir: 'dist/azure/react'  // Align with URL structure
+  }
+});
+```
+
+## Environment Variables
+
+### For SST Deployment
+```bash
+export AZURE_NEXT_ORIGIN="https://austin-site-seven.vercel.app"
+export AZURE_REACT_ORIGIN="https://gray-pebble-049c9b91e.1.azurestaticapps.net"
+export GCP_TANSTACK_ORIGIN="https://austin-site.netlify.app"
+```
+
+### Getting Azure Deployment Token
+```bash
+az staticwebapp secrets list \
+  --name austin-resume-react \
+  --resource-group austin-resume-rg \
+  --query "properties.apiKey" --output tsv
+```
+
+## Data Schema Transformation
+
+All frameworks use a `transformSharedResume` function to normalize the shared JSON schema:
+
+```javascript
+function transformSharedResume(shared) {
+  // Transform from JSON Resume schema to framework-specific structure
+  const basics = shared?.basics ?? {};
+  return {
+    name: basics?.name || '',
+    title: basics?.label || '',
+    // ... additional transformations
+  };
+}
+```
+
+## Debugging
+
+### Check CloudFront Distribution
+```bash
+aws cloudfront get-distribution --id YOUR_DISTRIBUTION_ID
+```
+
+### Test Individual Origins
+```bash
+# Test origins directly
+curl -I https://austin-site-seven.vercel.app/azure/next
+curl -I https://gray-pebble-049c9b91e.1.azurestaticapps.net/azure/react
+curl -I https://austin-site.netlify.app/gcp/tanstack
+```
+
+### Check Asset MIME Types
+```bash
+# Find and check CSS file
+css_path=$(curl -s "https://d2li8p8xclq49l.cloudfront.net/azure/react" | \
+  grep -o '/azure/react/assets/[^"]*\.css' | head -n1)
+curl -sI "https://d2li8p8xclq49l.cloudfront.net$css_path" | grep -i content-type
+```
+
+### Monitor Logs
+```bash
+# SST/Lambda logs
+aws logs tail /aws/lambda/YOUR_FUNCTION_NAME --follow
+
+# Vercel logs
+vercel logs
+
+# Azure Static Web Apps
+az staticwebapp show --name austin-resume-react
+
+# Netlify
+netlify status
+```
+
+## Performance Optimization
+
+1. **CloudFront Caching**: Static assets cached at edge locations
+2. **Prerendering**: SvelteKit pages prerendered where possible
+3. **Code Splitting**: All frameworks implement automatic code splitting
+4. **Asset Optimization**: Images and CSS optimized during build
+
+## Security Considerations
+
+1. **CORS Headers**: Properly configured for data endpoints
+2. **HTTPS Only**: All traffic encrypted via CloudFront
+3. **No Secrets in Code**: All deployment tokens in environment variables
+4. **Content Security Policy**: Configured at CloudFront level
+
+## Cost Optimization
+
+- **Vercel**: Free tier for Next.js
+- **Azure Static Web Apps**: Free tier includes 100GB bandwidth
+- **Netlify**: Free tier for static sites
+- **AWS**: CloudFront and Lambda@Edge are pay-per-use
+- **Scaling to Zero**: All services scale down when not in use
+
+## Rollback Procedures
+
+```bash
+# SST
+npx sst rollback --stage production
+
+# Vercel
+vercel rollback
+
+# Azure
+az staticwebapp deployment list --name austin-resume-react
+# Then redeploy previous version
+
+# Netlify
+netlify rollback
+```
+
+## Architecture Benefits
+
+1. **Multi-Cloud Resilience**: No single point of failure
+2. **Framework Flexibility**: Demonstrate same content in different frameworks
+3. **Centralized Data**: Single source of truth for content
+4. **Independent Deployments**: Each variant can be updated independently
+5. **Performance**: Edge caching via CloudFront
+6. **Cost Effective**: Leverages free tiers across providers
+
+## Future Enhancements
+
+1. Add more framework variants (Vue, Angular, Solid)
+2. Implement A/B testing at CloudFront level
+3. Add analytics to compare framework performance
+4. Implement progressive enhancement strategies
+5. Add WebAssembly variant
+6. Implement edge computing with CloudFront Functions
+
+## Maintenance
+
+- Keep framework dependencies updated
+- Monitor CloudFront cache hit ratios
+- Review and optimize Lambda@Edge functions
+- Regularly test all deployment paths
+- Keep deployment scripts in sync with infrastructure changes
+</file>
+
+<file path="netlify.toml">
+# example netlify.toml
+[build]
+  command = "npm run build"
+  functions = "netlify/functions"
+  publish = "dist"
+
+  ## Uncomment to use this redirect for Single Page Applications like create-react-app.
+  ## Not needed for static site generators.
+  #[[redirects]]
+  #  from = "/*"
+  #  to = "/index.html"
+  #  status = 200
+
+  ## (optional) Settings for Netlify Dev
+  ## https://github.com/netlify/cli/blob/main/docs/netlify-dev.md#project-detection
+  #[dev]
+  #  command = "yarn start" # Command to start your dev server
+  #  port = 3000 # Port that the dev server will be listening on
+  #  publish = "dist" # Folder with the static content for _redirect file
+
+  ## more info on configuring this file: https://ntl.fyi/file-based-build-config
+</file>
+
+<file path="CLAUDE.md">
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Commands
+
+### Development
+```bash
+npm run dev          # Start development server at localhost:5173
+npm run build        # Build for production
+npm run preview      # Preview production build locally
+npm run check        # Type-check Svelte components
+npm run validate:variants  # Validate all HTML variants
+```
+
+### Deployment
+```bash
+# Deploy to production (requires AWS credentials)
+AWS_PROFILE=prod npx sst deploy --stage production
+
+# Unlock deployment if locked
+AWS_PROFILE=prod npx sst unlock --stage production
+```
+
+## Architecture
+
+### Multi-Variant Resume Platform
+The site displays the same resume content styled by different AI tools. Each variant runs in an isolated iframe to prevent CSS/JS conflicts.
+
+**Key Components:**
+- **Providers System** (`src/lib/providers.ts`): Central registry of AI tool variants with metadata (id, name, path, icon, color)
+- **VariantFrame** (`src/lib/components/VariantFrame.svelte`): Manages iframe isolation and PostMessage height communication
+- **Data Layer** (`src/lib/data/*.json`): Centralized JSON files served via `/data/*.json` endpoints
+
+### Route Structure
+```
+/                           # Minimal/canonical resume
+/enablement                 # AI enablement content
+/with/[tool]               # Tool-specific resume variant
+/with/[tool]/enablement    # Tool-specific enablement variant
+/data/*.json               # CORS-enabled data endpoints
+```
+
+### Variant System
+Variants are static HTML files in `/static/variants/[tool-name]/` that must:
+1. Fetch data from `/data/resume.json` or `/data/enablement.json`
+2. Post height updates: `parent?.postMessage({ type: 'variant:height', value: scrollHeight }, '*')`
+3. Be self-contained with all assets
+
+Note: When variants are hosted on separate origins and mounted under subpaths via the SST Router (e.g., `/azure/react`, `/gcp/tanstack`), ensure the app is built with that base path and the host is configured to rewrite `/<prefix>/assets/*` → `/assets/*` so asset URLs resolve correctly behind CloudFront.
+
+## Routing Fix Progress (2025-09-05)
+
+- Implemented subpath-safe configs for all external variants:
+  - Next.js: `basePath: '/azure/next'` with conditional `output: 'standalone'` (Azure).
+  - React (SWA): `vite.base = '/azure/react/'` and `staticwebapp.config.json` with asset rewrite and `forwardingGateway.allowedForwardedHosts`.
+  - TanStack: `vite.base = '/gcp/tanstack/'` and Netlify redirects for SPA + assets.
+- Hardened deploy scripts to run `npm ci` and fail fast on missing SWA config.
+
+Next steps:
+- Deploy each variant (Azure SWA, Azure App Service or Vercel, Netlify/Cloud Run) and verify through CloudFront.
+- Run `./scripts/test-routes.sh "https://d2li8p8xclq49l.cloudfront.net"` to confirm headers and 200s.
+- If Azure SWA shows host-related redirects, confirm the added `forwardingGateway.allowedForwardedHosts` is active in the deployed config.
+
+### SST Deployment Configuration
+- **Domain**: www.austinwallace.ca (CloudFront + ACM certificate)
+- **DNS**: External management via GoDaddy
+- **Certificate ARN**: `arn:aws:acm:us-east-1:737679990662:certificate/061f07dc-2e1e-4751-bfee-e7e26c8b7c80`
+
+## Adding New Variants
+
+1. Create HTML file in `/static/variants/[tool-name]/index.html`
+2. Add provider entry to `src/lib/providers.ts`:
+   ```typescript
+   { id: 'tool-name', name: 'Tool Name', path: '/variants/tool-name/index.html', icon: '🔧', color: '#hex' }
+   ```
+3. Validate with `npm run validate:variants`
+4. Test locally with `npm run dev`
+
+## Navigation Context
+The layout maintains provider context - clicking "AI Enablement" while viewing Claude Code variant navigates to `/with/claude-code/enablement`, not `/enablement`.
+
+## Content Updates
+Edit JSON files in `src/lib/data/` — the API endpoints `/data/resume.json` and `/data/enablement.json` will reflect changes across all variants.
+</file>
+
+<file path="svelte.config.js">
+import adapter from 'svelte-kit-sst';
+
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+  kit: {
+    adapter: adapter(),
+    prerender: { 
+      entries: ['*'],
+      handleHttpError: ({ path, referrer, message }) => {
+        // Ignore 404 errors for external routes that will be handled by SST Router
+        if (path.startsWith('/azure/') || path.startsWith('/gcp/') || path.startsWith('/variants/')) {
+          return;
+        }
+        
+        // Throw error for other cases
+        throw new Error(message);
+      },
+      handleMissingId: ({ path, id, referrers }) => {
+        // Ignore missing ID warnings for now
+        console.warn(`Missing ID "${id}" on ${path} referenced by: ${referrers.join(', ')}`);
+      }
+    }
+  }
+};
+
+export default config;
+</file>
+
+<file path="sst.config.ts">
+/// <reference path="./.sst/platform/config.d.ts" />
+
+export default $config({
+  app(input) {
+    return {
+      name: "austin-site",
+      removal: input?.stage === "production" ? "retain" : "remove",
+      protect: ["production"].includes(input?.stage),
+      home: "aws",
+      providers: { aws: { region: "us-east-1" } },
+    };
+  },
+  async run() {
+    // 1) One CloudFront+domain for everything via Router
+    // Temporarily disabled custom domain due to conflict
+    const router = new sst.aws.Router("Edge", {
+      // domain: routerDomainConfig,
+    });
+
+    // 2) Keep your SvelteKit site at `/` (root)
+    const site = new sst.aws.SvelteKit("AustinSite", {
+      router: { instance: router }, // Mount at root of the same Router
+      environment: {
+        PUBLIC_STAGE: $app.stage,
+        PUBLIC_ROUTER_URL: router.url, // Expose router URL for convenience
+      }
+    });
+
+    // 3) Do NOT add an explicit /data route.
+    // The SvelteKit site is mounted at root on the same Router, so /data is served by the site directly.
+    // An explicit route to site.url would forward to the site's CloudFront domain and trigger its 403 guard.
+
+    // 4) External apps - actual deployed URLs with warnings
+    const AZURE_NEXT_ORIGIN = 
+      process.env.AZURE_NEXT_ORIGIN ?? "https://austin-site-seven.vercel.app";
+    const AZURE_REACT_ORIGIN = 
+      process.env.AZURE_REACT_ORIGIN ?? "https://gray-pebble-049c9b91e.1.azurestaticapps.net";
+    const GCP_TANSTACK_ORIGIN = 
+      process.env.GCP_TANSTACK_ORIGIN ?? "https://austin-site.netlify.app";
+    
+    // Warn when using defaults
+    if (!process.env.AZURE_NEXT_ORIGIN) {
+      console.warn("⚠️  Using default AZURE_NEXT_ORIGIN. Set env var to override.");
+    }
+    if (!process.env.AZURE_REACT_ORIGIN) {
+      console.warn("⚠️  Using default AZURE_REACT_ORIGIN. Set env var to override.");
+    }
+    if (!process.env.GCP_TANSTACK_ORIGIN) {
+      console.warn("⚠️  Using default GCP_TANSTACK_ORIGIN. Set env var to override.");
+    }
+
+    // Path prefixes - SST Router uses startsWith matching, no wildcards needed
+    router.route("/azure/next", AZURE_NEXT_ORIGIN);
+    // React (Azure SWA): rewrite the prefixed path to root since SWA serves from root
+    router.route("/azure/react/assets", AZURE_REACT_ORIGIN, {
+      rewrite: { regex: "^/azure/react/assets/(.*)$", to: "/assets/$1" }
+    });
+    router.route("/azure/react", AZURE_REACT_ORIGIN, {
+      rewrite: { regex: "^/azure/react/(.*)$", to: "/$1" }
+    });
+    router.route("/gcp/tanstack", GCP_TANSTACK_ORIGIN);
+
+    // Optional: Add redirects for convenience (removed due to SST bug)
+    
+    return {
+      url: router.url,          // single domain for everything
+      sveltekit: site.url,      // SvelteKit origin (also root)
+      variants: {
+        azure_next: AZURE_NEXT_ORIGIN,
+        azure_react: AZURE_REACT_ORIGIN,
+        gcp_tanstack: GCP_TANSTACK_ORIGIN,
+      }
+    };
+  },
+});
+</file>
+
+<file path="src/routes/+layout.svelte">
+<script>
+  import { PROVIDERS } from '$lib/providers';
+  export let data; // { currentProviderId, isOnEnablement }
+
+  $: ({ currentProviderId, isOnEnablement } = data);
+  $: currentProvider = PROVIDERS.find(p => p.id === currentProviderId) ?? PROVIDERS[0];
+
+  $: getProviderPath = (targetPage) => {
+    return targetPage === 'resume'
+      ? (currentProviderId === 'minimal' ? '/' : `/with/${currentProviderId}`)
+      : (currentProviderId === 'minimal' ? '/enablement' : `/with/${currentProviderId}/enablement`);
+  }
+
+  function handleProviderClick(e, provider) {
+    if (provider.comingSoon) {
+      e.preventDefault();
+    }
+  }
+</script>
+
+<style>
+  .layout-container {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .sidebar {
+    width: 80px;
+    background: #fafafa;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 0;
+    gap: 0.5rem;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  
+  .sidebar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem;
+    text-decoration: none;
+    color: var(--fg);
+    border-radius: 8px;
+    margin: 0 0.5rem;
+    transition: all 0.2s ease;
+    min-height: 60px;
+    position: relative;
+  }
+  
+  .sidebar-item:hover {
+    background: #f0f0f0;
+    transform: translateX(2px);
+  }
+  
+  .sidebar-item.active {
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  .sidebar-item.active::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 24px;
+    background: var(--accent-color, #000);
+    border-radius: 0 2px 2px 0;
+  }
+  
+  .sidebar-item.coming-soon {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .sidebar-item.coming-soon:hover {
+    opacity: 0.8;
+    transform: none;
+  }
+  
+  .sidebar-item.coming-soon .sidebar-logo,
+  .sidebar-item.coming-soon .sidebar-icon {
+    filter: grayscale(30%);
+  }
+  
+  .coming-soon-tooltip {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+    z-index: 10;
+  }
+  
+  .sidebar-item.coming-soon:hover .coming-soon-tooltip {
+    opacity: 1;
+  }
+  
+  .sidebar-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+  
+  .sidebar-logo {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    margin-bottom: 0.25rem;
+  }
+  
+  .sidebar-label {
+    font-size: 0.65rem;
+    text-align: center;
+    opacity: 0.7;
+  }
+  
+  .main-content {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  header {
+    padding: 1rem 2rem;
+    border-bottom: 1px solid var(--border);
+    background: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .content-area {
+    flex: 1;
+    max-width: 2000px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 1.25rem;
+  }
+  
+  footer {
+    padding: 1rem 2rem;
+    border-top: 1px solid var(--border);
+    background: #fafafa;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  
+  .provider-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background: #f0f0f0;
+    border-radius: 999px;
+    font-size: 0.85rem;
+  }
+  
+  .active-page {
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: underline;
+  }
+
+  /* Remove padding for pages with VariantFrame */
+  .content-area:has(.frame-wrap) {
+    padding: 0;
+  }
+  
+  @media (max-width: 768px) {
+    .sidebar {
+      width: 60px;
+    }
+    
+    .sidebar-label {
+      display: none;
+    }
+  }
+</style>
+
+<div class="layout-container">
+  <nav class="sidebar" aria-label="AI Variants">
+    {#each PROVIDERS as provider}
+      {@const providerHref = provider.comingSoon 
+        ? '#' 
+        : provider.id === 'minimal' 
+          ? (isOnEnablement ? '/enablement' : '/')
+          : (isOnEnablement ? `/with/${provider.id}/enablement` : `/with/${provider.id}`)}
+      <a 
+        href={providerHref}
+        class="sidebar-item"
+        class:active={currentProvider?.id === provider.id}
+        class:coming-soon={provider.comingSoon}
+        style="--accent-color: {provider.color || '#000'}"
+        title="{provider.name} version{provider.comingSoon ? ' (coming soon)' : ''}"
+        on:click={(e) => handleProviderClick(e, provider)}
+      >
+        {#if provider.logo}
+          <img src={provider.logo} alt={provider.name} class="sidebar-logo" />
+        {:else}
+          <span class="sidebar-icon" style="color: {provider.color || 'inherit'}">
+            {provider.icon}
+          </span>
+        {/if}
+        <span class="sidebar-label">{provider.name}</span>
+        {#if provider.comingSoon}
+          <span class="coming-soon-tooltip">Coming Soon</span>
+        {/if}
+      </a>
+    {/each}
+  </nav>
+
+  <div class="main-content">
+    <header>
+      <div style="display: flex; align-items: center; gap: 2rem;">
+        <a href="/" style="text-decoration:none;color:inherit;font-weight:700">
+          Austin Wallace — Data Engineer
+        </a>
+        <nav style="display: flex; gap: 1rem;">
+          <a href={getProviderPath('resume')} class:active-page={!isOnEnablement}>Resume</a>
+          <a href={getProviderPath('enablement')} class:active-page={isOnEnablement}>AI Enablement</a>
+        </nav>
+        {#if currentProvider}
+          <span class="provider-badge">
+            <span style="color: {currentProvider.color}">{currentProvider.icon}</span>
+            {currentProvider.name} Version
+          </span>
+        {/if}
+      </div>
+    </header>
+
+    <div class="content-area" id="content">
+      <slot />
+    </div>
+
+    <footer>
+      <p>Base text written by Austin, enhanced by various AI tooling providers, and deployed with SST. </p>
+    </footer>
+  </div>
+</div>
+</file>
+
+<file path="src/lib/providers.ts">
+export type Provider = {
+  id: string;
+  name: string;
+  path: string;        // static path to variant entry
+  noindex?: boolean;   // whether to add robots noindex on /with/[tool]
+  icon?: string;       // emoji or text icon for the provider
+  logo?: string;       // path to logo image
+  color?: string;      // accent color for the provider
+  comingSoon?: boolean; // whether this variant is still being developed
+};
+
+export const PROVIDERS: Provider[] = [
+  { id: 'minimal', name: 'Minimal', path: '/', icon: '◐', color: '#000' },
+  { id: 'claude-code', name: 'Claude Code', path: '/variants/claude-code/index.html', noindex: true, icon: '◈', logo: '/logos/claude.svg', color: '#d97706' },
+  { id: 'gpt-5-pro', name: 'GPT-5 Pro', path: '/variants/gpt-5-pro/index.html', noindex: true, icon: '⚡', logo: '/logos/chatgpt.svg', color: '#10a37f' },
+  { id: 'gpt-5-thinking', name: 'GPT-5 Thinking', path: '/variants/gpt-5-thinking/index.html', noindex: true, icon: '🧠', logo: '/logos/chatgpt.svg', color: '#10a37f' },
+  { id: 'lovable', name: 'Lovable', path: '/variants/lovable/index.html', noindex: true, icon: '♥', logo: '/logos/lovable.png', color: '#ff006e' },
+  { id: 'bolt', name: 'Bolt', path: '/variants/bolt/index.html', noindex: true, icon: '⚡', logo: '/logos/bolt.jpg', color: '#f59e0b' },
+  { id: 'firebase', name: 'Firebase Studio', path: '/variants/firebase/index.html', noindex: true, icon: '🔥', logo: '/logos/firebase.svg', color: '#039BE5' },
+];
+</file>
+
+</files>

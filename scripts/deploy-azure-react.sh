@@ -26,6 +26,9 @@ fi
 
 cd variants/react-azure
 
+# Build directory aligned with vite.config.ts outDir setting
+BUILD_DIR="dist/azure/react"
+
 # Ensure dependencies are installed for reproducible builds
 if [ -f package-lock.json ]; then
   npm ci
@@ -36,17 +39,16 @@ fi
 echo "Building React app..."
 npm run build
 
-echo "Copying Static Web Apps config into dist..."
-mkdir -p dist
+echo "Copying Static Web Apps config into build directory..."
 if [ -f staticwebapp.config.json ]; then
-  cp staticwebapp.config.json dist/staticwebapp.config.json
+  cp staticwebapp.config.json "$BUILD_DIR/staticwebapp.config.json"
 else
   echo "Error: staticwebapp.config.json missing. See variants/react-azure/."
   exit 1
 fi
 
 echo "Deploying to Azure Static Web Apps..."
-swa deploy ./dist \
+swa deploy "$BUILD_DIR" \
     --deployment-token $AZURE_SWA_DEPLOYMENT_TOKEN \
     --env production
 
