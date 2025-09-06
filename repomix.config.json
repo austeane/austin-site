@@ -1,0 +1,63 @@
+{
+  "output": {
+    "filePath": "repomix-architecture.xml",
+    "style": "xml",
+    "headerText": "Multi-Framework Resume Platform - Complete Architecture Context\n\nThis repomix contains all the context needed to understand and extend this sophisticated multi-cloud, multi-framework architecture where:\n- Main SvelteKit app hosts AI-styled variants in iframes\n- Three framework deployments (Next.js/Vercel, React/Azure, TanStack/Netlify) demonstrate the same resume\n- CloudFront serves as the unified entry point routing to all deployments\n- Shared data served via CORS-enabled endpoints\n\nFuture Goal: Each deployment should host all 6 AI variants, creating a matrix of implementations.",
+    "removeComments": false,
+    "removeEmptyLines": false,
+    "topFilesLength": 30,
+    "showLineNumbers": false
+  },
+  "include": [
+    "src/**/*",
+    "static/variants/**/*.html",
+    "variants/nextjs-azure/src/**/*",
+    "variants/nextjs-azure/next.config.mjs",
+    "variants/nextjs-azure/package.json",
+    "variants/react-azure/src/**/*",
+    "variants/react-azure/vite.config.ts",
+    "variants/react-azure/staticwebapp.config.json",
+    "variants/react-azure/package.json",
+    "variants/tanstack-gcp/src/**/*",
+    "variants/tanstack-gcp/vite.config.ts",
+    "variants/tanstack-gcp/package.json",
+    "scripts/*.sh",
+    "scripts/*.mjs",
+    "sst.config.ts",
+    "package.json",
+    "svelte.config.js",
+    "vite.config.ts",
+    "ARCHITECTURE.md",
+    "CLAUDE.md",
+    "repomix.config.json",
+    ".gitignore"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/node_modules",
+    ".git",
+    ".sst",
+    "dist",
+    "**/dist",
+    "build",
+    "**/build",
+    ".svelte-kit",
+    "**/.svelte-kit",
+    "*.lock",
+    "**/package-lock.json",
+    "**/pnpm-lock.yaml",
+    "**/*.log",
+    "coverage",
+    "**/coverage",
+    ".env*",
+    "**/.env*",
+    "repomix-*.xml",
+    "static/logos",
+    "variants/**/.next",
+    "variants/**/.turbo",
+    "variants/**/dist"
+  ],
+  "security": {
+    "enableSecurityCheck": true
+  }
+}
