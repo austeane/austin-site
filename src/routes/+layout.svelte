@@ -1,9 +1,12 @@
 <script>
-  import { PROVIDERS } from '$lib/providers';
+  import { PROVIDERS, DEPLOYMENT_VARIANTS } from '$lib/providers';
   export let data; // { currentProviderId, isOnEnablement }
 
+  let showDeploymentVariants = false;
+
   $: ({ currentProviderId, isOnEnablement } = data);
-  $: currentProvider = PROVIDERS.find(p => p.id === currentProviderId) ?? PROVIDERS[0];
+  $: activeProviders = showDeploymentVariants ? DEPLOYMENT_VARIANTS : PROVIDERS;
+  $: currentProvider = [...PROVIDERS, ...DEPLOYMENT_VARIANTS].find(p => p.id === currentProviderId) ?? PROVIDERS[0];
 
   $: getProviderPath = (targetPage) => {
     return targetPage === 'resume'
@@ -14,7 +17,14 @@
   function handleProviderClick(e, provider) {
     if (provider.comingSoon) {
       e.preventDefault();
+    } else if (provider.isDeployment && provider.externalUrl) {
+      e.preventDefault();
+      window.location.href = provider.externalUrl;
     }
+  }
+
+  function toggleVariantType() {
+    showDeploymentVariants = !showDeploymentVariants;
   }
 </script>
 
@@ -35,6 +45,41 @@
     gap: 0.5rem;
     overflow-y: auto;
     flex-shrink: 0;
+  }
+
+  .variant-toggle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5rem;
+    margin: 0 0.5rem 0.5rem;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .variant-toggle:hover {
+    background: #f0f0f0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .variant-toggle-icon {
+    font-size: 1.2rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .variant-toggle-label {
+    font-size: 0.6rem;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  .sidebar-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0.5rem 1rem;
   }
   
   .sidebar-item {
@@ -195,21 +240,41 @@
 </style>
 
 <div class="layout-container">
-  <nav class="sidebar" aria-label="AI Variants">
-    {#each PROVIDERS as provider}
-      {@const providerHref = provider.comingSoon 
-        ? '#' 
-        : provider.id === 'minimal' 
-          ? (isOnEnablement ? '/enablement' : '/')
-          : (isOnEnablement ? `/with/${provider.id}/enablement` : `/with/${provider.id}`)}
+  <nav class="sidebar" aria-label="Variants">
+    <!-- Toggle between AI and Deployment variants -->
+    <button 
+      class="variant-toggle" 
+      on:click={toggleVariantType}
+      title="Switch between AI-styled and deployment variants"
+    >
+      <span class="variant-toggle-icon">
+        {showDeploymentVariants ? '🚀' : '🤖'}
+      </span>
+      <span class="variant-toggle-label">
+        {showDeploymentVariants ? 'Deploy\nVariants' : 'AI\nVariants'}
+      </span>
+    </button>
+    
+    <div class="sidebar-divider"></div>
+    
+    {#each activeProviders as provider}
+      {@const providerHref = provider.isDeployment
+        ? provider.externalUrl
+        : provider.comingSoon 
+          ? '#' 
+          : provider.id === 'minimal' 
+            ? (isOnEnablement ? '/enablement' : '/')
+            : (isOnEnablement ? `/with/${provider.id}/enablement` : `/with/${provider.id}`)}
       <a 
         href={providerHref}
         class="sidebar-item"
         class:active={currentProvider?.id === provider.id}
         class:coming-soon={provider.comingSoon}
         style="--accent-color: {provider.color || '#000'}"
-        title="{provider.name} version{provider.comingSoon ? ' (coming soon)' : ''}"
+        title="{provider.name}{provider.comingSoon ? ' (coming soon)' : ''}{provider.isDeployment ? ' (external deployment)' : ''}"
         on:click={(e) => handleProviderClick(e, provider)}
+        target={provider.isDeployment ? '_blank' : null}
+        rel={provider.isDeployment ? 'noopener noreferrer' : null}
       >
         {#if provider.logo}
           <img src={provider.logo} alt={provider.name} class="sidebar-logo" />
