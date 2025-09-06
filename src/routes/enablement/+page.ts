@@ -1,8 +1,11 @@
-export async function load({ fetch }) {
-  const response = await fetch('/data/enablement.json');
-  const enablement = await response.json();
-  
+import enablementData from '$lib/data/enablement.json';
+
+export const prerender = true;
+
+export async function load() {
+  // Import data directly for prerendering
+  // External consumers still use /data/enablement.json endpoint
   return {
-    enablement
+    enablement: enablementData
   };
 }

@@ -30,7 +30,7 @@ The site displays the same resume content styled by different AI tools. Each var
 **Key Components:**
 - **Providers System** (`src/lib/providers.ts`): Central registry of AI tool variants with metadata (id, name, path, icon, color)
 - **VariantFrame** (`src/lib/components/VariantFrame.svelte`): Manages iframe isolation and PostMessage height communication
-- **Data Layer** (`/static/data/*.json`): Centralized JSON files for resume and enablement content
+- **Data Layer** (`src/lib/data/*.json`): Centralized JSON files served via `/data/*.json` endpoints
 
 ### Route Structure
 ```
@@ -46,6 +46,21 @@ Variants are static HTML files in `/static/variants/[tool-name]/` that must:
 1. Fetch data from `/data/resume.json` or `/data/enablement.json`
 2. Post height updates: `parent?.postMessage({ type: 'variant:height', value: scrollHeight }, '*')`
 3. Be self-contained with all assets
+
+Note: When variants are hosted on separate origins and mounted under subpaths via the SST Router (e.g., `/azure/react`, `/gcp/tanstack`), ensure the app is built with that base path and the host is configured to rewrite `/<prefix>/assets/*` → `/assets/*` so asset URLs resolve correctly behind CloudFront.
+
+## Routing Fix Progress (2025-09-05)
+
+- Implemented subpath-safe configs for all external variants:
+  - Next.js: `basePath: '/azure/next'` with conditional `output: 'standalone'` (Azure).
+  - React (SWA): `vite.base = '/azure/react/'` and `staticwebapp.config.json` with asset rewrite and `forwardingGateway.allowedForwardedHosts`.
+  - TanStack: `vite.base = '/gcp/tanstack/'` and Netlify redirects for SPA + assets.
+- Hardened deploy scripts to run `npm ci` and fail fast on missing SWA config.
+
+Next steps:
+- Deploy each variant (Azure SWA, Azure App Service or Vercel, Netlify/Cloud Run) and verify through CloudFront.
+- Run `./scripts/test-routes.sh "https://d2li8p8xclq49l.cloudfront.net"` to confirm headers and 200s.
+- If Azure SWA shows host-related redirects, confirm the added `forwardingGateway.allowedForwardedHosts` is active in the deployed config.
 
 ### SST Deployment Configuration
 - **Domain**: www.austinwallace.ca (CloudFront + ACM certificate)
@@ -66,4 +81,4 @@ Variants are static HTML files in `/static/variants/[tool-name]/` that must:
 The layout maintains provider context - clicking "AI Enablement" while viewing Claude Code variant navigates to `/with/claude-code/enablement`, not `/enablement`.
 
 ## Content Updates
-Edit JSON files in `/static/data/` - changes are immediately available to all variants without rebuilding.
+Edit JSON files in `src/lib/data/` — the API endpoints `/data/resume.json` and `/data/enablement.json` will reflect changes across all variants.

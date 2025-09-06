@@ -1,0 +1,234 @@
+{
+  "hero": {
+    "title": "AI Code Generation Enablement",
+    "subtitle": "Transform your development workflow with AI-powered coding assistants",
+    "primary_cta": {
+      "label": "Schedule Discovery",
+      "href": "mailto:austin.wallace@hotmail.com?subject=AI%20Code%20Generation%20Discovery"
+    },
+    "secondary_cta": {
+      "label": "View Resources",
+      "href": "#resources"
+    }
+  },
+  "value_props": [
+    {
+      "id": "productivity",
+      "title": "Productivity Gains",
+      "bullets": [
+        "30-50% faster feature development",
+        "Reduce boilerplate and repetitive tasks",
+        "Focus on architecture and business logic"
+      ]
+    },
+    {
+      "id": "quality",
+      "title": "Code Quality",
+      "bullets": [
+        "Consistent coding patterns",
+        "Built-in best practices",
+        "Real-time code review and suggestions"
+      ]
+    },
+    {
+      "id": "learning",
+      "title": "Team Learning",
+      "bullets": [
+        "Learn new languages and frameworks",
+        "Discover APIs and patterns",
+        "Upskill junior developers faster"
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "id": "approach",
+      "title": "Our Approach",
+      "type": "cards",
+      "cards": [
+        {
+          "title": "Discovery & Assessment",
+          "body": "Evaluate your team's needs and current development workflows",
+          "deliverables": [
+            "Team readiness assessment",
+            "Tool selection matrix",
+            "ROI projections"
+          ]
+        },
+        {
+          "title": "Pilot Program",
+          "body": "Run controlled experiments with selected teams and projects",
+          "deliverables": [
+            "Pilot team training",
+            "Success metrics tracking",
+            "Feedback loops"
+          ]
+        },
+        {
+          "title": "Scale & Optimize",
+          "body": "Roll out successful patterns across the organization",
+          "deliverables": [
+            "Playbooks and guidelines",
+            "Training programs",
+            "Continuous improvement"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tools",
+      "title": "AI Coding Tools",
+      "type": "accordion",
+      "intro": "Compare leading AI code generation tools and their capabilities",
+      "items": [
+        {
+          "label": "GitHub Copilot",
+          "content": [
+            "**Best for:** Teams already using GitHub and VS Code",
+            "**Strengths:** Deep IDE integration, multi-language support, enterprise features",
+            "**Pricing:** $10-19/user/month depending on plan",
+            "**Key Features:** Code completion, test generation, documentation, chat interface"
+          ]
+        },
+        {
+          "label": "Claude (Anthropic)",
+          "content": [
+            "**Best for:** Complex reasoning and large context windows",
+            "**Strengths:** Superior understanding of requirements, excellent at refactoring",
+            "**Pricing:** $20/month for Pro, API pricing available",
+            "**Key Features:** 100K+ token context, code explanation, architecture design"
+          ]
+        },
+        {
+          "label": "Cursor",
+          "content": [
+            "**Best for:** Teams wanting AI-first IDE experience",
+            "**Strengths:** Built-in AI features, codebase understanding, multi-file edits",
+            "**Pricing:** $20/month per user",
+            "**Key Features:** AI-native IDE, codebase chat, automatic refactoring"
+          ]
+        },
+        {
+          "label": "ChatGPT/GPT-4",
+          "content": [
+            "**Best for:** Versatile coding assistance and learning",
+            "**Strengths:** Wide knowledge base, good at explaining concepts",
+            "**Pricing:** $20/month for Plus, API pricing varies",
+            "**Key Features:** Code generation, debugging help, architecture discussions"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "best-practices",
+      "title": "Best Practices",
+      "type": "bullets",
+      "bullets": [
+        "**Start Small:** Begin with low-risk projects and willing early adopters",
+        "**Prompt Engineering:** Train teams on effective prompt writing techniques",
+        "**Code Review:** Always review AI-generated code before merging",
+        "**Security First:** Implement policies for handling sensitive data",
+        "**Measure Impact:** Track metrics like velocity, quality, and developer satisfaction",
+        "**Continuous Learning:** Share successful patterns and learnings across teams"
+      ]
+    },
+    {
+      "id": "implementation",
+      "title": "Implementation Roadmap",
+      "type": "process",
+      "steps": [
+        "Executive alignment and budget approval",
+        "Form AI enablement task force",
+        "Select pilot teams and projects",
+        "Choose and procure tools",
+        "Develop governance and security policies",
+        "Train pilot teams",
+        "Run 30-60 day pilot",
+        "Gather feedback and metrics",
+        "Refine approach based on learnings",
+        "Scale to additional teams",
+        "Establish center of excellence",
+        "Continuous improvement and optimization"
+      ]
+    },
+    {
+      "id": "challenges",
+      "title": "Common Challenges",
+      "type": "accordion",
+      "items": [
+        {
+          "label": "Security and IP Concerns",
+          "content": [
+            "Implement clear policies on code sharing",
+            "Use enterprise versions with data protection",
+            "Regular security audits and compliance checks",
+            "Train teams on secure AI usage"
+          ]
+        },
+        {
+          "label": "Quality Control",
+          "content": [
+            "Maintain rigorous code review processes",
+            "Implement automated testing for AI-generated code",
+            "Set clear quality standards and metrics",
+            "Regular audits of AI-generated code"
+          ]
+        },
+        {
+          "label": "Developer Resistance",
+          "content": [
+            "Focus on AI as augmentation, not replacement",
+            "Showcase success stories and productivity gains",
+            "Provide comprehensive training and support",
+            "Address concerns transparently"
+          ]
+        },
+        {
+          "label": "Cost Justification",
+          "content": [
+            "Track concrete metrics: velocity, bug rates, time-to-market",
+            "Calculate ROI based on developer time saved",
+            "Start with small pilot to prove value",
+            "Compare against cost of not adopting"
+          ]
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "title": "GitHub Copilot Enterprise Documentation",
+      "url": "https://docs.github.com/en/copilot",
+      "kind": "Documentation",
+      "notes": "Official guide for enterprise deployment"
+    },
+    {
+      "title": "Anthropic Claude Best Practices",
+      "url": "https://www.anthropic.com/claude",
+      "kind": "Guide",
+      "notes": "Tips for effective Claude usage in development"
+    },
+    {
+      "title": "AI Code Generation Security Guidelines",
+      "url": "https://owasp.org/",
+      "kind": "Security",
+      "notes": "OWASP guidelines for secure AI adoption"
+    },
+    {
+      "title": "Developer Productivity Metrics",
+      "url": "https://github.blog/2021-08-11-metrics-for-developer-productivity/",
+      "kind": "Research",
+      "notes": "How to measure impact of AI tools"
+    }
+  ],
+  "cta": {
+    "headline": "Ready to Transform Your Development Process?",
+    "subhead": "Let's discuss how AI code generation can accelerate your team",
+    "actions": [
+      {
+        "label": "Schedule Consultation",
+        "href": "mailto:austin.wallace@hotmail.com?subject=AI%20Code%20Generation%20Consultation"
+      }
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": [
+      "/azure/react/assets/*",
+      "/assets/*",
+      "/images/*.{png,jpg,gif}",
+      "/css/*",
+      "/js/*",
+      "/data/*"
+    ]
+  },
+  "forwardingGateway": {
+    "allowedForwardedHosts": [
+      "d2li8p8xclq49l.cloudfront.net",
+      "www.austinwallace.ca"
+    ]
+  },
+  "routes": [
+    {
+      "route": "/azure/react/assets/*",
+      "rewrite": "/assets/{*path}"
+    },
+    {
+      "route": "/azure/react/*",
+      "rewrite": "/{*path}"
+    }
+  ],
+  "mimeTypes": {
+    ".json": "application/json",
+    ".js": "application/javascript",
+    ".mjs": "application/javascript"
+  },
+  "globalHeaders": {
+    "Cache-Control": "public, max-age=3600"
+  }
+}

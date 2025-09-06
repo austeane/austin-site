@@ -1,0 +1,14 @@
+node_modules
+.output
+.vinxi
+dist
+.git
+.gitignore
+README.md
+.env*
+.cache
+coverage
+.vscode
+.DS_Store
+*.log
+cloudbuild.yaml

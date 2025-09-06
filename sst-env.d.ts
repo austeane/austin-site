@@ -9,6 +9,10 @@ declare module "sst" {
       "type": "sst.aws.SvelteKit"
       "url": string
     }
+    "Edge": {
+      "type": "sst.aws.Router"
+      "url": string
+    }
   }
 }
 /// <reference path="sst-env.d.ts" />
