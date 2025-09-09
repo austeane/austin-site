@@ -47,3 +47,9 @@ temp/
 
 # Local Netlify folder
 .netlify
+.vercel
+
+# Next.js build output
+.next/
+variants/**/.next/
+variants/**/deploy.zip

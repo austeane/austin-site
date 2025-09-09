@@ -70,6 +70,17 @@
   ];
 </script>
 
+<svelte:head>
+  <title>AI Enablement — Austin Wallace</title>
+  <meta name="description" content="Practical AI enablement for engineering teams: policy, training, tooling, and governance to safely scale AI usage across your org." />
+  <link rel="canonical" href="https://www.austinwallace.ca/enablement" />
+  <meta property="og:title" content="AI Enablement — Austin Wallace" />
+  <meta property="og:description" content="Practical AI enablement for engineering teams: policy, training, tooling, and governance." />
+  <meta property="og:url" content="https://www.austinwallace.ca/enablement" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+</svelte:head>
+
 <style>
   .enablement-container {
     display: grid;

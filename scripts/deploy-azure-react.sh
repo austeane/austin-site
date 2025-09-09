@@ -7,6 +7,10 @@ echo "==================================="
 echo "Deploying React to Azure Static Web Apps"
 echo "==================================="
 
+# Ensure six AI variants are copied into this app
+echo "Syncing AI variants into React public/variants..."
+./scripts/sync-variants.sh
+
 # Load deployment token from .env.azure if it exists
 if [ -f .env.azure ]; then
     source .env.azure

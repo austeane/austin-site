@@ -38,14 +38,14 @@ The site displays the same resume content styled by different AI tools. Each var
 /enablement                 # AI enablement content
 /with/[tool]               # Tool-specific resume variant
 /with/[tool]/enablement    # Tool-specific enablement variant
-/data/*.json               # CORS-enabled data endpoints
+/data/*.json               # ETag data endpoints (same-origin via Router)
 ```
 
 ### Variant System
 Variants are static HTML files in `/static/variants/[tool-name]/` that must:
 1. Fetch data from `/data/resume.json` or `/data/enablement.json`
-2. Post height updates: `parent?.postMessage({ type: 'variant:height', value: scrollHeight }, '*')`
-3. Be self-contained with all assets
+2. Be self-contained with all assets
+3. (Optional) Post height updates — the app uses fixed-height iframes by default and ignores height messages unless `autosize` is enabled in `VariantFrame`.
 
 Note: When variants are hosted on separate origins and mounted under subpaths via the SST Router (e.g., `/azure/react`, `/gcp/tanstack`), ensure the app is built with that base path and the host is configured to rewrite `/<prefix>/assets/*` → `/assets/*` so asset URLs resolve correctly behind CloudFront.
 
@@ -67,6 +67,45 @@ Next steps:
 - **DNS**: External management via GoDaddy
 - **Certificate ARN**: `arn:aws:acm:us-east-1:737679990662:certificate/061f07dc-2e1e-4751-bfee-e7e26c8b7c80`
 
+## Next.js Variant (Vercel) — Production Notes
+
+The Next.js deployment mounted at `/azure/next` is configured for stability behind CloudFront:
+
+- **SSR resume:** `/azure/next/resume` renders server‑side and hydrates cleanly through CF. This is the canonical resume route for the Next app.
+- **Root redirect:** `/azure/next` redirects to `/azure/next/resume` (configured in `variants/nextjs-azure/next.config.mjs`). Keep this for a clean landing.
+- **API Proxy:** `/azure/next/api/resume` proxies requests to `https://www.austinwallace.ca/data/resume.json` to avoid WAF/CloudFront blocking Vercel's servers. Both SSR and client-side fetches use this proxy.
+- **Logos:** Provider logos are copied into `variants/nextjs-azure/public/logos/*` to avoid 404s when the sidebar renders.
+
+### WAF/CloudFront Issue Resolution
+The Next.js variant uses an API proxy pattern to avoid 403 errors when Vercel servers attempt to fetch data from the main site:
+- Server-side: `getServerSideProps` fetches from local `/api/resume` route
+- Client-side: Fallback also uses `/api/resume` instead of direct external fetch
+- API route: Fetches from main site with friendly User-Agent header
+
+### Debug routes (kept, noindex)
+- `/azure/next/test` — minimal hydration sanity check.
+- `/azure/next/probe` — prints SSR vs client "fingerprint" diffs to console to catch env/host/basePath mismatches.
+
+Both routes are marked `noindex` and intended for diagnostics. You can remove them or gate with an env flag later.
+
+## React Variant (Azure SWA) — Production Notes
+
+- **Base path:** Built with `vite.base = '/azure/react/'` and SWA rewrites for assets.
+- **Canonical resume:** `/azure/react/resume` renders the minimal resume. The app router redirects `/azure/react/` → `/azure/react/resume` client-side, and SWA issues a server 308 for `/azure/react` → `/azure/react/resume`.
+- **SWA config:** See `variants/react-azure/staticwebapp.config.json` — includes:
+  - 308 redirect for `/azure/react` → `/azure/react/resume`
+  - Asset rewrites `/azure/react/assets/*` → `/assets/*`
+  - Forwarded hosts allow-list includes CloudFront and `www.austinwallace.ca`.
+
+## TanStack Variant (Netlify) — Production Notes
+
+- **Base path:** Built with `vite.base = '/gcp/tanstack/'`.
+- **Canonical resume:** `/gcp/tanstack/resume` renders the minimal resume. Root `/gcp/tanstack` is redirected at Netlify with a 308.
+- **Netlify redirects:** See `variants/tanstack-gcp/netlify.toml` — includes:
+  - 308 redirect for `/gcp/tanstack` → `/gcp/tanstack/resume`
+  - SPA rewrites: `/gcp/tanstack/*` → `/index.html` (200)
+  - Asset passthroughs for `/gcp/tanstack/assets/*` and `/gcp/tanstack/variants/*`.
+
 ## Adding New Variants
 
 1. Create HTML file in `/static/variants/[tool-name]/index.html`
@@ -80,5 +119,50 @@ Next steps:
 ## Navigation Context
 The layout maintains provider context - clicking "AI Enablement" while viewing Claude Code variant navigates to `/with/claude-code/enablement`, not `/enablement`.
 
+### Variant‑preserving Deploy Navigation
+On `/with/*` routes the sidebar defaults to "Deploy Variants". Clicking a deployment entry opens a new tab and deep‑links into the external app using app routes:
+- Non‑minimal: `/<prefix>/with/<tool>[/enablement]`
+- Minimal: the deployment app root at `/<prefix>`
+
 ## Content Updates
 Edit JSON files in `src/lib/data/` — the API endpoints `/data/resume.json` and `/data/enablement.json` will reflect changes across all variants.
+
+## Generating Repomix for Context
+
+To create a comprehensive repomix with ~60k tokens for sharing project context:
+
+```bash
+# Generate repomix with token count
+npx repomix@latest --token-count-encoding cl100k_base
+
+# Or with specific options
+npx repomix@latest \
+  --token-count-encoding cl100k_base \
+  --output repomix-60k.md \
+  --style markdown
+```
+
+### Current Repomix Configuration
+The `repomix.config.json` is configured to:
+- Include key source files from main app and deployment variants
+- Include configuration files and deployment scripts
+- Include all markdown documentation
+- Exclude build artifacts, node_modules, and generated files
+- Target ~60k tokens for comprehensive context
+
+### Files Included in Repomix
+- **Main SvelteKit app**: Routes, layouts, providers, components
+- **Deployment variants**: Layout components and key files from Next.js, React, and TanStack
+- **Configuration**: SST config, package.json, deployment configs
+- **Scripts**: All deployment and sync scripts
+- **Documentation**: All .md files including architecture guides
+
+### Token Distribution (typical)
+- ~9% - Main app routes and layouts
+- ~15% - Deployment variant layouts
+- ~10% - Documentation and guides
+- ~8% - Configuration files
+- ~5% - Deployment scripts
+- ~53% - Other source files and components
+
+This creates a complete context snapshot for AI assistants to understand the entire architecture.

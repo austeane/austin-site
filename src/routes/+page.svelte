@@ -27,7 +27,7 @@
       {#each contactLinks as c}
         <li>
           {#if c.url}
-            <a href={c.url} rel="noopener noreferrer">{c.label}</a>
+            <a href={c.url} target="_blank" rel="noopener noreferrer">{c.label}</a>
           {:else}
             <span>{c.label}</span>
           {/if}
@@ -80,7 +80,7 @@
     <ul style="list-style:disc;margin:.25rem 0 0 1rem;">
       {#each resume.projects as p}
         <li>
-          <strong>{p.name}</strong>{p.url ? ' — ' : ''}{#if p.url}<a rel="noopener noreferrer" href={p.url}>{p.url}</a>{/if}
+          <strong>{p.name}</strong>{p.url ? ' — ' : ''}{#if p.url}<a rel="noopener noreferrer" target="_blank" href={p.url}>{p.url}</a>{/if}
           {#if p.description}<div style="margin:.25rem 0 0 0;max-width:70ch;">{p.description}</div>{/if}
           {#if p.keywords?.length}<div style="color:var(--muted);font-size:.9rem;margin-top:.25rem;">{p.keywords.join(' · ')}</div>{/if}
         </li>
@@ -90,6 +90,35 @@
 
   <hr style="margin:1.25rem 0;border:0;border-top:1px solid var(--border);" />
 {/if}
+
+<svelte:head>
+  <title>Austin Wallace — Data Engineer (Databricks/Snowflake/dbt)</title>
+  <meta name="description" content="Data Engineer with 9+ years building Databricks/Snowflake/dbt platforms, AI enablement leader, and builder of reliable data pipelines." />
+  <link rel="canonical" href="https://www.austinwallace.ca/" />
+  <meta property="og:title" content="Austin Wallace — Data Engineer" />
+  <meta property="og:description" content="Data Engineer with 9+ years building Databricks/Snowflake/dbt platforms and AI enablement." />
+  <meta property="og:url" content="https://www.austinwallace.ca/" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  
+  <!-- JSON-LD Person Schema -->
+  {@html `<script type="application/ld+json">${JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": resume.basics?.name || "Austin Wallace",
+    "jobTitle": resume.basics?.label || "Data Engineer",
+    "email": resume.basics?.email ? `mailto:${resume.basics.email}` : undefined,
+    "url": "https://www.austinwallace.ca/",
+    "sameAs": [
+      resume.basics?.profiles?.find((p:any) => p.network?.toLowerCase() === 'github')?.url,
+      resume.basics?.profiles?.find((p:any) => p.network?.toLowerCase() === 'linkedin')?.url
+    ].filter(Boolean),
+    "address": resume.basics?.location?.city ? {
+      "@type": "PostalAddress",
+      "addressLocality": resume.basics.location.city
+    } : undefined
+  })}</script>`}
+</svelte:head>
 
 {#if resume.skills?.length}
   <section aria-labelledby="skills">

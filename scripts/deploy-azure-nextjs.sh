@@ -7,6 +7,10 @@ echo "==================================="
 echo "Deploying Next.js to Azure App Service"
 echo "==================================="
 
+# Ensure six AI variants are copied into this app
+echo "Syncing AI variants into Next.js public/variants..."
+./scripts/sync-variants.sh
+
 APP_NAME="austin-resume-next"
 RESOURCE_GROUP="austin-resume-rg"
 

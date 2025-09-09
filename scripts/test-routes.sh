@@ -99,6 +99,13 @@ test_route "/azure/react" "React on Azure" || ((failures++))
 test_route "/gcp/tanstack" "TanStack on Netlify" || ((failures++))
 
 echo ""
+echo "🧩 AI Variants present under each deployment"
+echo "-------------------------------------------"
+test_route "/azure/next/variants/claude-code/index.html" "Next hosts AI variants" || ((failures++))
+test_route "/azure/react/variants/claude-code/index.html" "React hosts AI variants" || ((failures++))
+test_route "/gcp/tanstack/variants/claude-code/index.html" "TanStack hosts AI variants" || ((failures++))
+
+echo ""
 echo "🧪 Asset MIME checks"
 echo "--------------------"
 asset_mime_check() {

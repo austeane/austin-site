@@ -12,9 +12,15 @@ export default $config({
   },
   async run() {
     // 1) One CloudFront+domain for everything via Router
-    // Temporarily disabled custom domain due to conflict
+    // Temporarily disabled - domain is still attached to old CloudFront
+    // Update GoDaddy DNS to point to: d2li8p8xclq49l.cloudfront.net
     const router = new sst.aws.Router("Edge", {
-      // domain: routerDomainConfig,
+      domain: {
+        name: "www.austinwallace.ca",
+        // redirects: ["austinwallace.ca"], // Another CloudFront has this, handle separately
+        dns: false, // We'll manage DNS in GoDaddy
+        cert: "arn:aws:acm:us-east-1:737679990662:certificate/061f07dc-2e1e-4751-bfee-e7e26c8b7c80"
+      }
     });
 
     // 2) Keep your SvelteKit site at `/` (root)

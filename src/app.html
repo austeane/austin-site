@@ -2,9 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="data:," />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#111111" />
     %sveltekit.head%
     <style>
       /* Minimal, high-contrast defaults (no custom fonts) */
@@ -19,6 +20,33 @@
       html, body { padding: 0; margin: 0; background: var(--bg); color: var(--fg); }
       a { color: var(--accent); }
       code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+      
+      /* Print stylesheet for clean PDF export */
+      @media print {
+        .sidebar, .variant-toggle, .progress, .inspector, header nav, footer { display: none !important; }
+        .layout-container { display: block !important; }
+        .content-area { 
+          max-width: 100% !important; 
+          padding: 0 !important; 
+          margin: 0 !important;
+        }
+        body { 
+          color: #000 !important; 
+          background: #fff !important;
+          font-size: 11pt;
+        }
+        a { color: #000 !important; text-decoration: underline; }
+        a[href]:after { 
+          content: " (" attr(href) ")"; 
+          font-size: 0.8em; 
+          color: #666;
+        }
+        a[href^="#"]:after,
+        a[href^="javascript:"]:after { content: ""; }
+        h1, h2, h3 { page-break-after: avoid; }
+        img, figure { page-break-inside: avoid; }
+        @page { margin: 0.75in; }
+      }
     </style>
   </head>
   <body>

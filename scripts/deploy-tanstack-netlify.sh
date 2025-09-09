@@ -8,6 +8,10 @@ echo "Deploying TanStack to Netlify"
 echo "==================================="
 echo ""
 
+# Ensure six AI variants are copied into this app
+echo "Syncing AI variants into TanStack public/variants..."
+./scripts/sync-variants.sh
+
 cd variants/tanstack-gcp
 
 # Ensure dependencies are installed for reproducible builds
@@ -30,8 +34,13 @@ npm run build
 # Ensure redirects are included in the published folder (works with CLI deploys)
 echo "Creating Netlify _redirects in dist..."
 cat > dist/_redirects << 'EOF'
-/gcp/tanstack/assets/*  /assets/:splat  200
-/gcp/tanstack/*         /index.html     200
+# Canonical root redirect to /resume
+/gcp/tanstack            /gcp/tanstack/resume   308!
+# Asset passthroughs
+/gcp/tanstack/assets/*   /assets/:splat         200
+/gcp/tanstack/variants/* /variants/:splat       200
+# SPA fallback
+/gcp/tanstack/*          /index.html            200
 EOF
 
 # (Optional) also include security headers

@@ -11,4 +11,9 @@ export default defineConfig({
     assetsDir: 'assets',
     sourcemap: false,
   },
+  server: {
+    proxy: {
+      '/data': 'http://localhost:5173',
+    }
+  }
 });

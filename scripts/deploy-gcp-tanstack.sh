@@ -7,6 +7,10 @@ echo "==================================="
 echo "Deploying TanStack to Google Cloud Run"
 echo "==================================="
 
+# Ensure six AI variants are copied into this app
+echo "Syncing AI variants into TanStack public/variants..."
+./scripts/sync-variants.sh
+
 # Configuration
 SERVICE_NAME="austin-resume-tanstack"
 REGION="us-central1"

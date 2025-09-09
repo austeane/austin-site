@@ -9,38 +9,120 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ResumeRouteImport } from './routes/resume'
+import { Route as EnablementRouteImport } from './routes/enablement'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WithIndexRouteImport } from './routes/with.index'
+import { Route as WithToolRouteImport } from './routes/with.$tool'
+import { Route as WithToolEnablementRouteImport } from './routes/with.$tool.enablement'
 
+const ResumeRoute = ResumeRouteImport.update({
+  id: '/resume',
+  path: '/resume',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnablementRoute = EnablementRouteImport.update({
+  id: '/enablement',
+  path: '/enablement',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WithIndexRoute = WithIndexRouteImport.update({
+  id: '/with/',
+  path: '/with/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WithToolRoute = WithToolRouteImport.update({
+  id: '/with/$tool',
+  path: '/with/$tool',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WithToolEnablementRoute = WithToolEnablementRouteImport.update({
+  id: '/enablement',
+  path: '/enablement',
+  getParentRoute: () => WithToolRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/enablement': typeof EnablementRoute
+  '/resume': typeof ResumeRoute
+  '/with/$tool': typeof WithToolRouteWithChildren
+  '/with': typeof WithIndexRoute
+  '/with/$tool/enablement': typeof WithToolEnablementRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/enablement': typeof EnablementRoute
+  '/resume': typeof ResumeRoute
+  '/with/$tool': typeof WithToolRouteWithChildren
+  '/with': typeof WithIndexRoute
+  '/with/$tool/enablement': typeof WithToolEnablementRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/enablement': typeof EnablementRoute
+  '/resume': typeof ResumeRoute
+  '/with/$tool': typeof WithToolRouteWithChildren
+  '/with/': typeof WithIndexRoute
+  '/with/$tool/enablement': typeof WithToolEnablementRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/enablement'
+    | '/resume'
+    | '/with/$tool'
+    | '/with'
+    | '/with/$tool/enablement'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/enablement'
+    | '/resume'
+    | '/with/$tool'
+    | '/with'
+    | '/with/$tool/enablement'
+  id:
+    | '__root__'
+    | '/'
+    | '/enablement'
+    | '/resume'
+    | '/with/$tool'
+    | '/with/'
+    | '/with/$tool/enablement'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  EnablementRoute: typeof EnablementRoute
+  ResumeRoute: typeof ResumeRoute
+  WithToolRoute: typeof WithToolRouteWithChildren
+  WithIndexRoute: typeof WithIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/resume': {
+      id: '/resume'
+      path: '/resume'
+      fullPath: '/resume'
+      preLoaderRoute: typeof ResumeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enablement': {
+      id: '/enablement'
+      path: '/enablement'
+      fullPath: '/enablement'
+      preLoaderRoute: typeof EnablementRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +130,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/with/': {
+      id: '/with/'
+      path: '/with'
+      fullPath: '/with'
+      preLoaderRoute: typeof WithIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/with/$tool': {
+      id: '/with/$tool'
+      path: '/with/$tool'
+      fullPath: '/with/$tool'
+      preLoaderRoute: typeof WithToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/with/$tool/enablement': {
+      id: '/with/$tool/enablement'
+      path: '/enablement'
+      fullPath: '/with/$tool/enablement'
+      preLoaderRoute: typeof WithToolEnablementRouteImport
+      parentRoute: typeof WithToolRoute
+    }
   }
 }
 
+interface WithToolRouteChildren {
+  WithToolEnablementRoute: typeof WithToolEnablementRoute
+}
+
+const WithToolRouteChildren: WithToolRouteChildren = {
+  WithToolEnablementRoute: WithToolEnablementRoute,
+}
+
+const WithToolRouteWithChildren = WithToolRoute._addFileChildren(
+  WithToolRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  EnablementRoute: EnablementRoute,
+  ResumeRoute: ResumeRoute,
+  WithToolRoute: WithToolRouteWithChildren,
+  WithIndexRoute: WithIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

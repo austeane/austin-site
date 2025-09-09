@@ -22,9 +22,10 @@ export const GET: RequestHandler = ({ request }) => {
       headers: {
         'ETag': etag,
         'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400',
+        // CORS must be present on 304 as well
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, If-None-Match'
+        'Access-Control-Allow-Headers': '*'
       }
     });
   }
@@ -32,22 +33,20 @@ export const GET: RequestHandler = ({ request }) => {
   return json(enablementData, {
     headers: {
       'ETag': etag,
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, If-None-Match',
       'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400',
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*'
     }
   });
 };
 
 export function OPTIONS() {
-  return new Response(null, {
+  return new Response(null, { 
     status: 200,
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, If-None-Match'
+      'Access-Control-Allow-Headers': '*'
     }
   });
 }

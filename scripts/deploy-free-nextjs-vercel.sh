@@ -12,6 +12,10 @@ echo "1. Install Vercel CLI: npm i -g vercel"
 echo "2. Login to Vercel: vercel login"
 echo ""
 
+# Ensure six AI variants are copied into this app
+echo "Syncing AI variants into Next.js public/variants..."
+./scripts/sync-variants.sh
+
 cd variants/nextjs-azure
 
 # Check if Vercel CLI is installed

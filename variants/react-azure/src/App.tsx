@@ -1,230 +1,230 @@
-import { useState, useEffect } from 'react';
+import { Routes, Route, Link, useParams, Navigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import Layout from './Layout';
 import './App.css';
 
-interface ResumeData {
-  name: string;
-  title: string;
-  location: string;
-  email: string;
-  linkedin: string;
-  github: string;
-  summary: string;
-  experience: Array<{
-    title: string;
-    company: string;
-    location: string;
-    period: string;
-    responsibilities: string[];
-  }>;
-  education: Array<{
-    degree: string;
-    school: string;
-    location: string;
-    year: string;
-  }>;
-  skills: {
-    [category: string]: string[];
+type Resume = {
+  basics: {
+    name: string;
+    label: string;
+    website?: string;
+    email?: string;
+    location?: { city?: string };
+    profiles?: { network: string; url: string }[];
+    summary?: string;
   };
-}
+  work: { name: string; position: string; startDate?: string; endDate?: string; summary?: string; highlights?: string[] }[];
+  projects?: { name: string; description?: string; url?: string; keywords?: string[] }[];
+  skills?: { name: string; keywords?: string[] }[];
+};
 
-// Transform the shared schema (basics/work/education/skills[]) to the shape this UI expects
-function transformSharedResume(shared: any): ResumeData {
-  const basics = shared?.basics ?? {};
-  const profiles: Array<any> = basics?.profiles ?? [];
-  const findProfile = (name: string) =>
-    profiles.find((p) => (p.network || '').toLowerCase().includes(name))?.url || '';
-
-  const experience = (shared?.work ?? []).map((w: any) => ({
-    title: w?.position || '',
-    company: w?.name || '',
-    location: w?.location || '',
-    period: [w?.startDate, w?.endDate || 'Present'].filter(Boolean).join(' - '),
-    responsibilities: Array.isArray(w?.highlights) ? w.highlights : [],
-  }));
-
-  const education = (shared?.education ?? []).map((e: any) => ({
-    degree: e?.studyType ? `${e.studyType}${e?.area ? ` in ${e.area}` : ''}` : (e?.area || ''),
-    school: e?.institution || '',
-    location: e?.location || '',
-    year: e?.endDate || '',
-  }));
-
-  const skills: Record<string, string[]> = {};
-  for (const s of shared?.skills ?? []) {
-    if (s?.name) skills[s.name] = Array.isArray(s?.keywords) ? s.keywords : [];
-  }
-
-  return {
-    name: basics?.name || '',
-    title: basics?.label || '',
-    location: basics?.location?.city || '',
-    email: basics?.email || '',
-    linkedin: findProfile('linkedin'),
-    github: findProfile('github'),
-    summary: basics?.summary || '',
-    experience,
-    education,
-    skills,
-  };
-}
-
-function App() {
-  const [resume, setResume] = useState<ResumeData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('experience');
+function MinimalVariant() {
+  const [data, setData] = useState<Resume | null>(null);
+  const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch from shared /data endpoint
-    // Set VITE_DATA_URL in production to your router domain
-    const dataUrl = import.meta.env.VITE_DATA_URL || '/data/resume.json';
-    
-    fetch(dataUrl)
-      .then(res => res.json())
-      .then(shared => {
-        setResume(transformSharedResume(shared));
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Failed to load resume:', err);
-        setLoading(false);
-      });
+    const url = import.meta.env.VITE_DATA_URL || '/data/resume.json';
+    fetch(url, { headers: { Accept: 'application/json' } })
+      .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(setData)
+      .catch((e) => setErr(e.message));
   }, []);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-      </div>
-    );
-  }
+  const basics = data?.basics;
+  const work = data?.work ?? [];
+  const projects = data?.projects ?? [];
+  const skills = data?.skills ?? [];
+  const contacts = useMemo(() => {
+    const items: { label: string; url: string | null }[] = [];
+    if (basics?.website) items.push({ label: 'Website', url: basics.website });
+    if (basics?.email) items.push({ label: basics.email, url: `mailto:${basics.email}` });
+    if (basics?.location?.city) items.push({ label: basics.location.city, url: null });
+    const gh = basics?.profiles?.find((p) => p.network?.toLowerCase() === 'github');
+    const li = basics?.profiles?.find((p) => p.network?.toLowerCase() === 'linkedin');
+    if (gh) items.push({ label: 'GitHub', url: gh.url });
+    if (li) items.push({ label: 'LinkedIn', url: li.url });
+    return items;
+  }, [basics]);
 
-  if (!resume) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-white">
-        <p>Failed to load resume data</p>
-      </div>
-    );
-  }
+  if (err) return <div style={{ padding: '2rem', maxWidth: 900, margin: '0 auto' }}><p>Failed to load resume: {err}</p></div>;
+  if (!data) return <div style={{ padding: '2rem', maxWidth: 900, margin: '0 auto' }}><p>Loading…</p></div>;
 
   return (
-    <div className="min-h-screen py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Glass-morphism card */}
-        <div className="backdrop-blur-lg bg-white/90 rounded-3xl shadow-2xl overflow-hidden">
-          
-          {/* Header */}
-          <header className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8">
-            <h1 className="text-5xl font-bold mb-2">{resume.name}</h1>
-            <h2 className="text-2xl mb-4 opacity-90">{resume.title}</h2>
-            <div className="flex flex-wrap gap-4 text-sm">
-              <span className="flex items-center gap-1">
-                📍 {resume.location}
-              </span>
-              <a href={`mailto:${resume.email}`} className="flex items-center gap-1 hover:underline">
-                ✉️ {resume.email}
-              </a>
-              <a href={resume.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:underline">
-                💼 LinkedIn
-              </a>
-              <a href={resume.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:underline">
-                🔗 GitHub
-              </a>
-            </div>
-          </header>
-
-          {/* Summary */}
-          <div className="p-8 border-b">
-            <h3 className="text-2xl font-bold mb-4 text-gray-800">Professional Summary</h3>
-            <p className="text-gray-600 leading-relaxed">{resume.summary}</p>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex border-b">
-            {['experience', 'education', 'skills'].map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-4 px-6 text-lg font-semibold capitalize transition-colors ${
-                  activeTab === tab 
-                    ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600' 
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                {tab}
-              </button>
+    <div style={{ padding: '1.25rem', maxWidth: 2000, margin: '0 auto' }}>
+      <section aria-labelledby="title">
+        <h1 id="title" style={{ fontSize: '2rem', lineHeight: 1.1, margin: '.25rem 0 .5rem 0' }}>
+          {basics?.name || 'Your Name'}
+        </h1>
+        <p style={{ margin: 0, color: '#666' }}>{basics?.label || 'AI Engineer · AI Enablement Specialist'}</p>
+        {!!contacts.length && (
+          <ul style={{ listStyle: 'none', padding: 0, margin: '.75rem 0 0 0', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            {contacts.map((c, i) => (
+              <li key={i}>
+                {c.url ? (
+                  <a href={c.url} target="_blank" rel="noopener noreferrer">{c.label}</a>
+                ) : (
+                  <span>{c.label}</span>
+                )}
+              </li>
             ))}
-          </div>
+          </ul>
+        )}
+      </section>
 
-          {/* Tab Content */}
-          <div className="p-8">
-            {/* Experience Tab */}
-            {activeTab === 'experience' && (
-              <div className="space-y-6">
-                {resume.experience.map((job, index) => (
-                  <div key={index} className="border-l-4 border-blue-500 pl-6 hover:border-purple-500 transition-colors">
-                    <h4 className="text-xl font-bold text-gray-800">{job.title}</h4>
-                    <div className="text-lg text-blue-600 font-medium">{job.company}</div>
-                    <div className="text-sm text-gray-500 mb-3">
-                      {job.period} | {job.location}
-                    </div>
-                    <ul className="space-y-2">
-                      {job.responsibilities.map((resp, i) => (
-                        <li key={i} className="text-gray-600 flex">
-                          <span className="text-blue-500 mr-2">▸</span>
-                          <span>{resp}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+      <hr style={{ margin: '1.25rem 0', border: 0, borderTop: '1px solid #eee' }} />
+
+      {basics?.summary && (
+        <section aria-labelledby="summary">
+          <h2 id="summary" style={{ fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '.5rem' }}>Summary</h2>
+          <p style={{ margin: 0, maxWidth: '70ch' }}>{basics.summary}</p>
+        </section>
+      )}
+
+      {basics?.summary && (<hr style={{ margin: '1.25rem 0', border: 0, borderTop: '1px solid #eee' }} />)}
+
+      {!!work.length && (
+        <section aria-labelledby="work">
+          <h2 id="work" style={{ fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '.5rem' }}>Experience</h2>
+          {work.map((job, i) => (
+            <article key={i} style={{ marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                <div>
+                  <strong>{job.position}</strong>{' @ '}{job.name}
+                </div>
+                <div style={{ color: '#666' }}>
+                  {job.startDate}{job.endDate ? ` – ${job.endDate}` : ' – Present'}
+                </div>
               </div>
-            )}
+              {job.summary && <p style={{ margin: '.25rem 0 0 0', maxWidth: '70ch' }}>{job.summary}</p>}
+              {!!job.highlights?.length && (
+                <ul style={{ margin: '.25rem 0 0 1rem' }}>
+                  {job.highlights.map((h, j) => (<li key={j}>{h}</li>))}
+                </ul>
+              )}
+            </article>
+          ))}
+        </section>
+      )}
 
-            {/* Education Tab */}
-            {activeTab === 'education' && (
-              <div className="space-y-6">
-                {resume.education.map((edu, index) => (
-                  <div key={index} className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
-                    <h4 className="text-xl font-bold text-gray-800">{edu.degree}</h4>
-                    <div className="text-lg text-blue-600 font-medium">{edu.school}</div>
-                    <div className="text-sm text-gray-500">
-                      {edu.year} | {edu.location}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+      {!!work.length && (<hr style={{ margin: '1.25rem 0', border: 0, borderTop: '1px solid #eee' }} />)}
 
-            {/* Skills Tab */}
-            {activeTab === 'skills' && (
-              <div className="space-y-6">
-                {Object.entries(resume.skills).map(([category, skills]) => (
-                  <div key={category}>
-                    <h4 className="text-lg font-bold text-gray-800 mb-3">{category}</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {skills.map((skill, i) => (
-                        <span 
-                          key={i} 
-                          className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-full text-sm font-medium hover:scale-105 transition-transform"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+      {!!projects.length && (
+        <section aria-labelledby="projects">
+          <h2 id="projects" style={{ fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '.5rem' }}>Projects</h2>
+          <ul style={{ listStyle: 'disc', margin: '.25rem 0 0 1rem' }}>
+            {projects.map((p, i) => (
+              <li key={i}>
+                <strong>{p.name}</strong>
+                {p.url && (
+                  <>
+                    {' '}— <a href={p.url} target="_blank" rel="noopener noreferrer">{p.url}</a>
+                  </>
+                )}
+                {p.description && (<div style={{ margin: '.25rem 0 0 0', maxWidth: '70ch' }}>{p.description}</div>)}
+                {!!p.keywords?.length && (
+                  <div style={{ color: '#666', fontSize: '.9rem', marginTop: '.25rem' }}>{p.keywords.join(' · ')}</div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
-          {/* Footer */}
-          <footer className="bg-gray-50 px-8 py-4 text-center text-sm text-gray-500">
-            <p>React (Vite) on Azure Static Web Apps | Multi-Framework Resume Platform</p>
-          </footer>
-        </div>
-      </div>
+      {!!projects.length && (<hr style={{ margin: '1.25rem 0', border: 0, borderTop: '1px solid #eee' }} />)}
+
+      {!!skills.length && (
+        <section aria-labelledby="skills">
+          <h2 id="skills" style={{ fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '.5rem' }}>Skills</h2>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexWrap: 'wrap', gap: '.5rem' }}>
+            {skills.map((s, i) => (
+              <li key={i} style={{ border: '1px solid #eee', padding: '.25rem .5rem', borderRadius: '999px' }}>
+                {s.name}{s.keywords?.length ? ` — ${s.keywords.join(', ')}` : ''}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }
 
-export default App;
+function MinimalEnablement() {
+  return (
+    <div style={{ padding: '2rem', maxWidth: 900, margin: '0 auto' }}>
+      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.5rem' }}>AI Enablement</h1>
+      <p style={{ color: '#666', marginBottom: '1rem' }}>
+        This deployment focuses on variant hosting. View the canonical enablement content on AWS/SST:
+        {' '}<a href="https://d2li8p8xclq49l.cloudfront.net/enablement" target="_blank" rel="noopener noreferrer">Enablement on AWS</a>.
+      </p>
+    </div>
+  );
+}
+
+function VariantView() {
+  const { tool } = useParams();
+  const src = `/azure/react/variants/${tool}/index.html`;
+  return (
+    <div style={{ height: "100%", display: "flex" }}>
+      <iframe
+        title={`AI Variant: ${tool}`}
+        src={src}
+        style={{ width: "100%", height: "100%", border: "0", background: "#fff" }}
+        sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+      />
+    </div>
+  );
+}
+
+function VariantEnablement() {
+  const { tool } = useParams();
+  const src = `/azure/react/variants/${tool}/enablement/index.html`;
+  return (
+    <div style={{ height: "100%", display: "flex" }}>
+      <iframe
+        title={`AI Enablement - ${tool}`}
+        src={src}
+        style={{ width: "100%", height: "100%", border: "0", background: "#fff" }}
+        sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+      />
+    </div>
+  );
+}
+
+function VariantIndex() {
+  const variants = [
+    { id: "claude-code", name: "Claude Code" },
+    { id: "gpt-5-pro", name: "GPT-5 Pro" },
+    { id: "gpt-5-thinking", name: "GPT-5 Thinking" },
+    { id: "lovable", name: "Lovable" },
+    { id: "bolt", name: "Bolt" },
+    { id: "firebase", name: "Firebase Studio" },
+  ];
+  return (
+    <main style={{ maxWidth: 960, margin: "2rem auto", padding: "0 1rem" }}>
+      <h1>AI Variants on React (SWA)</h1>
+      <p>Served from <code>/azure/react/variants/&lt;tool&gt;/index.html</code>.</p>
+      <ul>
+        {variants.map(v => (
+          <li key={v.id}><Link to={`/with/${v.id}`}>{v.name}</Link></li>
+        ))}
+      </ul>
+    </main>
+  );
+}
+
+export default function App() {
+  return (
+    <Layout>
+      <Routes>
+        {/* Canonical resume route */}
+        <Route path="/resume" element={<MinimalVariant />} />
+        {/* Redirect root to /resume to keep URL canonical */}
+        <Route path="/" element={<Navigate to="/resume" replace />} />
+        <Route path="/enablement" element={<MinimalEnablement />} />
+        <Route path="/with" element={<VariantIndex />} />
+        <Route path="/with/:tool" element={<VariantView />} />
+        <Route path="/with/:tool/enablement" element={<VariantEnablement />} />
+      </Routes>
+    </Layout>
+  );
+}

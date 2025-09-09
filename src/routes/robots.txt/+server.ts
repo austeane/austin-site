@@ -5,7 +5,8 @@ export const GET: RequestHandler = () => {
     'User-agent: *',
     'Allow: /',
     'Disallow: /with/',
-    'Sitemap: /sitemap.xml' // optional; remove if not generating one
+    'Disallow: /azure/',
+    'Disallow: /gcp/'
   ].join('\n');
 
   return new Response(body, {

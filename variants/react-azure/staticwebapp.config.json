@@ -3,6 +3,7 @@
     "rewrite": "/index.html",
     "exclude": [
       "/azure/react/assets/*",
+      "/azure/react/variants/*",
       "/assets/*",
       "/images/*.{png,jpg,gif}",
       "/css/*",
@@ -17,6 +18,11 @@
     ]
   },
   "routes": [
+    {
+      "route": "/azure/react",
+      "redirect": "/azure/react/resume",
+      "statusCode": 301
+    },
     {
       "route": "/azure/react/assets/*",
       "rewrite": "/assets/{*path}"

@@ -1,17 +1,29 @@
 import type { Handle } from '@sveltejs/kit';
 
+// Add a small set of security headers. Edge/CDN should also set these,
+// but adding here covers dynamic routes (`/data/*`, etc.).
 export const handle: Handle = async ({ event, resolve }) => {
-  // Add CORS headers for /data/* endpoints
-  if (event.url.pathname.startsWith('/data/')) {
-    const response = await resolve(event);
-    
-    // Set CORS headers to allow cross-origin access
-    response.headers.set('Access-Control-Allow-Origin', '*');
-    response.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', '*');
-    
-    return response;
+  const response = await resolve(event);
+
+  const csp = [
+    "default-src 'self'",
+    "img-src 'self' data: https:",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline'",
+    "frame-src 'self'",
+    "object-src 'none'",
+    "base-uri 'none'"
+  ].join('; ');
+
+  response.headers.set('Content-Security-Policy', csp);
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-Frame-Options', 'SAMEORIGIN');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  // Belt-and-suspenders: prevent indexing of deployment mirrors
+  if (/^\/(azure|gcp)\//.test(event.url.pathname)) {
+    response.headers.set('X-Robots-Tag', 'noindex');
   }
-  
-  return resolve(event);
+
+  return response;
 };

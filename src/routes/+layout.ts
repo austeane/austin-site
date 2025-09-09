@@ -5,5 +5,7 @@ export const load: LayoutLoad = ({ url }) => {
   const match = /^\/with\/([^/]+)/.exec(path);
   const currentProviderId = match ? match[1] : 'minimal';
   const isOnEnablement = path.includes('/enablement');
-  return { currentProviderId, isOnEnablement };
+  const isVariantRoute = path.startsWith('/with/');
+  const isExternalPath = path.startsWith('/azure/') || path.startsWith('/gcp/');
+  return { currentProviderId, isOnEnablement, isVariantRoute, isExternalPath };
 };

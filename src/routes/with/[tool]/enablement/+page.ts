@@ -1,6 +1,15 @@
 import { error } from '@sveltejs/kit';
 import { PROVIDERS } from '$lib/providers';
 
+/**
+ * SSR-only host page for clean '/with/<tool>/enablement' URLs.
+ * We intentionally do NOT prerender this page.
+ * The actual variant UI is static at /variants/<tool>/enablement/index.html and is iframed here.
+ * Reason: CloudFront/SST won't auto-map '/with/foo/enablement' → '/with/foo/enablement/index.html'.
+ * SSR guarantees direct access returns 200 without edge rewrites.
+ */
+export const prerender = false;
+
 export async function load({ params }) {
   const provider = PROVIDERS.find(p => p.id === params.tool);
   

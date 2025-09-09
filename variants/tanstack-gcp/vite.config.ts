@@ -14,4 +14,9 @@ export default defineConfig({
   build: {
     outDir: 'dist',
   },
+  server: {
+    proxy: {
+      '/data': 'http://localhost:5173',
+    },
+  },
 });
