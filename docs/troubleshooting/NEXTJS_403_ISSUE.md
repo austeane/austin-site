@@ -115,3 +115,4 @@ Update SST router to explicitly allow Vercel origins or add specific CORS rules 
 - [Vercel IP Addresses](https://vercel.com/docs/security/ip-addresses)
 - [CloudFront Access Control](https://docs.aws.amazon.com/cloudfront/latest/developerguide/access-control.html)
 - [Next.js Data Fetching](https://nextjs.org/docs/basic-features/data-fetching)
+

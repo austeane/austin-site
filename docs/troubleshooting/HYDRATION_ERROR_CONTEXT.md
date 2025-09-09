@@ -198,9 +198,4 @@ AWS_PROFILE=prod aws cloudfront create-invalidation \
 - `/variants/nextjs-azure/src/app/layout.tsx` - Layout component
 - `/variants/nextjs-azure/next.config.mjs` - Next.js configuration
 - `/sst.config.ts` - SST Router configuration
-- `/variants/react-azure/src/App.tsx` - React variant
-- `/variants/tanstack-gcp/src/routes/index.tsx` - TanStack variant
 
-## Summary
-
-The infrastructure appears correctly configured (curl tests pass), but React hydration fails in the browser. This points to a client-side JavaScript issue, likely related to how the app handles environment variables or computes values differently between server and client rendering.

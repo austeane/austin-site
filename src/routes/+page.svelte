@@ -15,6 +15,10 @@
       url: resume.basics.profiles.find((p:any)=>p.network?.toLowerCase()==='linkedin').url
     }
   ].filter(Boolean) as {label:string,url:string|null}[];
+
+  function downloadPDF() {
+    window.print();
+  }
 </script>
 
 <section aria-labelledby="title">
@@ -99,7 +103,11 @@
   <meta property="og:description" content="Data Engineer with 9+ years building Databricks/Snowflake/dbt platforms and AI enablement." />
   <meta property="og:url" content="https://www.austinwallace.ca/" />
   <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://www.austinwallace.ca/og-image.svg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://www.austinwallace.ca/og-image.svg" />
   
   <!-- JSON-LD Person Schema -->
   {@html `<script type="application/ld+json">${JSON.stringify({

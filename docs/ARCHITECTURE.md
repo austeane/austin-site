@@ -83,3 +83,4 @@ Two valid fixes:
 
 - **Pure SSG with a viewer‑request rewrite** (no SSR at all for `/with/*`): valid but adds edge code.
 - **Keep prerender + allow SSR fallback**: also works; current code chose "SSR‑only" for simpler behavior and docs.
+

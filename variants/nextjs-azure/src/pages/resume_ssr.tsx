@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import type { GetServerSidePropsContext } from 'next';
 
 type Resume = {
   basics: {
@@ -15,11 +16,12 @@ type Resume = {
   skills?: { name: string; keywords?: string[] }[];
 };
 
-export async function getServerSideProps() {
-  // Fetch through local API route to avoid WAF blocking
-  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-  const host = process.env.VERCEL_URL || 'localhost:3000';
-  const url = `${protocol}://${host}/azure/next/api/resume`;
+export async function getServerSideProps({ req }: GetServerSidePropsContext) {
+  // Use relative path through Next.js rewrite to avoid WAF blocking
+  // The rewrite in next.config.mjs maps /azure/next/data/* to the origin
+  const protocol = req.headers['x-forwarded-proto'] || 'https';
+  const host = req.headers.host || process.env.VERCEL_URL || 'localhost:3000';
+  const url = `${protocol}://${host}/azure/next/data/resume.json`;
   
   try {
     const res = await fetch(url, { 
@@ -49,11 +51,11 @@ export default function ResumeSSR({ data, error }: { data?: Resume; error?: stri
   const [clientError, setClientError] = useState<string | undefined>(error);
 
   useEffect(() => {
-    // Fallback: if SSR failed, fetch through our API proxy
+    // Fallback: if SSR failed, fetch through Next.js rewrite
     if (!clientData) {
       const tryFetch = async () => {
-        // Use local API route that proxies to avoid WAF
-        const r = await fetch('/azure/next/api/resume', { headers: { Accept: 'application/json' } });
+        // Use the rewrite path that maps to the origin's /data/resume.json
+        const r = await fetch('/azure/next/data/resume.json', { headers: { Accept: 'application/json' } });
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const json = (await r.json()) as Resume;
         setClientData(json);

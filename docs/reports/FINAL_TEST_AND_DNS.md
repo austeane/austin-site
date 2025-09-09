@@ -101,3 +101,4 @@ The multi-variant resume platform successfully demonstrates:
 ## Summary
 
 Your application is **100% functional** on CloudFront. The only remaining task is updating the DNS CNAME record to point to the correct CloudFront distribution. Once that's done, www.austinwallace.ca will serve your fully working multi-variant resume platform.
+

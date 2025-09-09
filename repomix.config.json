@@ -39,8 +39,8 @@
     "vite.config.ts",
     "README.md",
     "CLAUDE.md",
-    "ARCHITECTURE.md",
-    "NEXTJS_403_ISSUE.md"
+    "docs/ARCHITECTURE.md",
+    "docs/troubleshooting/NEXTJS_403_ISSUE.md"
   ],
   "exclude": [
     "node_modules",

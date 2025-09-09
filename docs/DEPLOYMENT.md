@@ -362,6 +362,7 @@ Use Netlify Dashboard → Deploys → Publish previous deploy
 ## Support
 
 For issues or questions:
-- Check [ARCHITECTURE.md](./ARCHITECTURE.md) for system overview
-- Review [CLAUDE.md](./CLAUDE.md) for AI assistant context
-- See [README.md](./README.md) for project setup
+- Check [Architecture Overview](./ARCHITECTURE.md) for system overview
+- Review [CLAUDE.md](../CLAUDE.md) for AI assistant context
+- See [README.md](../README.md) for project setup
+

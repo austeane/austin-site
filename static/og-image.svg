@@ -1,0 +1,28 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#ffffff"/>
+  <rect x="0" y="0" width="1200" height="10" fill="#111111"/>
+  
+  <text x="100" y="180" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="72" font-weight="bold" fill="#111111">
+    Austin Wallace
+  </text>
+  
+  <text x="100" y="250" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="36" fill="#666666">
+    Data Engineer
+  </text>
+  
+  <text x="100" y="320" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="24" fill="#666666">
+    Databricks · Snowflake · dbt · AI Enablement
+  </text>
+  
+  <text x="100" y="420" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="20" fill="#111111">
+    9+ years building platforms that move billions of rows
+  </text>
+  
+  <text x="100" y="460" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="20" fill="#111111">
+    Establishing best practices for responsible AI use
+  </text>
+  
+  <text x="100" y="560" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="18" fill="#666666">
+    www.austinwallace.ca
+  </text>
+</svg>
