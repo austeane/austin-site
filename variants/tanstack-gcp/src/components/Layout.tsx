@@ -27,7 +27,7 @@ const DEPLOYMENT_VARIANTS: Provider[] = [
     id: 'sveltekit-aws', 
     name: 'SvelteKit (AWS)', 
     isDeployment: true,
-    externalUrl: 'https://d2li8p8xclq49l.cloudfront.net',
+    externalUrl: 'https://www.austinwallace.ca',
     icon: '🚀', 
     color: '#ff3e00'
   },
@@ -35,7 +35,7 @@ const DEPLOYMENT_VARIANTS: Provider[] = [
     id: 'nextjs-vercel', 
     name: 'Next.js (Vercel)', 
     isDeployment: true,
-    externalUrl: 'https://d2li8p8xclq49l.cloudfront.net/azure/next',
+    externalUrl: 'https://www.austinwallace.ca/azure/next',
     icon: '▲', 
     color: '#000'
   },
@@ -43,7 +43,7 @@ const DEPLOYMENT_VARIANTS: Provider[] = [
     id: 'react-azure', 
     name: 'React (Azure)', 
     isDeployment: true,
-    externalUrl: 'https://d2li8p8xclq49l.cloudfront.net/azure/react',
+    externalUrl: 'https://www.austinwallace.ca/azure/react',
     icon: '⚛️', 
     color: '#0078d4'
   },
@@ -51,7 +51,7 @@ const DEPLOYMENT_VARIANTS: Provider[] = [
     id: 'tanstack-netlify', 
     name: 'TanStack (Netlify)', 
     isDeployment: true,
-    externalUrl: 'https://d2li8p8xclq49l.cloudfront.net/gcp/tanstack',
+    externalUrl: 'https://www.austinwallace.ca/gcp/tanstack',
     icon: '🔷', 
     color: '#00C7B7'
   },
