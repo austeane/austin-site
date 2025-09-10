@@ -140,12 +140,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 key={provider.id}
                 href={providerHref}
                 className={`sidebar-item ${isActive ? 'active' : ''} ${provider.comingSoon ? 'coming-soon' : ''}`}
-                aria-label={`${provider.name}${provider.comingSoon ? ' (coming soon)' : ''}${provider.isDeployment ? ' - opens in new tab' : ''}`}
+                aria-label={`${provider.name}${provider.comingSoon ? ' (coming soon)' : ''}`}
                 style={{ '--accent-color': provider.color || '#000' } as React.CSSProperties}
                 title={`${provider.name}${provider.comingSoon ? ' (coming soon)' : ''}${provider.isDeployment ? ' (external deployment)' : ''}`}
                 onClick={(e) => handleProviderClick(e, provider)}
-                target="_blank"
-                rel="noopener noreferrer"
               >
                 {provider.logo ? (
                   <img src={provider.logo} alt={provider.name} className="sidebar-logo" />
