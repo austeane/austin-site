@@ -381,12 +381,10 @@
         class="sidebar-item"
         class:active={currentProvider?.id === provider.id}
         class:coming-soon={provider.comingSoon}
-        aria-label="{provider.name}{provider.comingSoon ? ' (coming soon)' : ''}{provider.isDeployment ? ' - opens in new tab' : ''}"
+        aria-label="{provider.name}{provider.comingSoon ? ' (coming soon)' : ''}"
         style="--accent-color: {provider.color || '#000'}"
         title="{provider.name}{provider.comingSoon ? ' (coming soon)' : ''}{provider.isDeployment ? ' (external deployment)' : ''}"
         on:click={(e) => handleProviderClick(e, provider)}
-        target={provider.isDeployment ? '_blank' : null}
-        rel={provider.isDeployment ? 'noopener noreferrer' : null}
       >
         {#if provider.logo}
           <img src={provider.logo} alt={provider.name} class="sidebar-logo" />
