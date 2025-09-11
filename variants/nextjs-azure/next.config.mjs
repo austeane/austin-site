@@ -19,6 +19,17 @@ const nextConfig = {
       { source: '/', destination: '/resume', permanent: false },
     ];
   },
+  async headers() {
+    return [{
+      source: '/:path*',
+      headers: [
+        { key: 'X-Robots-Tag', value: 'noindex' },
+        { key: 'X-Content-Type-Options', value: 'nosniff' },
+        { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+        { key: 'Permissions-Policy', value: 'geolocation=(), microphone=(), camera=()' }
+      ]
+    }];
+  },
   ...(isVercel ? {} : { output: "standalone" }),
 };
 

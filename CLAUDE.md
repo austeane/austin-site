@@ -20,7 +20,20 @@ AWS_PROFILE=prod npx sst deploy --stage production
 
 # Unlock deployment if locked
 AWS_PROFILE=prod npx sst unlock --stage production
+
+# Deploy Next.js to Vercel (IMPORTANT: austin-site-seven.vercel.app)
+cd variants/nextjs-azure
+npx vercel --prod --yes
+# Then alias to the correct production URL:
+npx vercel alias set <deployment-url> austin-site-seven.vercel.app
 ```
+
+### IMPORTANT: Testing Requirements
+**Always verify deployments with MCP browser tools before declaring them fixed:**
+- Use `mcp__playwright__browser_navigate` to test URLs in a real browser
+- Use `mcp__playwright__browser_snapshot` to verify page content
+- Don't rely solely on curl/API tests - browser testing catches cache issues
+- If you see errors in browser but curl works, it's likely a caching issue
 
 ## Architecture
 
@@ -81,6 +94,16 @@ The Next.js variant uses an API proxy pattern to avoid 403 errors when Vercel se
 - Server-side: `getServerSideProps` fetches from local `/api/resume` route
 - Client-side: Fallback also uses `/api/resume` instead of direct external fetch
 - API route: Fetches from main site with friendly User-Agent header
+
+### Vercel Project Configuration
+**CRITICAL**: The Next.js app must be deployed to the URL that SST/CloudFront expects:
+- SST config points to: `austin-site-seven.vercel.app`
+- The project in `.vercel/project.json` might be `nextjs-azure` (wrong!)
+- After deploying, always alias to the correct URL:
+  ```bash
+  npx vercel alias set <deployment-url> austin-site-seven.vercel.app
+  ```
+- Verify the API routes work: `curl https://austin-site-seven.vercel.app/azure/next/api/resume`
 
 ### Debug routes (kept, noindex)
 - `/azure/next/test` — minimal hydration sanity check.
