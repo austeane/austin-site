@@ -31,6 +31,18 @@
       <div class="hero-text">
         <h1>Austin Wallace</h1>
         <p class="tagline">Data Engineer & AI Enablement Specialist</p>
+        <div class="social-links">
+          <a href="https://www.linkedin.com/in/austintwallace/" target="_blank" rel="noopener noreferrer" class="social-link linkedin" aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            </svg>
+          </a>
+          <a href="https://x.com/austeane" target="_blank" rel="noopener noreferrer" class="social-link x" aria-label="X (Twitter)">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+          </a>
+        </div>
         <p class="intro">
           Welcome to my portfolio experiment — the same resume content,
           styled by <strong>6 different AI agents</strong>, deployed across
@@ -155,7 +167,42 @@
   .tagline {
     font-size: 1.1rem;
     color: var(--muted);
-    margin: 0 0 1rem 0;
+    margin: 0 0 0.75rem 0;
+  }
+
+  .social-links {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    color: #fff;
+    transition: all 0.2s ease;
+  }
+
+  .social-link.linkedin {
+    background: #0A66C2;
+  }
+
+  .social-link.linkedin:hover {
+    background: #004182;
+    transform: translateY(-2px);
+  }
+
+  .social-link.x {
+    background: #000;
+  }
+
+  .social-link.x:hover {
+    background: #333;
+    transform: translateY(-2px);
   }
 
   .intro {
@@ -342,6 +389,10 @@
 
     .hero-text h1 {
       font-size: 2rem;
+    }
+
+    .social-links {
+      justify-content: center;
     }
 
     .intro {
