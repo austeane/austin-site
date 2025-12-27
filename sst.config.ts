@@ -37,19 +37,14 @@ export default $config({
     // An explicit route to site.url would forward to the site's CloudFront domain and trigger its 403 guard.
 
     // 4) External apps - actual deployed URLs with warnings
-    const AZURE_NEXT_ORIGIN = 
+    const AZURE_NEXT_ORIGIN =
       process.env.AZURE_NEXT_ORIGIN ?? "https://austin-site-seven.vercel.app";
-    const AZURE_REACT_ORIGIN = 
-      process.env.AZURE_REACT_ORIGIN ?? "https://gray-pebble-049c9b91e.1.azurestaticapps.net";
-    const GCP_TANSTACK_ORIGIN = 
+    const GCP_TANSTACK_ORIGIN =
       process.env.GCP_TANSTACK_ORIGIN ?? "https://austin-site.netlify.app";
-    
+
     // Warn when using defaults
     if (!process.env.AZURE_NEXT_ORIGIN) {
       console.warn("⚠️  Using default AZURE_NEXT_ORIGIN. Set env var to override.");
-    }
-    if (!process.env.AZURE_REACT_ORIGIN) {
-      console.warn("⚠️  Using default AZURE_REACT_ORIGIN. Set env var to override.");
     }
     if (!process.env.GCP_TANSTACK_ORIGIN) {
       console.warn("⚠️  Using default GCP_TANSTACK_ORIGIN. Set env var to override.");
@@ -57,13 +52,6 @@ export default $config({
 
     // Path prefixes - SST Router uses startsWith matching, no wildcards needed
     router.route("/azure/next", AZURE_NEXT_ORIGIN);
-    // React (Azure SWA): rewrite the prefixed path to root since SWA serves from root
-    router.route("/azure/react/assets", AZURE_REACT_ORIGIN, {
-      rewrite: { regex: "^/azure/react/assets/(.*)$", to: "/assets/$1" }
-    });
-    router.route("/azure/react", AZURE_REACT_ORIGIN, {
-      rewrite: { regex: "^/azure/react/(.*)$", to: "/$1" }
-    });
     router.route("/gcp/tanstack", GCP_TANSTACK_ORIGIN);
 
     // Optional: Add redirects for convenience (removed due to SST bug)
@@ -73,7 +61,6 @@ export default $config({
       sveltekit: site.url,      // SvelteKit origin (also root)
       variants: {
         azure_next: AZURE_NEXT_ORIGIN,
-        azure_react: AZURE_REACT_ORIGIN,
         gcp_tanstack: GCP_TANSTACK_ORIGIN,
       }
     };

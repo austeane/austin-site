@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { PROVIDERS } from '$lib/providers';
+import enablementData from '$lib/data/enablement.json';
 
 /**
  * SSR-only host page for clean '/with/<tool>/enablement' URLs.
@@ -12,13 +13,14 @@ export const prerender = false;
 
 export async function load({ params }) {
   const provider = PROVIDERS.find(p => p.id === params.tool);
-  
+
   if (!provider) {
     throw error(404, `Provider "${params.tool}" not found`);
   }
-  
+
   return {
     provider,
-    tool: params.tool
+    tool: params.tool,
+    enablement: enablementData
   };
 }

@@ -1,142 +1,351 @@
 <script lang="ts">
-  export let data: any;
-  const resume = data.resume;
+  import { PROVIDERS, DEPLOYMENT_VARIANTS } from '$lib/providers';
 
-  const contactLinks = [
-    resume.basics?.website && { label: 'Website', url: resume.basics.website },
-    resume.basics?.email && { label: resume.basics.email, url: `mailto:${resume.basics.email}` },
-    resume.basics?.location?.city && { label: resume.basics.location.city, url: null },
-    resume.basics?.profiles?.find((p:any)=>p.network?.toLowerCase()==='github') && {
-      label: 'GitHub',
-      url: resume.basics.profiles.find((p:any)=>p.network?.toLowerCase()==='github').url
+  const aiAgents = PROVIDERS.filter(p => p.id !== 'minimal');
+  const deploymentPlatforms = DEPLOYMENT_VARIANTS;
+
+  const projects = [
+    {
+      name: 'QDrill',
+      url: 'https://qdrill.app',
+      description: 'Complex practice planning app for my niche sport'
     },
-    resume.basics?.profiles?.find((p:any)=>p.network?.toLowerCase()==='linkedin') && {
-      label: 'LinkedIn',
-      url: resume.basics.profiles.find((p:any)=>p.network?.toLowerCase()==='linkedin').url
+    {
+      name: 'Quadball Canada',
+      url: 'https://quadballcanada.ca',
+      description: 'Official national governing body website'
     }
-  ].filter(Boolean) as {label:string,url:string|null}[];
-
-  function downloadPDF() {
-    window.print();
-  }
+  ];
 </script>
 
-<section aria-labelledby="title">
-  <h1 id="title" style="font-size:2rem;line-height:1.1;margin:.25rem 0 .5rem 0;">
-    {resume.basics?.name || 'Your Name'}
-  </h1>
-  <p style="margin:0;color:var(--muted);">{resume.basics?.label || 'AI Engineer · AI Enablement Specialist'}</p>
-  {#if contactLinks.length}
-    <ul style="list-style:none;padding:0;margin:.75rem 0 0 0;display:flex;gap:1rem;flex-wrap:wrap;">
-      {#each contactLinks as c}
-        <li>
-          {#if c.url}
-            <a href={c.url} target="_blank" rel="noopener noreferrer">{c.label}</a>
-          {:else}
-            <span>{c.label}</span>
-          {/if}
-        </li>
-      {/each}
-    </ul>
-  {/if}
-</section>
-
-<hr style="margin:1.25rem 0;border:0;border-top:1px solid var(--border);" />
-
-{#if resume.basics?.summary}
-  <section aria-labelledby="summary">
-    <h2 id="summary" style="font-size:1rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;">Summary</h2>
-    <p style="margin:0;max-width:70ch;">{resume.basics.summary}</p>
-  </section>
-
-  <hr style="margin:1.25rem 0;border:0;border-top:1px solid var(--border);" />
-{/if}
-
-{#if resume.work?.length}
-  <section aria-labelledby="work">
-    <h2 id="work" style="font-size:1rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;">Experience</h2>
-    {#each resume.work as job (job.name + job.position)}
-      <article style="margin-bottom:1rem;">
-        <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
-          <div>
-            <strong>{job.position}</strong>{' @ '}{job.name}
-          </div>
-          <div style="color:var(--muted);">
-            {job.startDate}{job.endDate ? ` – ${job.endDate}` : ' – Present'}
-          </div>
-        </div>
-        {#if job.summary}<p style="margin:.25rem 0 0 0;max-width:70ch;">{job.summary}</p>{/if}
-        {#if job.highlights?.length}
-          <ul style="margin:.25rem 0 0 1rem;">
-            {#each job.highlights as h}<li>{h}</li>{/each}
-          </ul>
-        {/if}
-      </article>
-    {/each}
-  </section>
-
-  <hr style="margin:1.25rem 0;border:0;border-top:1px solid var(--border);" />
-{/if}
-
-{#if resume.projects?.length}
-  <section aria-labelledby="projects">
-    <h2 id="projects" style="font-size:1rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;">Projects</h2>
-    <ul style="list-style:disc;margin:.25rem 0 0 1rem;">
-      {#each resume.projects as p}
-        <li>
-          <strong>{p.name}</strong>{p.url ? ' — ' : ''}{#if p.url}<a rel="noopener noreferrer" target="_blank" href={p.url}>{p.url}</a>{/if}
-          {#if p.description}<div style="margin:.25rem 0 0 0;max-width:70ch;">{p.description}</div>{/if}
-          {#if p.keywords?.length}<div style="color:var(--muted);font-size:.9rem;margin-top:.25rem;">{p.keywords.join(' · ')}</div>{/if}
-        </li>
-      {/each}
-    </ul>
-  </section>
-
-  <hr style="margin:1.25rem 0;border:0;border-top:1px solid var(--border);" />
-{/if}
-
 <svelte:head>
-  <title>Austin Wallace — Data Engineer (Databricks/Snowflake/dbt)</title>
-  <meta name="description" content="Data Engineer with 9+ years building Databricks/Snowflake/dbt platforms, AI enablement leader, and builder of reliable data pipelines." />
+  <title>Austin Wallace — Data Engineer & AI Enablement</title>
+  <meta name="description" content="Explore my resume designed by 6 different AI agents across 4 deployment platforms. Data Engineer and AI Enablement specialist." />
   <link rel="canonical" href="https://www.austinwallace.ca/" />
-  <meta property="og:title" content="Austin Wallace — Data Engineer" />
-  <meta property="og:description" content="Data Engineer with 9+ years building Databricks/Snowflake/dbt platforms and AI enablement." />
-  <meta property="og:url" content="https://www.austinwallace.ca/" />
-  <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.austinwallace.ca/og-image.svg" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:image" content="https://www.austinwallace.ca/og-image.svg" />
-  
-  <!-- JSON-LD Person Schema -->
-  {@html `<script type="application/ld+json">${JSON.stringify({
-    "@context": "https://schema.org",
-    "@type": "Person",
-    "name": resume.basics?.name || "Austin Wallace",
-    "jobTitle": resume.basics?.label || "Data Engineer",
-    "email": resume.basics?.email ? `mailto:${resume.basics.email}` : undefined,
-    "url": "https://www.austinwallace.ca/",
-    "sameAs": [
-      resume.basics?.profiles?.find((p:any) => p.network?.toLowerCase() === 'github')?.url,
-      resume.basics?.profiles?.find((p:any) => p.network?.toLowerCase() === 'linkedin')?.url
-    ].filter(Boolean),
-    "address": resume.basics?.location?.city ? {
-      "@type": "PostalAddress",
-      "addressLocality": resume.basics.location.city
-    } : undefined
-  })}</script>`}
 </svelte:head>
 
-{#if resume.skills?.length}
-  <section aria-labelledby="skills">
-    <h2 id="skills" style="font-size:1rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;">Skills</h2>
-    <ul style="list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:.5rem;">
-      {#each resume.skills as s}
-        <li style="border:1px solid var(--border);padding:.25rem .5rem;border-radius:999px;">
-          {s.name}{s.keywords?.length ? ` — ${s.keywords.join(', ')}` : ''}
-        </li>
-      {/each}
-    </ul>
+<div class="home">
+  <section class="hero">
+    <div class="hero-content">
+      <img src="/images/austin-profile.jpg" alt="Austin Wallace" class="profile-photo" />
+      <div class="hero-text">
+        <h1>Austin Wallace</h1>
+        <p class="tagline">Data Engineer & AI Enablement Specialist</p>
+        <p class="intro">
+          Welcome to my portfolio experiment — the same resume content,
+          styled by <strong>6 different AI agents</strong>, deployed across
+          <strong>4 cloud platforms</strong>.
+        </p>
+      </div>
+    </div>
   </section>
-{/if}
+
+  <section class="resume-variants">
+    <h2>Two Resume Variants</h2>
+    <p class="section-intro">Choose a perspective to explore my experience:</p>
+    <div class="variant-cards">
+      <a href="/with/claude-code" class="variant-card">
+        <span class="variant-icon">📊</span>
+        <h3>Data Engineer</h3>
+        <p>9+ years building data platforms with Databricks, Snowflake, and dbt</p>
+      </a>
+      <a href="/with/claude-code/enablement" class="variant-card">
+        <span class="variant-icon">🤖</span>
+        <h3>AI Enablement</h3>
+        <p>Helping teams adopt AI tools and workflows for accelerated development</p>
+      </a>
+    </div>
+  </section>
+
+  <section class="ai-agents">
+    <h2>6 AI Agents</h2>
+    <p class="section-intro">Each agent designed the same resume content with their unique approach:</p>
+    <div class="agent-grid">
+      {#each aiAgents as agent}
+        <a href="/with/{agent.id}" class="agent-card" style="--agent-color: {agent.color}">
+          {#if agent.logo}
+            <img src={agent.logo} alt={agent.name} class="agent-logo" />
+          {:else}
+            <span class="agent-icon">{agent.icon}</span>
+          {/if}
+          <span class="agent-name">{agent.name}</span>
+        </a>
+      {/each}
+    </div>
+  </section>
+
+  <section class="platforms">
+    <h2>4 Deployment Platforms</h2>
+    <p class="section-intro">The same app deployed across different cloud providers and frameworks:</p>
+    <div class="platform-grid">
+      {#each deploymentPlatforms as platform}
+        <a href={platform.externalUrl} class="platform-card" style="--platform-color: {platform.color}" target="_blank" rel="noopener noreferrer">
+          {#if platform.logo}
+            <img src={platform.logo} alt={platform.name} class="platform-logo" />
+          {:else}
+            <span class="platform-icon">{platform.icon}</span>
+          {/if}
+          <span class="platform-name">{platform.name}</span>
+        </a>
+      {/each}
+    </div>
+  </section>
+
+  <section class="projects">
+    <h2>Side Projects</h2>
+    <p class="section-intro">Other things I've built with AI:</p>
+    <div class="project-grid">
+      {#each projects as project}
+        <a href={project.url} class="project-card" target="_blank" rel="noopener noreferrer">
+          <h3>{project.name}</h3>
+          <p>{project.description}</p>
+          <span class="project-link">{project.url.replace('https://', '')} →</span>
+        </a>
+      {/each}
+    </div>
+  </section>
+</div>
+
+<style>
+  .home {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  section {
+    margin-bottom: 3rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+
+  .section-intro {
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+
+  /* Hero */
+  .hero {
+    margin-bottom: 3rem;
+  }
+
+  .hero-content {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  .profile-photo {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--border);
+  }
+
+  .hero-text h1 {
+    font-size: 2.5rem;
+    margin: 0 0 0.25rem 0;
+    font-weight: 700;
+  }
+
+  .tagline {
+    font-size: 1.1rem;
+    color: var(--muted);
+    margin: 0 0 1rem 0;
+  }
+
+  .intro {
+    max-width: 500px;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* Resume Variants */
+  .variant-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+
+  .variant-card {
+    display: block;
+    padding: 1.5rem;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+  }
+
+  .variant-card:hover {
+    border-color: #333;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+  }
+
+  .variant-icon {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  .variant-card h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.25rem;
+  }
+
+  .variant-card p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  /* AI Agents */
+  .agent-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+  }
+
+  .agent-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.25rem 1rem;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+  }
+
+  .agent-card:hover {
+    border-color: var(--agent-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+  }
+
+  .agent-logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    margin-bottom: 0.5rem;
+  }
+
+  .agent-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .agent-name {
+    font-size: 0.85rem;
+    text-align: center;
+    font-weight: 500;
+  }
+
+  /* Platforms */
+  .platform-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+  }
+
+  .platform-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.25rem 1rem;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+  }
+
+  .platform-card:hover {
+    border-color: var(--platform-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+  }
+
+  .platform-logo {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    margin-bottom: 0.5rem;
+  }
+
+  .platform-icon {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .platform-name {
+    font-size: 0.85rem;
+    text-align: center;
+    font-weight: 500;
+  }
+
+  /* Projects */
+  .project-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+
+  .project-card {
+    display: block;
+    padding: 1.5rem;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+  }
+
+  .project-card:hover {
+    border-color: #333;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+  }
+
+  .project-card h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+  }
+
+  .project-card p {
+    margin: 0 0 0.75rem 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .project-link {
+    font-size: 0.85rem;
+    color: #0066cc;
+    font-weight: 500;
+  }
+
+  @media (max-width: 600px) {
+    .hero-content {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .hero-text h1 {
+      font-size: 2rem;
+    }
+
+    .intro {
+      text-align: center;
+    }
+  }
+</style>

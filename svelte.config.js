@@ -1,4 +1,5 @@
 import adapter from 'svelte-kit-sst';
+import { mdsvex } from 'mdsvex';
 
 // Known AI variant IDs (keep in sync with src/lib/providers.ts; exclude 'minimal')
 const variantIds = [
@@ -12,6 +13,12 @@ const variantIds = [
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
+  extensions: ['.svelte', '.md'],
+  preprocess: [
+    mdsvex({
+      extensions: ['.md']
+    })
+  ],
   kit: {
     adapter: adapter(),
     prerender: { 

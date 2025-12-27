@@ -35,10 +35,10 @@ export const DEPLOYMENT_VARIANTS: Provider[] = [
     color: '#FF9900',
     noindex: false
   },
-  { 
-    id: 'nextjs-vercel', 
-    name: 'Next.js (Vercel)', 
-    path: '/azure/next', 
+  {
+    id: 'nextjs-vercel',
+    name: 'Next.js (Vercel)',
+    path: '/azure/next',
     isDeployment: true,
     externalUrl: 'https://www.austinwallace.ca/azure/next',
     icon: '▲',
@@ -46,18 +46,7 @@ export const DEPLOYMENT_VARIANTS: Provider[] = [
     color: '#000',
     noindex: true
   },
-  { 
-    id: 'react-azure', 
-    name: 'React (Azure)', 
-    path: '/azure/react', 
-    isDeployment: true,
-    externalUrl: 'https://www.austinwallace.ca/azure/react',
-    icon: '⚛️',
-    logo: '/logos/azure.svg',
-    color: '#0078d4',
-    noindex: true
-  },
-  { 
+  {
     id: 'tanstack-netlify', 
     name: 'TanStack (Netlify)', 
     path: '/gcp/tanstack', 

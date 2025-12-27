@@ -1,5 +1,6 @@
 import type { PageLoad } from './$types';
 import { PROVIDERS } from '$lib/providers';
+import resumeData from '$lib/data/resume.json';
 
 /**
  * SSR-only host page for clean '/with/<tool>' URLs.
@@ -14,6 +15,7 @@ export const load: PageLoad = async ({ params }) => {
   const provider = PROVIDERS.find((p) => p.id === params.tool);
   return {
     provider,
-    providers: PROVIDERS
+    providers: PROVIDERS,
+    resume: resumeData
   };
 };

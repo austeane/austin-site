@@ -55,7 +55,7 @@
   let showDeploymentVariants = false; // default; will be set by route below
   let userToggled = false;
 
-  $: ({ currentProviderId, isOnEnablement, isVariantRoute } = data);
+  $: ({ currentProviderId, isOnHome, isOnEnablement, isOnBlog, isVariantRoute } = data);
   $: activeProviders = showDeploymentVariants ? DEPLOYMENT_VARIANTS : PROVIDERS;
   $: currentProvider = [...PROVIDERS, ...DEPLOYMENT_VARIANTS].find(p => p.id === currentProviderId) ?? PROVIDERS[0];
 
@@ -67,8 +67,8 @@
 
   $: getProviderPath = (targetPage) => {
     return targetPage === 'resume'
-      ? (currentProviderId === 'minimal' ? '/' : `/with/${currentProviderId}`)
-      : (currentProviderId === 'minimal' ? '/enablement' : `/with/${currentProviderId}/enablement`);
+      ? `/with/${currentProviderId || 'minimal'}`
+      : `/with/${currentProviderId || 'minimal'}/enablement`;
   }
 
   function handleProviderClick(e, provider) {
@@ -371,11 +371,9 @@
               // All deployment variants now use their app routes, not static HTML
               : `${provider.externalUrl}/with/${currentProviderId}${isOnEnablement ? '/enablement' : ''}`
           )
-        : provider.comingSoon 
-          ? '#' 
-          : provider.id === 'minimal' 
-            ? (isOnEnablement ? '/enablement' : '/')
-            : (isOnEnablement ? `/with/${provider.id}/enablement` : `/with/${provider.id}`)}
+        : provider.comingSoon
+          ? '#'
+          : (isOnEnablement ? `/with/${provider.id}/enablement` : `/with/${provider.id}`)}
       <a 
         href={providerHref}
         class="sidebar-item"
@@ -410,8 +408,10 @@
           Austin Wallace — Data Engineer
         </a>
         <nav style="display: flex; gap: 1rem;">
-          <a href={getProviderPath('resume')} class:active-page={!isOnEnablement} aria-current={!isOnEnablement ? 'page' : undefined}>Resume</a>
+          <a href="/" class:active-page={isOnHome} aria-current={isOnHome ? 'page' : undefined}>Home</a>
+          <a href={getProviderPath('resume')} class:active-page={!isOnHome && !isOnEnablement && !isOnBlog} aria-current={!isOnHome && !isOnEnablement && !isOnBlog ? 'page' : undefined}>Resume</a>
           <a href={getProviderPath('enablement')} class:active-page={isOnEnablement} aria-current={isOnEnablement ? 'page' : undefined}>AI Enablement</a>
+          <a href="/blog" class:active-page={isOnBlog} aria-current={isOnBlog ? 'page' : undefined}>Blog</a>
         </nav>
         <div style="display:flex; gap:8px; align-items:center;">
           {#if currentProvider}
