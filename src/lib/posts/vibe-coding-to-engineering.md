@@ -1,7 +1,7 @@
 ---
 title: 'Vibe Coding to Engineering: A Spectrum'
 date: '2025-12-28'
-description: What is the optimal vibe?
+description: What is the optimal vibe? 
 image: /images/grokking-modular-addition.jpg
 imageAlt: Chart showing grokking in modular addition - train loss drops immediately while test loss stays high for thousands of epochs before suddenly collapsing
 ---
@@ -39,8 +39,8 @@ This sweet spot can change task to task on a given project, and these apply both
 |-------|-------------|-------------|-----------|
 | Vibe coding | When you truly never once look at the code, have no idea what the agent is doing, may know the coding language but not the libraries used | Building a toy one-off, something that would be shocking for a modern agent to screw up, something you care zero+ℏ about | 1% |
 | Vibe engineering | When you aren't reading the code, but you are putting a lot of effort into prompting, giving the agent tools to verify, architecting | Things you care about but not enough to actually read the code for, or where you don't know the language it's being written in | 45% |
-| AI-assisted engineering | When you are writing at least some of the code, and hand reviewing at least the most important parts of the actual code, and certainly all architecture | When you really care about getting it right and want to maximize the success using all of your effort and the AI's effort | 45% |
-| Human-driven development | When the extent of the AI's involvement is AI tab-complete, never writing code off a prompt | When you want to code | 1% |
+| Agentic engineering | When you are writing at least some of the code, and hand reviewing at least the most important parts of the actual code, and certainly all architecture | When you really care about getting it right, when there is user data ingolved, when you want want to maximize the s   uccess using all of your effort and the AI's effort | 45% |
+| Human-driven development | When the extent of the AI's involvement is AI tab-complete, never writing code off a prompt | When you want to code, when you really don't trust AI in a domain | 1% |
 | Hand coding | Everything before 2022 | When you are a domain expert and anything less than perfect is unacceptable and time does not matter, when you need to prove to yourself that you still got it, interviews | 8% |
 
 ---
@@ -56,7 +56,7 @@ For me, to grok (lower case g) something is to be able to hold it in your mind a
 - **Tools:** Do you know the languages and libraries being used, why they are being used, what they are and are not suited to?
 - **Code:** Do you understand the design patterns being used? Could you walk someone through the codebase, file by file, and explain the decisions in each?
 
-What's great about all of these is that a dialogue with the AI about each, "help me grok x", is often helpful for getting a deeper understanding.
+What's great about all of these is that a dialogue with the AI about each, "help me grok x", is often helpful for getting a deeper understanding. 
 
 The above is in descending order of importance, and also the path you should follow to (re-)grok a system. If you don't grok your own project at a goal level, you aren't even lost, as the concept of being lost requires a concept of what being found means. I've been there, and it sucks to work so hard on a problem and solve it to realize that what you did is in fact a non-sequitur. If you know the goal, you can vibe code without grokking architecture, but to build something actually good it's essential to be able to reason about the tradeoffs inherent in the decisions already made. With just those two, you can build genuinely great works, but grokking your tools and code will make the hardest parts so much easier that it's worth doing for the things you really care about.
 
