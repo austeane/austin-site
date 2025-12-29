@@ -13,6 +13,30 @@ npm run check        # Type-check Svelte components
 npm run validate:variants  # Validate all HTML variants
 ```
 
+### Analytics
+```bash
+# View site analytics (last 7 days by default)
+AWS_PROFILE=prod npm run analytics
+
+# View blog-only analytics
+AWS_PROFILE=prod npm run analytics:blog
+
+# Custom options
+AWS_PROFILE=prod npx tsx scripts/analytics.ts --days 30          # Last 30 days
+AWS_PROFILE=prod npx tsx scripts/analytics.ts --blog-only        # Blog posts only
+AWS_PROFILE=prod npx tsx scripts/analytics.ts --bucket BUCKET    # Specify bucket
+```
+
+The analytics script pulls CloudFront access logs from S3 and displays:
+- Total page views and unique visitors
+- Top pages and blog posts
+- Referrer sources
+- Browser breakdown
+- Daily traffic trends
+- Geographic distribution (edge locations)
+
+**Note**: CloudFront logs have a 1-2 hour delay before appearing in S3.
+
 ### Deployment
 ```bash
 # Deploy to production (requires AWS credentials)
@@ -161,7 +185,7 @@ npx repomix@latest --token-count-encoding cl100k_base
 # Or with specific options
 npx repomix@latest \
   --token-count-encoding cl100k_base \
-  --output repomix-60k.md \
+  --output repomix-60k.md 
   --style markdown
 ```
 

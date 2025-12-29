@@ -1,6 +1,6 @@
 ---
 title: Using Repomix Effectively
-date: '2025-01-15'
+date: '2025-12-27'
 description: Repomix's role in optimizing workflows to solve SWE problems with AI
 image: /images/diamond-miner.jpg
 imageAlt: A miner giving up just before reaching diamonds, while another persists and finds them
@@ -14,7 +14,7 @@ This first post is about an overall workflow that is made much better by a speci
 ## Terms
 
 - **CLI agents**: e.g. GPT-5.2 Codex (xhigh) in Codex and Claude 4.5 Opus in Claude Code.
-- **One-shot models**: e.g. GPT-5.2 Pro in ChatGPT and Gemini Deep Think in the Gemini app.
+- **One Shot models**: e.g. GPT-5.2 Pro in ChatGPT and Gemini Deep Think in the Gemini app.
 - **Repomix**: An open source [tool](https://github.com/yamadashy/repomix) for packing arbitrary files from your repository into a single pasteable bundle (XML/Markdown) for another LLM. Repoprompt also works for this, especially after their [recent CLI release](https://docs.repoprompt.com/cli/getting-started).
 
 ## When to use what
@@ -39,7 +39,7 @@ I use CLI to isolate and define the problem, writing it to a markdown file. I of
 
 ### 2. Generate Context
 
-I then ask a CLI agent (usually Claude Code) to create a ~55k-token repomix (roughly GPT-5.2 Pro's context window). It knows to use the skill, it includes a security check, and I sanity check the output before pasting it into the one-shot model.
+I then ask a CLI agent (usually Claude Code) to create a ~55k-token repomix (roughly GPT-5.2 Pro's context window). It knows to use the skill, repomix includes built-in a security check, and I sanity check the output before pasting it into the One Shot model.
 
 ### 3. One-shot the core insight
 
@@ -63,7 +63,7 @@ This is where I think hardest: Does this approach fit my vision, or is it a work
 Recently I've been working on a major project (building an enterprise-level league and event management SaaS). I had to implement a major refactor and set of features across a large codebase. I'm going to give my specific workflow here as an extreme example of the Large Task workflow.
 Below, CC always means Claude Code with Opus 4.5 and Codex always means 5.2-Codex-xhigh.
 
-This is not a prescriptive workflow, just a specific end-to-end example of what was best for me in this situation, from problem discovery through to deployment. 
+This is not a prescriptive workflow, this is a complex end-to-end example of what was best for me in this situation, from problem discovery through to deployment. 
 
 0. First attempt at implementation (which I won't cover here).
 1. Extremely detailed [review of implementation](https://github.com/soleilheaney/solstice/blob/21eee9c1d888f3288c594dcd3602a85ac590848c/docs/sin-rfp/route-tree-implementation-review.md) by 5.2 XHigh.
@@ -79,12 +79,4 @@ This is not a prescriptive workflow, just a specific end-to-end example of what 
 11. Once all streams are done, I get both Codex and CC to do final reviews that everything is complete, and I commit, deploy, and push. Also, I have a pre-commit hook that blocks commits unless type checking, linting, and tests all pass.
 
 ## Takeaway
-The above can often be overkill, but they raise the complexity ceiling of what can be accomplished with AI assisted engineering, and I believe this workflow should continue to scale with model intelligence at least in the medium term.
-
-## Sidenote: Meme bounty 
-
-I haven't used AI generation much, and both ChatGPT Images and Nano Banana Pro failed hilariously at generating the exact "digging for diamonds" meme I wanted. Open bounty: I will pay the first person to create the proper version of this meme: $5 if AI generated, $50 if done manually by a digital artist. Please email austinwallacetech@gmail.com with your submission; if this passage is still in my blog post, the bounty is likely still open.
-
-![My rough sketch](/images/meme-rough-sketch.png)
-
-![AI's best attempt](/images/meme-ai-attempt.png)
+The above workflow can often be overkill, but it raises the complexity ceiling of what can be accomplished with AI assisted engineering, and I believe this workflow should continue to scale with model intelligence at least in the medium term.

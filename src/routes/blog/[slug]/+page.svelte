@@ -8,7 +8,10 @@
   };
 
   function formatDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('en-US', {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -25,12 +28,16 @@
   <header class="post-header">
     <a href="/blog" class="back-link">&larr; Back to blog</a>
     <h1>{data.metadata.title}</h1>
-    <time>{formatDate(data.metadata.date)}</time>
+    <time datetime={data.metadata.date}>{formatDate(data.metadata.date)}</time>
   </header>
 
   {#if data.metadata.image}
     <figure class="hero-image">
-      <img src={data.metadata.image} alt={data.metadata.imageAlt || data.metadata.title} />
+      <img
+        src={data.metadata.image}
+        alt={data.metadata.imageAlt || data.metadata.title}
+        decoding="async"
+      />
     </figure>
   {/if}
 
@@ -41,18 +48,21 @@
 
 <style>
   .blog-post {
-    max-width: 70ch;
+    max-width: min(1100px, 100%);
     margin: 0 auto;
   }
 
   .post-header {
     margin-bottom: 1.5rem;
+    max-width: 85ch;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .post-header h1 {
-    font-size: 2rem;
-    line-height: 1.2;
-    margin: 0.5rem 0;
+    font-size: clamp(2rem, 3vw, 2.75rem);
+    line-height: 1.15;
+    margin: 0.5rem 0 0.25rem 0;
   }
 
   .post-header time {
@@ -84,6 +94,19 @@
     display: block;
   }
 
+  .prose {
+    font-size: 1.05rem;
+    max-width: 85ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  @media (min-width: 768px) {
+    .prose {
+      font-size: 1.125rem;
+    }
+  }
+
   .prose :global(h1),
   .prose :global(h2),
   .prose :global(h3),
@@ -91,6 +114,7 @@
     margin-top: 2rem;
     margin-bottom: 0.75rem;
     line-height: 1.3;
+    scroll-margin-top: 2rem;
   }
 
   .prose :global(h2) {
@@ -120,10 +144,13 @@
   }
 
   .prose :global(pre) {
-    background: var(--bg-code, #1e1e1e);
-    padding: 1rem;
-    border-radius: 8px;
+    background: var(--bg-code, #0b1021);
+    color: var(--fg-code, #e6edf3);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    padding: 1rem 1.25rem;
+    border-radius: 10px;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     margin: 1.5rem 0;
   }
 
@@ -132,10 +159,18 @@
     font-size: 0.9em;
   }
 
-  .prose :global(p code) {
-    background: var(--bg-code, #1e1e1e);
-    padding: 0.2em 0.4em;
-    border-radius: 4px;
+  .prose :global(pre code) {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+  }
+
+  .prose :global(:not(pre) > code) {
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--border);
+    padding: 0.15em 0.35em;
+    border-radius: 6px;
+    overflow-wrap: anywhere;
   }
 
   .prose :global(blockquote) {
@@ -151,6 +186,7 @@
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 2px;
+    overflow-wrap: anywhere;
   }
 
   .prose :global(a:hover) {
@@ -163,11 +199,35 @@
     border-top: 1px solid var(--border);
   }
 
+  .prose :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+    margin: 1.5rem 0;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .prose :global(th),
+  .prose :global(td) {
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .prose :global(th) {
+    background: rgba(0, 0, 0, 0.02);
+    font-weight: 600;
+  }
+
   .prose :global(img) {
     max-width: 100%;
     height: auto;
     border-radius: 8px;
-    margin: 1.5rem 0;
+    margin: 1.5rem auto;
+    display: block;
   }
 
   .prose :global(strong) {

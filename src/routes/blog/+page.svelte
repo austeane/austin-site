@@ -4,7 +4,10 @@
   export let data: { posts: Post[] };
 
   function formatDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('en-US', {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -33,12 +36,17 @@
             <article class="post-card" class:has-image={post.metadata.image}>
               {#if post.metadata.image}
                 <div class="post-image">
-                  <img src={post.metadata.image} alt={post.metadata.imageAlt || post.metadata.title} />
+                  <img
+                    src={post.metadata.image}
+                    alt={post.metadata.imageAlt || post.metadata.title}
+                    loading="lazy"
+                    decoding="async"
+                  />
                 </div>
               {/if}
               <div class="post-content">
                 <h2>{post.metadata.title}</h2>
-                <time>{formatDate(post.metadata.date)}</time>
+                <time datetime={post.metadata.date}>{formatDate(post.metadata.date)}</time>
                 {#if post.metadata.description}
                   <p>{post.metadata.description}</p>
                 {/if}
@@ -53,7 +61,7 @@
 
 <style>
   .blog-listing {
-    max-width: 70ch;
+    max-width: min(1100px, 100%);
     margin: 0 auto;
   }
 

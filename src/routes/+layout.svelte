@@ -236,6 +236,8 @@
   .main-content {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior-x: contain;
     display: flex;
     flex-direction: column;
   }
@@ -302,9 +304,13 @@
     .sidebar {
       width: 60px;
     }
-    
+
     .sidebar-label {
       display: none;
+    }
+
+    .main-content {
+      touch-action: pan-y;
     }
   }
   .backend-pill {
@@ -340,7 +346,7 @@
   {#if loading}
     <div class="progress" style="--progress-color:{backend.includes('Vercel') ? '#000' : backend.includes('Azure') ? '#0078D4' : backend.includes('Netlify') ? '#00AD9F' : '#FF9900'}"></div>
   {/if}
-  {#if !isShellHidden}
+  {#if !isShellHidden && !isOnBlog}
   <nav class="sidebar" aria-label="Variants">
     <!-- Toggle between AI and Deployment variants -->
     <button 
