@@ -1,5 +1,4 @@
 [build]
-  base = "variants/tanstack-gcp"
   command = "npm run build"
   publish = "dist"
 
