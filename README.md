@@ -3,7 +3,7 @@
 Showcases one set of resume content rendered through multiple AI‑styled UIs, all served under a single domain. The app demonstrates multi‑cloud routing behind CloudFront, strict iframe isolation, and a centralized data layer.
 
 ## What This Demonstrates
-- Single‑domain, multi‑cloud routing via SST/CloudFront to Vercel, Azure SWA, and Netlify.
+- Single‑domain, multi‑cloud routing via SST/CloudFront to Vercel and Netlify.
 - Static AI variants in sandboxed iframes with provider‑aware navigation.
 - Centralized JSON data endpoints with ETag for consistency and caching.
 - Clean URLs for variant pages using lightweight SSR host routes.
@@ -11,14 +11,13 @@ Showcases one set of resume content rendered through multiple AI‑styled UIs, a
 ## Live Examples
 - Main site: https://www.austinwallace.ca
 - Data: https://www.austinwallace.ca/data/resume.json
-- Deploy variants: `/azure/next`, `/azure/react`, `/gcp/tanstack`
+- Deploy variants: `/vercel/next`, `/gcp/tanstack`
 
 ## Architecture At A Glance
 - SvelteKit at the root handles the canonical pages (`/`, `/enablement`) and SSR‑only variant hosts (`/with/<tool>`).
 - Each AI variant is a static bundle served from `/variants/<tool>/...` and iframed for isolation.
 - SST Router (CloudFront) prefixes route to external framework apps:
-  - `/azure/next` → Next.js (Vercel)
-  - `/azure/react` → React (Azure SWA)
+  - `/vercel/next` → Next.js (Vercel)
   - `/gcp/tanstack` → TanStack (Netlify)
 
 ## Why It’s Interesting

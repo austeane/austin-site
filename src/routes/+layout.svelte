@@ -6,14 +6,13 @@
   // forwards to external apps. Falls back to AWS/SST for the core site.
   function detectBackend(pathname) {
     if (!pathname) return 'AWS';
-    if (pathname.startsWith('/azure/next')) return 'Vercel (Next.js)';
-    if (pathname.startsWith('/azure/react')) return 'Azure SWA (React)';
+    if (pathname.startsWith('/vercel/next')) return 'Vercel (Next.js)';
     if (pathname.startsWith('/gcp/tanstack')) return 'Netlify (TanStack)';
     return 'AWS (SST)';
   }
 
   let backend = detectBackend(typeof window !== 'undefined' ? window.location.pathname : '');
-  let isExternalPath = data?.isExternalPath ?? (typeof window !== 'undefined' ? /^(?:\/azure\/|\/gcp\/)/.test(window.location.pathname) : false);
+  let isExternalPath = data?.isExternalPath ?? (typeof window !== 'undefined' ? /^(?:\/vercel\/|\/gcp\/)/.test(window.location.pathname) : false);
   let isFramed = typeof window !== 'undefined' ? window.self !== window.top : false;
   $: isShellHidden = isExternalPath || isFramed;
 
@@ -22,10 +21,10 @@
   import { afterNavigate, beforeNavigate } from '$app/navigation';
   if (typeof window !== 'undefined') {
     beforeNavigate(() => { loading = true; });
-    afterNavigate(() => { 
-      loading = false; 
+    afterNavigate(() => {
+      loading = false;
       backend = detectBackend(window.location.pathname);
-      isExternalPath = /^(?:\/azure\/|\/gcp\/)/.test(window.location.pathname);
+      isExternalPath = /^(?:\/vercel\/|\/gcp\/)/.test(window.location.pathname);
       isFramed = window.self !== window.top;
     });
   }
@@ -344,7 +343,7 @@
 
 <div class="layout-container">
   {#if loading}
-    <div class="progress" style="--progress-color:{backend.includes('Vercel') ? '#000' : backend.includes('Azure') ? '#0078D4' : backend.includes('Netlify') ? '#00AD9F' : '#FF9900'}"></div>
+    <div class="progress" style="--progress-color:{backend.includes('Vercel') ? '#000' : backend.includes('Netlify') ? '#00AD9F' : '#FF9900'}"></div>
   {/if}
   {#if !isShellHidden && !isOnBlog}
   <nav class="sidebar" aria-label="Variants">

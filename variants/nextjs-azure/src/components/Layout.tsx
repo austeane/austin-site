@@ -27,36 +27,28 @@ const AI_PROVIDERS: Provider[] = [
 ];
 
 const DEPLOYMENT_VARIANTS: Provider[] = [
-  { 
-    id: 'sveltekit-aws', 
-    name: 'SvelteKit (AWS)', 
+  {
+    id: 'sveltekit-aws',
+    name: 'SvelteKit (AWS)',
     isDeployment: true,
     externalUrl: 'https://www.austinwallace.ca',
-    icon: '🚀', 
+    icon: '🚀',
     color: '#ff3e00'
   },
-  { 
-    id: 'nextjs-vercel', 
-    name: 'Next.js (Vercel)', 
+  {
+    id: 'nextjs-vercel',
+    name: 'Next.js (Vercel)',
     isDeployment: true,
-    externalUrl: 'https://www.austinwallace.ca/azure/next',
-    icon: '▲', 
+    externalUrl: 'https://www.austinwallace.ca/vercel/next',
+    icon: '▲',
     color: '#000'
   },
-  { 
-    id: 'react-azure', 
-    name: 'React (Azure)', 
-    isDeployment: true,
-    externalUrl: 'https://www.austinwallace.ca/azure/react',
-    icon: '⚛️', 
-    color: '#0078d4'
-  },
-  { 
-    id: 'tanstack-netlify', 
-    name: 'TanStack (Netlify)', 
+  {
+    id: 'tanstack-netlify',
+    name: 'TanStack (Netlify)',
     isDeployment: true,
     externalUrl: 'https://www.austinwallace.ca/gcp/tanstack',
-    icon: '🔷', 
+    icon: '🔷',
     color: '#00C7B7'
   },
 ];

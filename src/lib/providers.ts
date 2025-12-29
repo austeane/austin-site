@@ -24,10 +24,10 @@ export const PROVIDERS: Provider[] = [
 
 // Deployment variants (external framework deployments via CloudFront)
 export const DEPLOYMENT_VARIANTS: Provider[] = [
-  { 
-    id: 'sveltekit-aws', 
-    name: 'SvelteKit (AWS)', 
-    path: '/', 
+  {
+    id: 'sveltekit-aws',
+    name: 'SvelteKit (AWS)',
+    path: '/',
     isDeployment: true,
     externalUrl: 'https://www.austinwallace.ca',
     icon: '🚀',
@@ -38,18 +38,18 @@ export const DEPLOYMENT_VARIANTS: Provider[] = [
   {
     id: 'nextjs-vercel',
     name: 'Next.js (Vercel)',
-    path: '/azure/next',
+    path: '/vercel/next',
     isDeployment: true,
-    externalUrl: 'https://www.austinwallace.ca/azure/next',
+    externalUrl: 'https://www.austinwallace.ca/vercel/next',
     icon: '▲',
     logo: '/logos/vercel.svg',
     color: '#000',
     noindex: true
   },
   {
-    id: 'tanstack-netlify', 
-    name: 'TanStack (Netlify)', 
-    path: '/gcp/tanstack', 
+    id: 'tanstack-netlify',
+    name: 'TanStack (Netlify)',
+    path: '/gcp/tanstack',
     isDeployment: true,
     externalUrl: 'https://www.austinwallace.ca/gcp/tanstack',
     icon: '🔷',

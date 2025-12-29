@@ -66,21 +66,21 @@ export default $config({
     // An explicit route to site.url would forward to the site's CloudFront domain and trigger its 403 guard.
 
     // 4) External apps - actual deployed URLs with warnings
-    const AZURE_NEXT_ORIGIN =
-      process.env.AZURE_NEXT_ORIGIN ?? "https://austin-site-seven.vercel.app";
+    const VERCEL_NEXT_ORIGIN =
+      process.env.VERCEL_NEXT_ORIGIN ?? "https://austin-site-seven.vercel.app";
     const GCP_TANSTACK_ORIGIN =
       process.env.GCP_TANSTACK_ORIGIN ?? "https://austin-site.netlify.app";
 
     // Warn when using defaults
-    if (!process.env.AZURE_NEXT_ORIGIN) {
-      console.warn("⚠️  Using default AZURE_NEXT_ORIGIN. Set env var to override.");
+    if (!process.env.VERCEL_NEXT_ORIGIN) {
+      console.warn("⚠️  Using default VERCEL_NEXT_ORIGIN. Set env var to override.");
     }
     if (!process.env.GCP_TANSTACK_ORIGIN) {
       console.warn("⚠️  Using default GCP_TANSTACK_ORIGIN. Set env var to override.");
     }
 
     // Path prefixes - SST Router uses startsWith matching, no wildcards needed
-    router.route("/azure/next", AZURE_NEXT_ORIGIN);
+    router.route("/vercel/next", VERCEL_NEXT_ORIGIN);
     router.route("/gcp/tanstack", GCP_TANSTACK_ORIGIN);
 
     // Optional: Add redirects for convenience (removed due to SST bug)
@@ -90,7 +90,7 @@ export default $config({
       sveltekit: site.url,      // SvelteKit origin (also root)
       logsBucket: logsBucket.bucket, // S3 bucket for CloudFront access logs
       variants: {
-        azure_next: AZURE_NEXT_ORIGIN,
+        vercel_next: VERCEL_NEXT_ORIGIN,
         gcp_tanstack: GCP_TANSTACK_ORIGIN,
       }
     };

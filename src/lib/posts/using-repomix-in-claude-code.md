@@ -80,3 +80,5 @@ This is not a prescriptive workflow, this is a complex end-to-end example of wha
 
 ## Takeaway
 The above workflow can often be overkill, but it raises the complexity ceiling of what can be accomplished with AI assisted engineering, and I believe this workflow should continue to scale with model intelligence at least in the medium term.
+
+## Comments: Please leave comments on https://x.com/austeane/status/2005439786790875181

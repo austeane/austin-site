@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const isVercel = !!process.env.VERCEL;
-const basePath = "/azure/next";
+const basePath = "/vercel/next";
 
 const nextConfig = {
   basePath,
