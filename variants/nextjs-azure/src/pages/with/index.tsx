@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+
 const AI_VARIANTS = [
   { id: "claude-code", name: "Claude Code" },
   { id: "gpt-5-pro", name: "GPT-5 Pro" },
@@ -14,7 +16,7 @@ export default function WithIndex() {
     <main style={{ maxWidth: 960, margin: "2rem auto", padding: "0 1rem" }}>
       <h1>AI Variants on Next.js</h1>
       <p>
-        These are served from <code>/azure/next/variants/&lt;tool&gt;/index.html</code>.
+        These are served from <code>{BASE_PATH}/variants/&lt;tool&gt;/index.html</code>.
       </p>
       <ul>
         {AI_VARIANTS.map((v) => (
@@ -26,4 +28,3 @@ export default function WithIndex() {
     </main>
   );
 }
-

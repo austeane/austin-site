@@ -1,9 +1,11 @@
 import { useRouter } from 'next/router';
 
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+
 export default function VariantEnablement() {
   const router = useRouter();
   const { tool } = router.query as { tool?: string };
-  const src = tool ? `/azure/next/variants/${tool}/enablement/index.html` : undefined;
+  const src = tool ? `${BASE_PATH}/variants/${tool}/enablement/index.html` : undefined;
   return (
     <div style={{ height: "100%", display: "flex" }}>
       {src ? (
@@ -17,4 +19,3 @@ export default function VariantEnablement() {
     </div>
   );
 }
-

@@ -611,8 +611,8 @@
       const msg = el('section', {},
         el('div', { class: 'inner' },
           el('div', { class: 'card' },
-            el('h3', {}, 'Unable to load resume'),
-            el('p', { class: 'small' }, 'I couldn’t fetch("https://www.austinwallace.ca/data/enablement.json")
+            el('h3', {}, 'Unable to load enablement'),
+            el('p', { class: 'small' }, 'I couldn’t fetch "https://www.austinwallace.ca/data/enablement.json".'),
             el('pre', { class: 'small' }, String(err && err.message || err || 'Unknown error'))
           )
         )
