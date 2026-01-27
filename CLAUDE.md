@@ -218,6 +218,22 @@ The frontend wasn't built with the correct base path. Redeploy austin-site.
 **API returns CORS errors:**
 The proxy routing may be misconfigured. Check `sst.config.ts` router rules.
 
+**CloudFront serving stale content:**
+Invalidate the cache:
+```bash
+AWS_PROFILE=prod aws cloudfront create-invalidation --distribution-id E1JQ3CFBKJU5SV --paths "/trading-cards/*"
+```
+
+### Tech Debt & Workarounds
+
+1. **Hybrid Deployment** - Frontend deploys from austin-site, backend from trading-card-app. Easy to forget one when making full-stack changes.
+
+2. **Symlinks** - `apps/trading-cards/` uses symlinks to `~/dev/trading-card-app/`. Won't work if someone clones austin-site without trading-card-app present.
+
+3. **Two CloudFront Distributions** - Backend has its own CloudFront that austin-site proxies to. Extra hop adds slight latency.
+
+4. **Base Path Coupling** - TanStack Router `basepath` and Vite `base` must both be `/trading-cards`. If out of sync, routing breaks.
+
 ## Architecture
 
 ### Multi-Variant Resume Platform
