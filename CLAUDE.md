@@ -161,7 +161,7 @@ AWS_PROFILE=prod npx sst deploy --stage production
 **Backend (from trading-card-app):**
 ```bash
 cd ~/dev/trading-card-app
-AWS_PROFILE=prod npx sst deploy --stage austin
+AWS_PROFILE=prod npx sst deploy --stage production
 ```
 
 Both deployments are required for a fully functioning app. The frontend deployment builds with `VITE_BASE_PATH=/trading-cards` to ensure all asset paths work correctly.
@@ -170,10 +170,9 @@ Both deployments are required for a fully functioning app. The frontend deployme
 
 | Stage | Frontend | Backend | URL |
 |-------|----------|---------|-----|
-| production | austin-site | trading-card-app (austin) | www.austinwallace.ca/trading-cards |
-| dev | austin-site | trading-card-app (austin) | CloudFront dev URL |
+| production | austin-site | trading-card-app (production) | www.austinwallace.ca/trading-cards |
 
-The backend "austin" stage is the production backend. The frontend reads `TRADING_CARDS_ROUTER` env var (defaults to the austin stage CloudFront URL).
+The frontend reads `TRADING_CARDS_ROUTER` env var (defaults to the production stage CloudFront URL).
 
 ### Environment Variables
 
@@ -201,7 +200,7 @@ The app has optional admin authentication for sensitive operations:
 2. **Set the admin password:**
    ```bash
    cd ~/dev/trading-card-app
-   AWS_PROFILE=prod npx sst secret set AdminPassword "your-secure-password" --stage austin
+   AWS_PROFILE=prod npx sst secret set AdminPassword "your-secure-password" --stage production
    ```
 
 3. **Access admin endpoints** with the `Authorization: Bearer <password>` header.
@@ -214,7 +213,7 @@ The app has optional admin authentication for sensitive operations:
 ### Troubleshooting
 
 **"sst dev is not running" error:**
-The backend isn't deployed. Run `AWS_PROFILE=prod npx sst deploy --stage austin` from trading-card-app.
+The backend isn't deployed. Run `AWS_PROFILE=prod npx sst deploy --stage production` from trading-card-app.
 
 **Assets not loading (404s):**
 The frontend wasn't built with the correct base path. Redeploy austin-site.

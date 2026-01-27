@@ -417,6 +417,8 @@
           <a href={getProviderPath('resume')} class:active-page={!isOnHome && !isOnEnablement && !isOnBlog} aria-current={!isOnHome && !isOnEnablement && !isOnBlog ? 'page' : undefined}>Resume</a>
           <a href={getProviderPath('enablement')} class:active-page={isOnEnablement} aria-current={isOnEnablement ? 'page' : undefined}>AI Enablement</a>
           <a href="/blog" class:active-page={isOnBlog} aria-current={isOnBlog ? 'page' : undefined}>Blog</a>
+          <a href="/kernel" target="_blank" rel="noopener noreferrer">Kernel Viz</a>
+          <a href="/trading-cards" target="_blank" rel="noopener noreferrer">Trading Cards</a>
         </nav>
         <div style="display:flex; gap:8px; align-items:center;">
           {#if currentProvider}

@@ -95,8 +95,8 @@ export default $config({
 
     // ===== Trading Card App =====
     // Hybrid deployment: Frontend from austin-site, backend from trading-card-app repo
-    // Backend (Lambda, DynamoDB, S3) stays deployed from ~/dev/trading-card-app
-    const TRADING_CARDS_ROUTER = process.env.TRADING_CARDS_ROUTER ?? "https://dx56a7tfy0a7x.cloudfront.net";
+    // Backend (Lambda, DynamoDB, S3) deployed from ~/dev/trading-card-app --stage production
+    const TRADING_CARDS_ROUTER = process.env.TRADING_CARDS_ROUTER ?? "https://dn5m00m19yfre.cloudfront.net";
 
     if (!process.env.TRADING_CARDS_ROUTER) {
       console.warn("⚠️  Using default TRADING_CARDS_ROUTER. Set env var to override.");
