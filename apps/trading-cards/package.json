@@ -1,0 +1,14 @@
+{
+  "name": "trading-cards-wrapper",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.15.0",
+  "scripts": {
+    "build": "pnpm --filter shared build && VITE_BASE_PATH=/trading-cards pnpm --filter client build",
+    "build:server": "pnpm --filter server build",
+    "dev": "pnpm --filter client dev"
+  },
+  "devDependencies": {
+    "sst": "^3.17.38"
+  }
+}

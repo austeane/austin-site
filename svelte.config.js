@@ -29,10 +29,18 @@ const config = {
       ],
       handleHttpError: ({ path, referrer, message }) => {
         // Ignore 404 errors for external routes that will be handled by SST Router
-        if (path.startsWith('/azure/') || path.startsWith('/gcp/') || path.startsWith('/variants/')) {
+        // These routes are served by separate StaticSites or external deployments
+        if (
+          path.startsWith('/azure/') ||
+          path.startsWith('/gcp/') ||
+          path.startsWith('/vercel/') ||
+          path.startsWith('/kernel') ||
+          path.startsWith('/trading-cards') ||
+          path.startsWith('/variants/')
+        ) {
           return;
         }
-        
+
         // Throw error for other cases
         throw new Error(message);
       },

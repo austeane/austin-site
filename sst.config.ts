@@ -32,15 +32,15 @@ export default $config({
     }, { dependsOn: [logsBucketOwnership] });
 
     // 1) One CloudFront+domain for everything via Router
-    // Temporarily disabled - domain is still attached to old CloudFront
-    // Update GoDaddy DNS to point to: d2li8p8xclq49l.cloudfront.net
+    // Domain only for production - other stages use CloudFront default domain
+    const isProduction = $app.stage === "production";
     const router = new sst.aws.Router("Edge", {
-      domain: {
+      domain: isProduction ? {
         name: "www.austinwallace.ca",
         // redirects: ["austinwallace.ca"], // Another CloudFront has this, handle separately
         dns: false, // We'll manage DNS in GoDaddy
         cert: "arn:aws:acm:us-east-1:737679990662:certificate/061f07dc-2e1e-4751-bfee-e7e26c8b7c80"
-      },
+      } : undefined,
       transform: {
         cdn: (args) => {
           args.loggingConfig = {
@@ -83,8 +83,51 @@ export default $config({
     router.route("/vercel/next", VERCEL_NEXT_ORIGIN);
     router.route("/gcp/tanstack", GCP_TANSTACK_ORIGIN);
 
-    // Optional: Add redirects for convenience (removed due to SST bug)
-    
+    // VLIW CPU Optimization Visualization - deployed as StaticSite at /kernel
+    const kernelViz = new sst.aws.StaticSite("KernelViz", {
+      path: "apps/kernel",
+      build: {
+        command: "npm install && npm run build",
+        output: "dist",
+      },
+    });
+    router.route("/kernel", kernelViz.url);
+
+    // ===== Trading Card App =====
+    // Hybrid deployment: Frontend from austin-site, backend from trading-card-app repo
+    // Backend (Lambda, DynamoDB, S3) stays deployed from ~/dev/trading-card-app
+    const TRADING_CARDS_ROUTER = process.env.TRADING_CARDS_ROUTER ?? "https://dx56a7tfy0a7x.cloudfront.net";
+
+    if (!process.env.TRADING_CARDS_ROUTER) {
+      console.warn("⚠️  Using default TRADING_CARDS_ROUTER. Set env var to override.");
+    }
+
+    // Frontend only - build with /trading-cards base path
+    const tradingCardsSite = new sst.aws.StaticSite("TradingCardsSite", {
+      path: "apps/trading-cards",
+      build: {
+        command: "pnpm install && pnpm build",
+        output: "client/dist",
+      },
+      environment: {
+        VITE_BASE_PATH: "/trading-cards",
+      },
+    });
+
+    // Trading Cards Routes - proxy API and media to existing trading-card-app deployment
+    router.route("/trading-cards/api", TRADING_CARDS_ROUTER, {
+      rewrite: { regex: "^/trading-cards/api/(.*)$", to: "/api/$1" },
+    });
+    router.route("/trading-cards/r", TRADING_CARDS_ROUTER, {
+      rewrite: { regex: "^/trading-cards/r/(.*)$", to: "/r/$1" },
+    });
+    router.route("/trading-cards/c", TRADING_CARDS_ROUTER, {
+      rewrite: { regex: "^/trading-cards/c/(.*)$", to: "/c/$1" },
+    });
+    router.route("/trading-cards", tradingCardsSite.url, {
+      rewrite: { regex: "^/trading-cards(?:/(.*))?$", to: "/$1" },
+    });
+
     return {
       url: router.url,          // single domain for everything
       sveltekit: site.url,      // SvelteKit origin (also root)
@@ -92,7 +135,11 @@ export default $config({
       variants: {
         vercel_next: VERCEL_NEXT_ORIGIN,
         gcp_tanstack: GCP_TANSTACK_ORIGIN,
-      }
+      },
+      tradingCards: {
+        site: tradingCardsSite.url,
+        backend: TRADING_CARDS_ROUTER,
+      },
     };
   },
 });

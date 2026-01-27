@@ -13,6 +13,14 @@ declare module "sst" {
       "type": "sst.aws.Router"
       "url": string
     }
+    "KernelViz": {
+      "type": "sst.aws.StaticSite"
+      "url": string
+    }
+    "TradingCardsSite": {
+      "type": "sst.aws.StaticSite"
+      "url": string
+    }
   }
 }
 /// <reference path="sst-env.d.ts" />

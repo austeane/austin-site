@@ -53,6 +53,175 @@ AWS_PROFILE=prod npx sst unlock --stage production
 - Don't rely solely on curl/API tests - browser testing catches cache issues
 - If you see errors in browser but curl works, it's likely a caching issue
 
+## Kernel Visualization (VLIW CPU Optimization)
+
+The `/kernel` route hosts an interactive D3.js visualization of VLIW CPU optimization work. The source code lives in a separate repository and is symlinked into this project.
+
+### Source Setup
+```
+apps/kernel/
+├── src/           → symlink to ~/dev/original_performance_takehome/vliw-viz/src
+├── index.html     ← copied from vliw-viz (auto-synced on build)
+└── vite.config.ts → builds with base: '/kernel/'
+```
+
+### Development
+```bash
+# Edit source files in the original repo
+cd ~/dev/original_performance_takehome/vliw-viz/src
+
+# Changes reflect immediately via symlink
+# Run dev server from austin-site root
+npm run dev
+```
+
+### How the Sync Works
+- `apps/kernel/src` is a symlink to `~/dev/original_performance_takehome/vliw-viz/src`
+- `index.html` cannot be symlinked (Vite limitation), so it's copied via npm script
+- The `sync` script in `apps/kernel/package.json` runs before dev/build:
+  ```json
+  "sync": "cp /Users/austin/dev/original_performance_takehome/vliw-viz/index.html index.html"
+  ```
+
+### Deployment
+The kernel app deploys as part of the main site deployment:
+```bash
+AWS_PROFILE=prod npx sst deploy --stage production
+```
+
+### URL
+- Production: https://www.austinwallace.ca/kernel
+- Local: http://localhost:5173/kernel (when running from apps/kernel)
+
+## Trading Cards App
+
+The `/trading-cards` route hosts a full-stack trading card creation app. Unlike the kernel visualization (pure static), this app has a backend with Lambda, DynamoDB, and S3.
+
+### Hybrid Architecture
+```
+austinwallace.ca/trading-cards
+├── /*           → StaticSite (React frontend, built from austin-site)
+├── /api/*       → Proxy to trading-card-app CloudFront
+├── /r/*         → Proxy to trading-card-app S3 renders
+└── /c/*         → Proxy to trading-card-app S3 config
+```
+
+**Why Hybrid?** The backend Lambda references SST Resource types (`Resource.Cards`, `Resource.Media`) that are tightly coupled to trading-card-app's SST config. Rather than refactor the server code, we:
+- Deploy the **frontend** from austin-site with `/trading-cards` base path
+- **Proxy** API and media requests to the existing trading-card-app deployment
+
+### Source Setup
+```
+apps/trading-cards/
+├── client → symlink to ~/dev/trading-card-app/client
+├── server → symlink to ~/dev/trading-card-app/server (unused for frontend build)
+├── shared → symlink to ~/dev/trading-card-app/shared
+├── package.json        # Wrapper with build scripts
+└── pnpm-workspace.yaml # Workspace config for symlinked packages
+```
+
+### Development
+
+**Option 1: Full-stack development (recommended for backend changes)**
+```bash
+# Terminal 1 - Start trading-card-app backend
+cd ~/dev/trading-card-app
+AWS_PROFILE=prod npx sst dev
+
+# Terminal 2 - Start frontend dev server
+cd ~/dev/trading-card-app/client
+pnpm dev
+```
+Open http://localhost:5173 — this runs the standalone app with hot reload.
+
+**Option 2: Frontend-only development**
+```bash
+cd ~/dev/austin-site/apps/trading-cards
+pnpm dev
+```
+Note: API calls will fail unless the trading-card-app backend is running.
+
+### Making Changes
+
+| Change Type | Edit Location | Deploy From |
+|-------------|---------------|-------------|
+| Frontend (React, UI) | `~/dev/trading-card-app/client/` | austin-site |
+| Backend (API, Lambda) | `~/dev/trading-card-app/server/` | trading-card-app |
+| Shared types | `~/dev/trading-card-app/shared/` | Both repos |
+| Infrastructure | `~/dev/trading-card-app/sst.config.ts` | trading-card-app |
+
+### Deployment
+
+**Frontend (from austin-site):**
+```bash
+cd ~/dev/austin-site
+AWS_PROFILE=prod npx sst deploy --stage production
+```
+
+**Backend (from trading-card-app):**
+```bash
+cd ~/dev/trading-card-app
+AWS_PROFILE=prod npx sst deploy --stage austin
+```
+
+Both deployments are required for a fully functioning app. The frontend deployment builds with `VITE_BASE_PATH=/trading-cards` to ensure all asset paths work correctly.
+
+### Stages
+
+| Stage | Frontend | Backend | URL |
+|-------|----------|---------|-----|
+| production | austin-site | trading-card-app (austin) | www.austinwallace.ca/trading-cards |
+| dev | austin-site | trading-card-app (austin) | CloudFront dev URL |
+
+The backend "austin" stage is the production backend. The frontend reads `TRADING_CARDS_ROUTER` env var (defaults to the austin stage CloudFront URL).
+
+### Environment Variables
+
+**Build-time (frontend):**
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VITE_BASE_PATH` | Subpath prefix for assets | `/trading-cards` |
+
+**Runtime (backend):**
+| Variable | Description |
+|----------|-------------|
+| `ADMIN_AUTH_ENABLED` | Enable admin password auth (`"true"` or `"false"`) |
+
+### Admin Authentication
+
+The app has optional admin authentication for sensitive operations:
+
+1. **Enable auth** in trading-card-app's sst.config.ts:
+   ```typescript
+   environment: {
+     ADMIN_AUTH_ENABLED: "true",
+   },
+   ```
+
+2. **Set the admin password:**
+   ```bash
+   cd ~/dev/trading-card-app
+   AWS_PROFILE=prod npx sst secret set AdminPassword "your-secure-password" --stage austin
+   ```
+
+3. **Access admin endpoints** with the `Authorization: Bearer <password>` header.
+
+### URLs
+- Production: https://www.austinwallace.ca/trading-cards
+- Backend API: https://www.austinwallace.ca/trading-cards/api
+- Card renders: https://www.austinwallace.ca/trading-cards/r/{cardId}.png
+
+### Troubleshooting
+
+**"sst dev is not running" error:**
+The backend isn't deployed. Run `AWS_PROFILE=prod npx sst deploy --stage austin` from trading-card-app.
+
+**Assets not loading (404s):**
+The frontend wasn't built with the correct base path. Redeploy austin-site.
+
+**API returns CORS errors:**
+The proxy routing may be misconfigured. Check `sst.config.ts` router rules.
+
 ## Architecture
 
 ### Multi-Variant Resume Platform
