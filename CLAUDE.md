@@ -122,24 +122,21 @@ apps/trading-cards/
 
 ### Development
 
-**Option 1: Full-stack development (recommended for backend changes)**
+Always develop from the trading-card-app repo with two terminals:
+
+**Terminal 1 - Backend:**
 ```bash
-# Terminal 1 - Start trading-card-app backend
 cd ~/dev/trading-card-app
 AWS_PROFILE=prod npx sst dev
+```
 
-# Terminal 2 - Start frontend dev server
+**Terminal 2 - Frontend:**
+```bash
 cd ~/dev/trading-card-app/client
 pnpm dev
 ```
-Open http://localhost:5173 — this runs the standalone app with hot reload.
 
-**Option 2: Frontend-only development**
-```bash
-cd ~/dev/austin-site/apps/trading-cards
-pnpm dev
-```
-Note: API calls will fail unless the trading-card-app backend is running.
+Open http://localhost:5173. Both frontend and backend hot reload on save.
 
 ### Making Changes
 
